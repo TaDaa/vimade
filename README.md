@@ -1,27 +1,41 @@
-#vimade 
-######An eye catching plugin that fades your inactive buffers and preserves syntax highlighting!!!!
-
-#####Screenshots
+# vimade
 
 
+###### An eye catching plugin that fades your inactive buffers and preserves syntax highlighting!!!!
 
-#####Compatibility
+##### Screenshots
+
+**Fade inactive windows**
+
+![](http://tadaa.github.io/images/vimade_fade.gif)
+
+**Change the colorscheme and fadelevel on the fly**
+
+![](http://tadaa.github.io/images/vimade_colorscheme.gif)
+![](http://tadaa.github.io/images/vimade_fadelevel.gif)
+
+**Fade/Unfade diffs together**
+
+![](http://tadaa.github.io/images/vimade_diff.gif)
+
+
+##### Compatibility
 - gui vim8+
 - gui nvim
 - terminal support is coming
 
-#####What/Why?
+##### What/Why?
 - Vimade fades inactive/unfocused buffer text and removes the fade from focused buffers. 
 - Vimade diffs and multiple windows linked to the same buffer are treaded as a group that highlights/unhighlights together.
 - Vimade reacts to scrolling, tab changes, colorscheme changes, diff, and much more!
 
-#####Install
+##### Install
 *Add `tadaa/vimade` to your vimrc -- you can use any plugin manager e.g:*
 ```
 Bundle 'tadaa/vimade'
 ```
 
-#####Config
+##### Config
 Vimade is initialized with the following configuration:
 ```
 let g:vimade = {
