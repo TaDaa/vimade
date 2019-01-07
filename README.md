@@ -1,4 +1,4 @@
-#vimade 
+#vimade
 ######An eye catching plugin that fades your inactive buffers and preserves syntax highlighting!!!!
 
 #####Screenshots
