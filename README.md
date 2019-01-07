@@ -5,6 +5,18 @@
 
 ##### Screenshots
 
+**Fade inactive windows**
+
+![](http://tadaa.github.io/images/vimade_fade.gif)
+
+**Change the colorscheme and fadelevel on the fly**
+
+![](http://tadaa.github.io/images/vimade_colorscheme.gif)
+![](http://tadaa.github.io/images/vimade_fadelevel.gif)
+
+**Fade/Unfade diffs together**
+
+![](http://tadaa.github.io/images/vimade_diff.gif)
 
 
 ##### Compatibility
