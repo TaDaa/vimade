@@ -63,13 +63,17 @@ let g:vimade = {}
 let g:vimade.fadelevel = 0.7
 ```
 
-##### TODO
+##### Features
 - [X] Fade inactive buffers
-- [X] Fade and unfade diffs together
-- [X] Fade based on colorscheme and automatically adjust to changes
-- [X] Fade based on fadelevel and automatically adjust to changes
-- [X] Fade active window and react to window resize + scroll changes
-- [X] Neovim (gui) support
-- [ ] Terminal support
+- [X] Fade/Unfade diffs together
+- [X] Automatically adjust to colorscheme changes
+- [X] Automatically adjust to basebg changes
+- [X] Automatically adjust to fadelevel changes
+- [X] React to window resize + scroll changes
+- [X] Vim8+ (gui)
+- [X] Neovim (gui)
+- [X] Python3
+- [ ] Python
+- [ ] 256 color terminal support
 - [ ] Secondary buffer window highlighting
 - [ ] Vim Documentation/Help
