@@ -30,9 +30,9 @@
 - Vimade reacts to scrolling, tab changes, colorscheme changes, diff, and much more!
 
 ##### Install
-*Add `tadaa/vimade` to your vimrc -- you can use any plugin manager e.g:*
+*Add `TaDaa/vimade` to your vimrc -- you can use any plugin manager e.g:*
 ```
-Bundle 'tadaa/vimade'
+Bundle 'TaDaa/vimade'
 ```
 
 ##### Config
@@ -63,4 +63,13 @@ let g:vimade = {}
 let g:vimade.fadelevel = 0.7
 ```
 
-
+##### TODO
+- [X] Fade inactive buffers
+- [X] Fade and unfade diffs together
+- [X] Fade based on colorscheme and automatically adjust to changes
+- [X] Fade based on fadelevel and automatically adjust to changes
+- [X] Fade active window and react to window resize + scroll changes
+- [X] Neovim (gui) support
+- [ ] Terminal support
+- [ ] Secondary buffer window highlighting
+- [ ] Vim Documentation/Help
