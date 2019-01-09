@@ -49,7 +49,7 @@ function! vimade#Init()
   call vimade#ScheduleCheckWindows()
   exec g:vimade_py_cmd join([
       \ "import vimade",
-      \ "vimade.updateState({'activeBuffer': str(vim.current.buffer.number), 'activeTab': '".tabpagenr()."', 'activeWindow': '".win_getid(winnr())."'})",
+      \ "vimade.updateState({'activeBuffer': str(vim.current.buffer.number), 'activeTab': '".tabpagenr()."', 'activeWindow': '".win_getid(winnr())."', 'background': '".&background."'})",
   \ ], "\n")
 endfunction
 
@@ -57,7 +57,7 @@ function! vimade#CheckWindows(num)
   unlet g:vimade_timer
   exec g:vimade_py_cmd join([
       \ "import vimade",
-      \ "vimade.updateState({'activeBuffer': str(vim.current.buffer.number), 'activeTab': '".tabpagenr()."', 'activeWindow': '".win_getid(winnr())."'})",
+      \ "vimade.updateState({'activeBuffer': str(vim.current.buffer.number), 'activeTab': '".tabpagenr()."', 'activeWindow': '".win_getid(winnr())."', 'background':'".&background."'})",
   \ ], "\n")
   call vimade#ScheduleCheckWindows()
 endfunction
@@ -65,14 +65,14 @@ endfunction
 function! vimade#FadeCurrentBuffer()
     exec g:vimade_py_cmd join([
         \ "import vimade",
-        \ "vimade.updateState({'activeBuffer': -1, 'activeTab': '".tabpagenr()."', 'activeWindow': '".win_getid(winnr())."'})",
+        \ "vimade.updateState({'activeBuffer': -1, 'activeTab': '".tabpagenr()."', 'activeWindow': '".win_getid(winnr())."', 'background':'".&background."'})",
     \ ], "\n")
 endfunction
 
 function! vimade#UnfadeCurrentBuffer()
     exec g:vimade_py_cmd join([
         \ "import vimade,vim",
-        \ "vimade.updateState({'activeBuffer': str(vim.current.buffer.number), 'activeTab': '".tabpagenr()."', 'activeWindow': '".win_getid(winnr())."'})",
+        \ "vimade.updateState({'activeBuffer': str(vim.current.buffer.number), 'activeTab': '".tabpagenr()."', 'activeWindow': '".win_getid(winnr())."', 'background':'".&background."'})",
     \ ], "\n")
 endfunction
 
@@ -80,7 +80,7 @@ function! vimade#DiffToggled()
     let winid = win_getid(winnr())
     exec g:vimade_py_cmd join([
         \ "import vimade,vim",
-        \ "vimade.updateState({'diff': {'winid':".winid.",'value':".&diff."}, 'activeBuffer': str(vim.current.buffer.number), 'activeTab': '".tabpagenr()."', 'activeWindow': '".winid. "'})",
+        \ "vimade.updateState({'diff': {'winid':".winid.",'value':".&diff."}, 'activeBuffer': str(vim.current.buffer.number), 'activeTab': '".tabpagenr()."', 'activeWindow': '".winid. "', 'background':'".&background."'})",
     \ ], "\n")
 endfunction
 

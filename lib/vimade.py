@@ -16,6 +16,7 @@ BASE_BG = ''
 BASE_FG = ''
 FADE_STATE = {
   'windows' : {},
+  'background': '',
   'prevent': False,
   'buffers': {},
   'activeWindow': str(vim.current.window.number),
@@ -100,6 +101,11 @@ def updateState(nextState = None):
   #Error condition - just return
   if status == ERROR:
     return
+
+  if FADE_STATE['background'] != nextState['background']:
+    FADE_STATE['background'] = nextState['background']
+    status = FULL_INVALIDATE
+
   #Full invalidate - clean cache and unfade all windows + reset buffesr
   if status == FULL_INVALIDATE:
     HI_CACHE = {}
