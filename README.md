@@ -73,7 +73,7 @@ let g:vimade.fadelevel = 0.7
 - [X] Vim8+ (gui)
 - [X] Neovim (gui)
 - [X] Python3
-- [ ] Python
+- [X] Python
 - [ ] 256 color terminal support
 - [ ] Secondary buffer window highlighting
 - [ ] Vim Documentation/Help

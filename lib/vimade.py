@@ -1,6 +1,10 @@
+import sys
 import vim
 import math
 import time
+IS_V3 = False
+if (sys.version_info > (3, 0)):
+    IS_V3 = True
 
 FADE_LEVEL = None
 BASE_HI = [None, None]
@@ -21,7 +25,7 @@ HI_CACHE = {}
 IS_NVIM = vim.eval('has("nvim")')
 
 def fadeRGBToHex(source, to):
-  rgb = [math.floor(to[0]+(source[0]-to[0])*FADE_LEVEL), math.floor(to[1]+(source[1]-to[1])*FADE_LEVEL), math.floor(to[2]+(source[2]-to[2])*FADE_LEVEL)]
+  rgb = [int(math.floor(to[0]+(source[0]-to[0])*FADE_LEVEL)), int(math.floor(to[1]+(source[1]-to[1])*FADE_LEVEL)), int(math.floor(to[2]+(source[2]-to[2])*FADE_LEVEL))]
   return '#' + hex(rgb[0])[2:] + hex(rgb[1])[2:] + hex(rgb[2])[2:]
 
 
@@ -287,14 +291,20 @@ def fadeWin(winState):
   while row <= endRow:
     column = startCol
     index = row - 1
-    rawText = buf[index]
-    text = bytes(rawText, 'utf-8')
-
-    #make adjustments
-    adjustStart = rawText[0:cursorCol]
-    adjustStart = len(bytes(adjustStart, 'utf-8')) - len(adjustStart)
-    adjustEnd = rawText[cursorCol:maxCol]
-    adjustEnd = len(bytes(adjustEnd, 'utf-8')) - len(adjustEnd)
+    if IS_V3:
+      rawText = buf[index]
+      text = bytes(rawText, 'utf-8')
+      adjustStart = rawText[0:cursorCol]
+      adjustStart = len(bytes(adjustStart, 'utf-8')) - len(adjustStart)
+      adjustEnd = rawText[cursorCol:maxCol]
+      adjustEnd = len(bytes(adjustEnd, 'utf-8')) - len(adjustEnd)
+    else:
+      text = buf[index]
+      rawText = text.decode('utf-8')
+      adjustStart = rawText[0:cursorCol]
+      adjustStart = len(adjustStart.encode('utf-8')) - len(adjustStart)
+      adjustEnd = rawText[cursorCol:maxCol]
+      adjustEnd = len(adjustEnd.encode('utf-8')) - len(adjustEnd)
     text_ln = len(text)
     column -= adjustStart
     column = max(column, 1)
