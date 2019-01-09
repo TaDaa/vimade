@@ -167,6 +167,7 @@ def updateState(nextState = None):
     state = FADE_STATE['windows'][winid]
     state['win'] = window
     state['number'] = winnr
+    state['buffer'] = bufnr
 
     if str(updateDiff['winid']) == winid:
       state['diff'] = updateDiff['value']
