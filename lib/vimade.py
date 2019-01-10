@@ -319,7 +319,6 @@ def fadeWin(winState):
     if colors == None:
       colors = coords[index] = [None] * text_ln
     str_row = str(row)
-    vim.vars['cc'] = str(column) + ' ' + str(endCol)
     while column <= endCol:
       #get syntax id and cache
       current = colors[column - 1]
