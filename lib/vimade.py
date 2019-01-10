@@ -173,7 +173,6 @@ def updateState(nextState = None):
     state = FADE_STATE['windows'][winid]
     state['win'] = window
     state['number'] = winnr
-    state['buffer'] = bufnr
 
     if str(updateDiff['winid']) == winid:
       state['diff'] = updateDiff['value']
@@ -284,7 +283,7 @@ def fadeWin(winState):
 
   bufState = FADE_STATE['buffers'][winState['buffer']]
   coords = bufState['coords']
-  currentBuf = ''.join(buf)
+  currentBuf = '\n'.join(buf)
   if bufState['last'] != currentBuf:
     #todo remove all highlights? - negative impact on perf but better sync highlights
     unfadeWin(winState)
@@ -320,6 +319,7 @@ def fadeWin(winState):
     if colors == None:
       colors = coords[index] = [None] * text_ln
     str_row = str(row)
+    vim.vars['cc'] = str(column) + ' ' + str(endCol)
     while column <= endCol:
       #get syntax id and cache
       current = colors[column - 1]
