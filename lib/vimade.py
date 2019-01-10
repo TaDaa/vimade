@@ -2,6 +2,8 @@ import sys
 import vim
 import math
 import time
+from term_256 import RGB_256
+
 IS_V3 = False
 if (sys.version_info > (3, 0)):
     IS_V3 = True
@@ -24,10 +26,41 @@ FADE_STATE = {
 }
 HI_CACHE = {}
 IS_NVIM = vim.eval('has("nvim")')
+FADE = None
+HI_FG = ''
+HI_BG = ''
 
-def fadeRGBToHex(source, to):
+def fadeHex(source, to):
+    source = [int(source[1:3], 16), int(source[3:5], 16), int(source[5:7], 16)]
+    to = [int(to[1:3], 16), int(to[3:5], 16), int(to[5:7], 16)]
+    rgb = [int(math.floor(to[0]+(source[0]-to[0])*FADE_LEVEL)), int(math.floor(to[1]+(source[1]-to[1])*FADE_LEVEL)), int(math.floor(to[2]+(source[2]-to[2])*FADE_LEVEL))]
+    return '#' + hex(rgb[0])[2:] + hex(rgb[1])[2:] + hex(rgb[2])[2:]
+
+###NOT MY CODE -- this is a temp implementation to get terminal up and running...not too happy the visual product
+#we can achieve better results by examining the porportion and ensuring some type of fade occurred (fade to gray/black if necessary)
+#however this is a decent starting point
+codes_256 = [0, 0x5f, 0x87, 0xaf, 0xd7, 0xff]
+def get_code_index(v):
+  return 
+def dist_square(A,B,C, a,b,c):
+  return ((A-a)*(A-a) + (B-b)*(B-b) + (C-c)*(C-c))
+def dist(a, b):
+  return (a[0]-b[0])**2 + (a[1]-b[1])**2 + (a[2] - b[2])**2
+def get_closest(rgb):
+  r = int(0 if rgb[0] < 48 else 1 if rgb[0] < 115 else (rgb[0] - 35) / 40)
+  g = int(0 if rgb[1] < 48 else 1 if rgb[1] < 115 else (rgb[1] - 35) / 40)
+  b = int(0 if rgb[2] < 48 else 1 if rgb[2] < 115 else (rgb[2] - 35) / 40)
+  avg = int((r + g + b) / 3)
+  gray_index = int(23 if avg > 238 else (avg - 3) / 10)
+  gray_value = int(8 + 10 * gray_index)
+  color_err =  int(dist((codes_256[r], codes_256[g], codes_256[b]), rgb))
+  gray_err  = int(dist((gray_value, gray_value, gray_value), rgb))
+  return (16 + (36*r+6*g+b)) if color_err <= gray_err else 232 + gray_index;
+def fade256(source, to):
+  source = RGB_256[int(source)]
+  to = RGB_256[int(to)]
   rgb = [int(math.floor(to[0]+(source[0]-to[0])*FADE_LEVEL)), int(math.floor(to[1]+(source[1]-to[1])*FADE_LEVEL)), int(math.floor(to[2]+(source[2]-to[2])*FADE_LEVEL))]
-  return '#' + hex(rgb[0])[2:] + hex(rgb[1])[2:] + hex(rgb[2])[2:]
+  return str(get_closest(rgb))
 
 
 ERROR = -1
@@ -42,6 +75,9 @@ def updateGlobals():
   global BASE_FG
   global BASE_FADE
   global FADE_LEVEL
+  global FADE
+  global HI_FG
+  global HI_BG
 
   returnState = READY 
   nextGlobals = vim.eval('g:vimade')
@@ -76,10 +112,18 @@ def updateGlobals():
     BASE_HI[1] = BASE_BG = basebg
     returnState = FULL_INVALIDATE
 
-  if returnState == FULL_INVALIDATE and len(BASE_FG) == 7 and len(BASE_BG) == 7:
-    BASE_HI[0] = [int(BASE_FG[1:3], 16), int(BASE_FG[3:5], 16), int(BASE_FG[5:7], 16)]
-    BASE_HI[1] = [int(BASE_BG[1:3], 16), int(BASE_BG[3:5], 16), int(BASE_BG[5:7], 16)]
-    BASE_FADE = fadeRGBToHex(BASE_HI[0], BASE_HI[1])
+  if returnState == FULL_INVALIDATE and len(BASE_FG) > 2 and len(BASE_BG) > 2:
+    BASE_HI[0] = BASE_FG
+    BASE_HI[1] = BASE_BG
+    if len(BASE_FG) == 7 or len(BASE_BG) == 7:
+      HI_FG = ' guifg='
+      HI_BG = ' guibg='
+      FADE = fadeHex
+    else:
+      HI_FG = ' ctermfg='
+      HI_BG = ' ctermbg='
+      FADE = fade256
+    BASE_FADE = FADE(BASE_FG, BASE_BG)
 
   if BASE_FG == None or BASE_BG == None or BASE_FADE == None:
     returnState = ERROR
@@ -331,9 +375,9 @@ def fadeWin(winState):
         if not id in HI_CACHE:
           #create & cache highlight
           hi = HI_CACHE[id] = fadeHi(vim.eval('vimade#GetHi('+id+')'))
-          vim_expr = 'hi ' + hi['group'] + ' guifg=' + hi['guifg']
+          vim_expr = 'hi ' + hi['group'] + HI_FG + hi['guifg']
           if hi['guibg']:
-            vim_expr += ' guibg='+hi['guibg']
+            vim_expr += HI_BG + hi['guibg']
           vim.command(vim_expr)
         else:
           hi = HI_CACHE[id]
@@ -383,7 +427,7 @@ def fadeHi(hi):
     if guibg == BASE_BG:
       guibg = None
     else:
-      guibg = fadeRGBToHex([int(guibg[1:3], 16), int(guibg[3:5], 16), int(guibg[5:7], 16)], BASE_HI[1])
+      guibg = FADE(guibg, BASE_BG)
     result['guibg'] = guibg
   else:
     guibg = result['guibg'] = None
@@ -391,12 +435,10 @@ def fadeHi(hi):
   if guifg == '':
     guifg = BASE_FADE
   else:
-    guifg = [int(guifg[1:3], 16), int(guifg[3:5], 16), int(guifg[5:7], 16)]
-    guifg = fadeRGBToHex(guifg, BASE_HI[1])
+    guifg = FADE(guifg, BASE_BG)
 
   result['guifg'] = guifg
 
   result['group'] = 'fade_' + str(guifg)[1:] + '_' + str(guibg)[1:]
 
   return result
-
