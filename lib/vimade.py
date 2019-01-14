@@ -39,28 +39,85 @@ def fadeHex(source, to):
 ###NOT MY CODE -- this is a temp implementation to get terminal up and running...not too happy the visual product
 #we can achieve better results by examining the porportion and ensuring some type of fade occurred (fade to gray/black if necessary)
 #however this is a decent starting point
-codes_256 = [0, 0x5f, 0x87, 0xaf, 0xd7, 0xff]
-def get_code_index(v):
-  return 
-def dist_square(A,B,C, a,b,c):
-  return ((A-a)*(A-a) + (B-b)*(B-b) + (C-c)*(C-c))
-def dist(a, b):
-  return (a[0]-b[0])**2 + (a[1]-b[1])**2 + (a[2] - b[2])**2
-def get_closest(rgb):
-  r = int(0 if rgb[0] < 48 else 1 if rgb[0] < 115 else (rgb[0] - 35) / 40)
-  g = int(0 if rgb[1] < 48 else 1 if rgb[1] < 115 else (rgb[1] - 35) / 40)
-  b = int(0 if rgb[2] < 48 else 1 if rgb[2] < 115 else (rgb[2] - 35) / 40)
-  avg = int((r + g + b) / 3)
-  gray_index = int(23 if avg > 238 else (avg - 3) / 10)
-  gray_value = int(8 + 10 * gray_index)
-  color_err =  int(dist((codes_256[r], codes_256[g], codes_256[b]), rgb))
-  gray_err  = int(dist((gray_value, gray_value, gray_value), rgb))
-  return (16 + (36*r+6*g+b)) if color_err <= gray_err else 232 + gray_index;
+thresholds = [-1,0, 95, 135, 175, 215, 255, 256]
+
+#this algorithm is better at preserving color
+#TODO we need to handle grays better
 def fade256(source, to):
   source = RGB_256[int(source)]
   to = RGB_256[int(to)]
   rgb = [int(math.floor(to[0]+(source[0]-to[0])*FADE_LEVEL)), int(math.floor(to[1]+(source[1]-to[1])*FADE_LEVEL)), int(math.floor(to[2]+(source[2]-to[2])*FADE_LEVEL))]
-  return str(get_closest(rgb))
+  dir = (to[0]+to[1]+to[2]) / 3 - (source[0]+source[1]+source[2]) / 3
+
+  i = -1
+  result = [0,0,0]
+  for v in rgb: 
+    i += 1
+    j = 1
+    last = - 1
+    while j < len(thresholds) - 1:
+      if v > thresholds[j]:
+        j += 1
+        continue
+      if v < (thresholds[j]/2.5 + thresholds[j-1]/2):
+        result[i] = j - 1
+      else:
+        result[i] = j
+      break
+
+  r = result[0]
+  g = result[1]
+  b = result[2]
+
+  i = -1
+  r0 = rgb[0]
+  g0 = rgb[1]
+  b0 = rgb[2]
+  
+  thres = 25
+  dir = -1 if dir > thres  else 1
+  if dir < 0:
+    r += dir
+    g += dir
+    b += dir
+
+  #color fix
+  if r == g and g == b and r == b:
+    if (r0 >= g0 or r0 >= b0) and (r0 <= g0 or r0 <= b0):
+      if g0 - thres > r0: g = result[1]+dir
+      if b0 - thres > r0: b = result[2]+dir
+      if g0 + thres < r0: g = result[1]-dir
+      if b0 + thres < r0: b = result[2]-dir
+    elif (g0 >= r0 or g0 >= b0) and (g0 <= r0 or g0 <= b0):
+      if r0 - thres > g0: r = result[0]+dir
+      if b0 - thres > g0: b = result[2]+dir
+      if r0 + thres < g0: r = result[0]-dir
+      if b0 + thres < g0: b = result[2]-dir
+    elif (b0 >= g0 or b0 >= r0) and (b0 <= g0 or b0 <= r0):
+      if g0 - thres > b0: g = result[1]+dir
+      if r0 - thres > b0: r = result[0]+dir
+      if g0 + thres < b0: g = result[1]-dir
+      if r0 + thres < b0: r = result[0]-dir
+
+  if r == 0 or g == 0 or b == 0:
+    r += 1
+    g += 1
+    b += 1
+
+  if b == 7 or r == 7 or g == 7:
+    r -= 1
+    g -= 1
+    b -= 1
+
+  r = thresholds[r]
+  g = thresholds[g]
+  b = thresholds[b]
+
+  i = -1
+  for v in RGB_256:
+    i += 1
+    if v[0] ==  r and v[1] == g and v[2] == b:
+      return str(i)
 
 
 ERROR = -1
@@ -439,6 +496,6 @@ def fadeHi(hi):
 
   result['guifg'] = guifg
 
-  result['group'] = 'fade_' + str(guifg)[1:] + '_' + str(guibg)[1:]
+  result['group'] = 'fade_' + str(guifg) + '_' + str(guibg)
 
   return result

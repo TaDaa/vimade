@@ -49,9 +49,9 @@ let g:vimade = {
 }
 ```
 - **vimade.normalid** - if not specified, the normalid is determined when vimade is first loaded.  normalid provides the id of the "Normal" highlight which is used to calculate fading.  You can override this config with another highlight group.
-- **vimade.basefg** - basefg is a hexidecimal color code.  It's default is calculated as the "Normal" highlight guifg. 
-- **vimade.basebg** - basebg is a hexidecimal color code that is used as the color that text is faded against.  You can override this config with another hexidecimal color.
-- **vimade.fadelevel** - amount of fading applied between text and basebg.  0 will make the text the same color as the background and 1 applies no fading.  The default value is 0.4
+- **vimade.basefg** - basefg is a hexidecimal color (in gui) and a 256 color code (in term).  By default basefg is calculated as the "Normal" highlight guifg or ctermfg.
+- **vimade.basebg** - basebg is a hexidecimal color (in gui) and a 256 color code (in term).  basebg is used as the color that text is faded against.  You can override this config with another hexidecimal color.
+- **vimade.fadelevel** - amount of fading applied between text and basebg.  0 will make the text the same color as the background and 1 applies no fading.  The default value is 0.4.  If you are using terminal, you may need to tweak this value to get better results.
 - **vimade.rowbufsize** - the number of rows above and below of the determined scroll area that should be precalculated. Default is 30.
 - **vimade.colbufsize** - the number of cols left and right of the determined scroll area that should be precalculated. Default is 30.
 - **vimade.checkinterval** - the amount of time in milliseconds that vimade should check the screen for changes.  This config is mainly used to detect resize and scroll changes that occur on inactive windows.  Default is 32.
@@ -74,6 +74,10 @@ let g:vimade.fadelevel = 0.7
 - [X] Neovim (gui)
 - [X] Python3
 - [X] Python2
-- [ ] 256 color terminal support
+- [X] 256 color terminal support (Xterm)
 - [ ] Secondary buffer window highlighting
 - [ ] Vim Documentation/Help
+
+###### Todo
+- [ ] Support other terminals palletes? -- Open an issue if you need support for a different palette
+- [ ] Improve terminal color rounding for grays
