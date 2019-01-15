@@ -55,7 +55,7 @@ let g:vimade = {
 - **vimade.fadelevel** - amount of fading applied between text and basebg.  0 will make the text the same color as the background and 1 applies no fading.  The default value is 0.4.  If you are using terminal, you may need to tweak this value to get better results.
 - **vimade.rowbufsize** - the number of rows above and below of the determined scroll area that should be precalculated. Default is 30.
 - **vimade.colbufsize** - the number of cols left and right of the determined scroll area that should be precalculated. Default is 30.
-- **vimade.checkinterval** - the amount of time in milliseconds that vimade should check the screen for changes.  This config is mainly used to detect resize and scroll changes that occur on inactive windows.  Default is 32.
+- **vimade.checkinterval** - the amount of time in milliseconds that vimade should check the screen for changes.  This config is mainly used to detect resize and scroll changes that occur on inactive windows. Checkinterval does nothing on gvim, if you want to control the refresh time, see 'h updatetime'. Default is 32.  
 
 ##### Example
 *this example reduces the amount of fading applied to text*
@@ -76,9 +76,12 @@ let g:vimade.fadelevel = 0.7
 - [X] Python3
 - [X] Python2
 - [X] 256 color terminal support (Xterm)
+- [ ] Toggle vimade on/off
 - [ ] Secondary buffer window highlighting
 - [ ] Vim Documentation/Help
 
 ###### Todo
 - [ ] Support other terminals palletes? -- Open an issue if you need support for a different palette
 - [ ] Improve terminal color rounding for grays
+- [ ] Wrapped Text
+- [ ] Experiment with highlighted text within current window (limelight behavior)
