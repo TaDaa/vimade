@@ -2,6 +2,7 @@ if exists('g:vimade_loaded')
   finish
 endif
 let g:vimade_loaded = 1
+let s:IS_WIN32 = has('win32') && has('gui_running')
 
 let defaults = {
   \ "normalid": '',
@@ -40,7 +41,7 @@ if !exists('g:vimade_py_cmd')
 endif
 
 function! vimade#ScheduleCheckWindows()
-  if !exists('g:vimade_timer')
+  if !s:IS_WIN32 && !exists('g:vimade_timer')
     let g:vimade_timer = timer_start(g:vimade.checkinterval, 'vimade#CheckWindows')
   endif
 endfunction
@@ -54,7 +55,9 @@ function! vimade#Init()
 endfunction
 
 function! vimade#CheckWindows(num)
-  unlet g:vimade_timer
+  if !s:IS_WIN32
+    unlet g:vimade_timer
+  endif
   exec g:vimade_py_cmd join([
       \ "import vimade",
       \ "vimade.updateState({'activeBuffer': str(vim.current.buffer.number), 'activeTab': '".tabpagenr()."', 'activeWindow': '".win_getid(winnr())."', 'background':'".&background."'})",
@@ -101,4 +104,8 @@ augroup vimade
     au BufLeave * call vimade#FadeCurrentBuffer()
     au BufEnter * call vimade#UnfadeCurrentBuffer()
     au OptionSet diff call vimade#DiffToggled()
+    if s:IS_WIN32
+      au CursorHold * call vimade#CheckWindows(0)
+      au VimResized * call vimade#CheckWindows(0)
+    endif
 augroup END
