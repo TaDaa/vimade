@@ -2,7 +2,7 @@ if exists('g:vimade_loaded')
   finish
 endif
 let g:vimade_loaded = 1
-let s:IS_WIN32 = has('win32') && has('gui_running')
+let s:IS_WIN32 = has('win32') && has('gui_running') && !has('nvim')
 
 let defaults = {
   \ "normalid": '',
