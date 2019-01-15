@@ -78,10 +78,10 @@ let g:vimade.fadelevel = 0.7
 - [X] 256 color terminal support (Xterm)
 - [ ] Toggle vimade on/off
 - [ ] Secondary buffer window highlighting
-- [ ] Wrapped Text
 - [ ] Vim Documentation/Help
 
 ###### Todo
 - [ ] Support other terminals palletes? -- Open an issue if you need support for a different palette
 - [ ] Improve terminal color rounding for grays
+- [ ] Wrapped Text
 - [ ] Experiment with highlighted text within current window (limelight behavior)
