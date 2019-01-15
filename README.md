@@ -22,7 +22,8 @@
 ##### Compatibility
 - gui vim8+
 - gui nvim
-- terminal support is coming
+- xterm 256 colors
+- leave an issue if you need a different terminal palette supported
 
 ##### What/Why?
 - Vimade fades inactive/unfocused buffer text and removes the fade from focused buffers. 
