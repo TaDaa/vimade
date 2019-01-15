@@ -78,6 +78,7 @@ let g:vimade.fadelevel = 0.7
 - [X] 256 color terminal support (Xterm)
 - [ ] Toggle vimade on/off
 - [ ] Secondary buffer window highlighting
+- [ ] Wrapped Text
 - [ ] Vim Documentation/Help
 
 ###### Todo
