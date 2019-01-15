@@ -496,6 +496,10 @@ def fadeHi(hi):
 
   result['guifg'] = guifg
 
-  result['group'] = 'fade_' + str(guifg) + '_' + str(guibg)
+  group = 'fade_'
+  group += guifg[1:] if guifg and len(guifg) > 3 else str(guifg)
+  group += guibg[1:] if guibg and len(guibg) > 3 else str(guibg)
+
+  result['group'] = group
 
   return result
