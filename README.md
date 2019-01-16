@@ -63,6 +63,11 @@ let g:vimade = {
 let g:vimade = {}
 let g:vimade.fadelevel = 0.7
 ```
+##### Commands
+- **VimadeEnable** - Turns vimade on (Vimade is on by default)
+- **VimadeDisable** - Turns vimade off and unfades all buffers
+- **VimadeToggle** - Toggles between on/off states
+
 
 ##### Features
 - [X] Fade inactive buffers
@@ -76,7 +81,7 @@ let g:vimade.fadelevel = 0.7
 - [X] Python3
 - [X] Python2
 - [X] 256 color terminal support (Xterm)
-- [ ] Toggle vimade on/off
+- [X] Toggle vimade on/off (VimadeEnable, VimadeDisable, VimadeToggle)
 - [ ] Secondary buffer window highlighting
 - [ ] Vim Documentation/Help
 
