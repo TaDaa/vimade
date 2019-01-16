@@ -340,7 +340,7 @@ def unfadeWin(winState):
   matches = winState['matches']
   winid = str(winState['id'])
   if lastWin != winid:
-    vim.command('noautocmd silent call win_gotoid('+winid+')')
+    vim.command('noautocmd call win_gotoid('+winid+')')
   coords = FADE_STATE['buffers'][winState['buffer']]['coords']
   errs = 0
   if coords:
@@ -354,7 +354,7 @@ def unfadeWin(winState):
         vim.command('call matchdelete('+match+')')
   winState['matches'] = []
   if lastWin != winid:
-    vim.command('noautocmd silent call win_gotoid('+lastWin+')')
+    vim.command('noautocmd call win_gotoid('+lastWin+')')
   FADE_STATE['prevent'] = False
 
 def fadeWin(winState):
@@ -428,10 +428,11 @@ def fadeWin(winState):
         if setWin == False:
           setWin = True
           if lastWin != winid:
-            vim.command('noautocmd silent call win_gotoid('+winid+')')
+            vim.command('noautocmd call win_gotoid('+winid+')')
         ids.append('synID('+str_row+','+str(column)+',0)')
         gaps.append(column - 1)
       column = column + 1
+
     ids = vim.eval('[' + ','.join(ids) + ']')
 
     i = 0
@@ -445,7 +446,7 @@ def fadeWin(winState):
         exprs.append(vim_expr)
       else:
         hi = HI_CACHE[id]
-      colors[i] = {'id': id, 'hi': hi}
+      colors[gaps[i]] = {'id': id, 'hi': hi}
       i += 1
 
     if len(exprs):
@@ -466,7 +467,6 @@ def fadeWin(winState):
           else:
             match.append((row, column, 1))
       column += 1
-
     row = row + 1
   items = matches.items()
 
@@ -475,7 +475,7 @@ def fadeWin(winState):
     if IS_NVIM and not setWin:
       setWin = True
       if lastWin != winid:
-        vim.command('noautocmd silent call win_gotoid('+winid+')')
+        vim.command('noautocmd call win_gotoid('+winid+')')
     for (group, coords) in matches.items():
       i = 0
       end = len(coords)
@@ -484,9 +484,10 @@ def fadeWin(winState):
         i += 8
 
 
+
   if setWin:
     if lastWin != winid:
-      vim.command('noautocmd silent call win_gotoid('+lastWin+')')
+      vim.command('noautocmd call win_gotoid('+lastWin+')')
   FADE_STATE['prevent'] = False
   # print((time.time() - startTime) * 1000)
 
