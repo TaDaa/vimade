@@ -340,7 +340,7 @@ def unfadeWin(winState):
   matches = winState['matches']
   winid = str(winState['id'])
   if lastWin != winid:
-    vim.command('noautocmd call win_gotoid('+winid+')')
+    vim.command('noautocmd silent call win_gotoid('+winid+')')
   coords = FADE_STATE['buffers'][winState['buffer']]['coords']
   errs = 0
   if coords:
@@ -354,11 +354,8 @@ def unfadeWin(winState):
         vim.command('call matchdelete('+match+')')
   winState['matches'] = []
   if lastWin != winid:
-    vim.command('noautocmd call win_gotoid('+lastWin+')')
+    vim.command('noautocmd silent call win_gotoid('+lastWin+')')
   FADE_STATE['prevent'] = False
-
-  
-
 
 def fadeWin(winState):
   FADE_STATE['prevent'] = True
@@ -420,6 +417,10 @@ def fadeWin(winState):
     if colors == None:
       colors = coords[index] = [None] * text_ln
     str_row = str(row)
+
+    ids = []
+    gaps = []
+
     while column <= endCol:
       #get syntax id and cache
       current = colors[column - 1]
@@ -427,19 +428,33 @@ def fadeWin(winState):
         if setWin == False:
           setWin = True
           if lastWin != winid:
-            vim.command('noautocmd call win_gotoid('+winid+')')
-        prev_id = id = vim.eval('synID('+str_row+','+str(column)+',0)')
-        if not id in HI_CACHE:
-          #create & cache highlight
-          hi = HI_CACHE[id] = fadeHi(vim.eval('vimade#GetHi('+id+')'))
-          vim_expr = 'hi ' + hi['group'] + HI_FG + hi['guifg']
-          if hi['guibg']:
-            vim_expr += HI_BG + hi['guibg']
-          vim.command(vim_expr)
-        else:
-          hi = HI_CACHE[id]
-        current = colors[column - 1] = {'id': id, 'hi': hi}
-      if not winid in current:
+            vim.command('noautocmd silent call win_gotoid('+winid+')')
+        ids.append('synID('+str_row+','+str(column)+',0)')
+        gaps.append(column - 1)
+      column = column + 1
+    ids = vim.eval('[' + ','.join(ids) + ']')
+
+    i = 0
+    exprs = []
+    for id in ids:
+      if not id in HI_CACHE:
+        hi = HI_CACHE[id] = fadeHi(vim.eval('vimade#GetHi('+id+')'))
+        vim_expr = 'hi ' + hi['group'] + HI_FG + hi['guifg']
+        if hi['guibg']:
+          vim_expr += HI_BG + hi['guibg']
+        exprs.append(vim_expr)
+      else:
+        hi = HI_CACHE[id]
+      colors[i] = {'id': id, 'hi': hi}
+      i += 1
+
+    if len(exprs):
+      vim.command('|'.join(exprs))
+
+    column = startCol
+    while column <= endCol:
+      current = colors[column - 1]
+      if current and not winid in current:
         hi = current['hi']
         current[winid] = True
         if not hi['group'] in matches:
@@ -450,8 +465,8 @@ def fadeWin(winState):
             match[-1] = (row, match[-1][1], match[-1][2] + 1)
           else:
             match.append((row, column, 1))
+      column += 1
 
-      column = column + 1
     row = row + 1
   items = matches.items()
 
@@ -460,7 +475,7 @@ def fadeWin(winState):
     if IS_NVIM and not setWin:
       setWin = True
       if lastWin != winid:
-        vim.command('noautocmd call win_gotoid('+winid+')')
+        vim.command('noautocmd silent call win_gotoid('+winid+')')
     for (group, coords) in matches.items():
       i = 0
       end = len(coords)
@@ -471,7 +486,7 @@ def fadeWin(winState):
 
   if setWin:
     if lastWin != winid:
-      vim.command('noautocmd call win_gotoid('+lastWin+')')
+      vim.command('noautocmd silent call win_gotoid('+lastWin+')')
   FADE_STATE['prevent'] = False
   # print((time.time() - startTime) * 1000)
 
