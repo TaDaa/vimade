@@ -85,3 +85,4 @@ let g:vimade.fadelevel = 0.7
 - [ ] Improve terminal color rounding for grays
 - [ ] Wrapped Text
 - [ ] Experiment with highlighted text within current window (limelight behavior)
+- [ ] Investigate sign column
