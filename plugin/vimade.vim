@@ -1,8 +1,11 @@
 if exists('g:vimade_loaded')
   finish
 endif
+if !exists('g:vimade_running')
+  let g:vimade_running = 1
+endif
 let g:vimade_loaded = 1
-let s:IS_GVIM = has('gui_running') && !has('nvim') && execute('version')=~"GUI version"
+let g:vimade_gvim = has('gui_running') && !has('nvim') && execute('version')=~"GUI version"
 
 let defaults = {
   \ "normalid": '',
@@ -40,63 +43,16 @@ if !exists('g:vimade_py_cmd')
     endif
 endif
 
-function! vimade#ScheduleCheckWindows()
-  if !s:IS_GVIM && !exists('g:vimade_timer')
-    let g:vimade_timer = timer_start(g:vimade.checkinterval, 'vimade#CheckWindows')
-  endif
-endfunction
-
-function! vimade#Init()
-  call vimade#ScheduleCheckWindows()
-  exec g:vimade_py_cmd join([
-      \ "import vimade",
-      \ "vimade.updateState({'activeBuffer': str(vim.current.buffer.number), 'activeTab': '".tabpagenr()."', 'activeWindow': '".win_getid(winnr())."', 'background': '".&background."'})",
-  \ ], "\n")
-endfunction
-
-function! vimade#CheckWindows(num)
-  if !s:IS_GVIM
-    unlet g:vimade_timer
-  endif
-  exec g:vimade_py_cmd join([
-      \ "import vimade",
-      \ "vimade.updateState({'activeBuffer': str(vim.current.buffer.number), 'activeTab': '".tabpagenr()."', 'activeWindow': '".win_getid(winnr())."', 'background':'".&background."'})",
-  \ ], "\n")
-  call vimade#ScheduleCheckWindows()
-endfunction
-
-function! vimade#FadeCurrentBuffer()
-    exec g:vimade_py_cmd join([
-        \ "import vimade",
-        \ "vimade.updateState({'activeBuffer': -1, 'activeTab': '".tabpagenr()."', 'activeWindow': '".win_getid(winnr())."', 'background':'".&background."'})",
-    \ ], "\n")
-endfunction
-
-function! vimade#UnfadeCurrentBuffer()
-    exec g:vimade_py_cmd join([
-        \ "import vimade,vim",
-        \ "vimade.updateState({'activeBuffer': str(vim.current.buffer.number), 'activeTab': '".tabpagenr()."', 'activeWindow': '".win_getid(winnr())."', 'background':'".&background."'})",
-    \ ], "\n")
-endfunction
-
-function! vimade#DiffToggled()
-    let winid = win_getid(winnr())
-    exec g:vimade_py_cmd join([
-        \ "import vimade,vim",
-        \ "vimade.updateState({'diff': {'winid':".winid.",'value':".&diff."}, 'activeBuffer': str(vim.current.buffer.number), 'activeTab': '".tabpagenr()."', 'activeWindow': '".winid. "', 'background':'".&background."'})",
-    \ ], "\n")
-endfunction
-
-function! vimade#GetHi(id)
-  let tid = synIDtrans(a:id)
-  return [synIDattr(tid, 'fg#'), synIDattr(tid, 'bg#')]
-endfunction
-
 let g:vimade_plugin_current_directory = resolve(expand('<sfile>:p:h').'/../lib')
 exec g:vimade_py_cmd  join([
     \ "import vim",
     \ "sys.path.append(vim.eval('g:vimade_plugin_current_directory'))",
 \ ], "\n")
+
+
+command! VimadeEnable call vimade#Enable()
+command! VimadeDisable call vimade#Disable()
+command! VimadeToggle call vimade#Toggle()
 
 augroup vimade 
     au!
@@ -104,7 +60,7 @@ augroup vimade
     au BufLeave * call vimade#FadeCurrentBuffer()
     au BufEnter * call vimade#UnfadeCurrentBuffer()
     au OptionSet diff call vimade#DiffToggled()
-    if s:IS_GVIM
+    if g:vimade_gvim
       au CursorHold * call vimade#CheckWindows(0)
       au VimResized * call vimade#CheckWindows(0)
     endif

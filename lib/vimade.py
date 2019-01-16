@@ -187,7 +187,12 @@ def updateGlobals():
 
   return returnState
 
-
+def unfadeAll():
+  currentWindows = FADE_STATE['windows']
+  for winState in currentWindows.values():
+    if winState['faded']:
+      unfadeWin(winState)
+      winState['faded'] = False
 
 def updateState(nextState = None):
   global HI_CACHE
