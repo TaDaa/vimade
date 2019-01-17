@@ -24,7 +24,7 @@ function! vimade#CheckWindows(num)
   if g:vimade_running
     exec g:vimade_py_cmd join([
         \ "import vimade",
-        \ "vimade.updateState({'activeBuffer': str(vim.current.buffer.number), 'activeTab': '".tabpagenr()."', 'activeWindow': '".win_getid(winnr())."', 'background':'".&background."'})",
+        \ "vimade.updateState({'activeBuffer': str(vim.current.buffer.number), 'activeTab': '".tabpagenr()."', 'activeWindow': '".win_getid(winnr())."'})",
     \ ], "\n")
   endif
   call vimade#ScheduleCheckWindows()
@@ -34,7 +34,7 @@ function! vimade#FadeCurrentBuffer()
     if g:vimade_running
       exec g:vimade_py_cmd join([
           \ "import vimade",
-          \ "vimade.updateState({'activeBuffer': -1, 'activeTab': '".tabpagenr()."', 'activeWindow': '".win_getid(winnr())."', 'background':'".&background."'})",
+          \ "vimade.updateState({'activeBuffer': -1, 'activeTab': '".tabpagenr()."', 'activeWindow': '".win_getid(winnr())."'})",
       \ ], "\n")
     endif
 endfunction
@@ -43,7 +43,7 @@ function! vimade#UnfadeCurrentBuffer()
     if g:vimade_running
       exec g:vimade_py_cmd join([
           \ "import vimade,vim",
-          \ "vimade.updateState({'activeBuffer': str(vim.current.buffer.number), 'activeTab': '".tabpagenr()."', 'activeWindow': '".win_getid(winnr())."', 'background':'".&background."'})",
+          \ "vimade.updateState({'activeBuffer': str(vim.current.buffer.number), 'activeTab': '".tabpagenr()."', 'activeWindow': '".win_getid(winnr())."'})",
       \ ], "\n")
     endif
 endfunction
@@ -53,7 +53,7 @@ function! vimade#DiffToggled()
     if g:vimade_running
       exec g:vimade_py_cmd join([
           \ "import vimade,vim",
-          \ "vimade.updateState({'diff': {'winid':".winid.",'value':".&diff."}, 'activeBuffer': str(vim.current.buffer.number), 'activeTab': '".tabpagenr()."', 'activeWindow': '".winid. "', 'background':'".&background."'})",
+          \ "vimade.updateState({'diff': {'winid':".winid.",'value':".&diff."}, 'activeBuffer': str(vim.current.buffer.number), 'activeTab': '".tabpagenr()."', 'activeWindow': '".winid. "'})",
       \ ], "\n")
   endif
 endfunction
@@ -84,6 +84,6 @@ function! vimade#Init()
   call vimade#ScheduleCheckWindows()
   exec g:vimade_py_cmd join([
       \ "import vimade",
-      \ "vimade.updateState({'activeBuffer': str(vim.current.buffer.number), 'activeTab': '".tabpagenr()."', 'activeWindow': '".win_getid(winnr())."', 'background': '".&background."'})",
+      \ "vimade.updateState({'activeBuffer': str(vim.current.buffer.number), 'activeTab': '".tabpagenr()."', 'activeWindow': '".win_getid(winnr())."'})",
   \ ], "\n")
 endfunction

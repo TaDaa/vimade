@@ -11,6 +11,8 @@ if (sys.version_info > (3, 0)):
 FADE_LEVEL = None
 BASE_HI = [None, None]
 BASE_FADE = None
+BACKGROUND = None
+COLORSCHEME = None
 ROW_BUF_SIZE = None
 COL_BUF_SIZE = None
 NORMAL_ID = None
@@ -132,9 +134,14 @@ def updateGlobals():
   global FADE
   global HI_FG
   global HI_BG
+  global COLORSCHEME
+  global BACKGROUND
 
   returnState = READY 
-  nextGlobals = vim.eval('g:vimade')
+  allGlobals = vim.eval('[g:vimade, &background, execute(":colorscheme")]')
+  nextGlobals = allGlobals[0]
+  background = allGlobals[1]
+  colorscheme = allGlobals[2]
   fadelevel = float(nextGlobals['fadelevel'])
   rowbufsize = int(nextGlobals['rowbufsize'])
   colbufsize = int(nextGlobals['colbufsize'])
@@ -145,6 +152,12 @@ def updateGlobals():
   ROW_BUF_SIZE = rowbufsize
   COL_BUF_SIZE = colbufsize
 
+  if COLORSCHEME != colorscheme:
+    COLORSCHEME = colorscheme
+    returnState = FULL_INVALIDATE
+  if BACKGROUND != background:
+    BACKGROUND = background
+    returnState = FULL_INVALIDATE
   if FADE_LEVEL != fadelevel:
     FADE_LEVEL = fadelevel 
     returnState = FULL_INVALIDATE
@@ -204,10 +217,6 @@ def updateState(nextState = None):
   #Error condition - just return
   if status == ERROR:
     return
-
-  if FADE_STATE['background'] != nextState['background']:
-    FADE_STATE['background'] = nextState['background']
-    status = FULL_INVALIDATE
 
   #Full invalidate - clean cache and unfade all windows + reset buffesr
   if status == FULL_INVALIDATE:
