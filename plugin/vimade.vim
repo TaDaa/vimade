@@ -43,6 +43,10 @@ command! VimadeEnable call vimade#Enable()
 command! VimadeDisable call vimade#Disable()
 command! VimadeToggle call vimade#Toggle()
 
+if v:vim_did_enter
+  call vimade#Init()
+endif
+
 augroup vimade 
     au!
     au VimEnter * call vimade#Init()
