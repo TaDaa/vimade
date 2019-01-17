@@ -36,9 +36,6 @@ def fadeHex(source, to):
     rgb = [int(math.floor(to[0]+(source[0]-to[0])*FADE_LEVEL)), int(math.floor(to[1]+(source[1]-to[1])*FADE_LEVEL)), int(math.floor(to[2]+(source[2]-to[2])*FADE_LEVEL))]
     return '#' + hex(rgb[0])[2:] + hex(rgb[1])[2:] + hex(rgb[2])[2:]
 
-###NOT MY CODE -- this is a temp implementation to get terminal up and running...not too happy the visual product
-#we can achieve better results by examining the porportion and ensuring some type of fade occurred (fade to gray/black if necessary)
-#however this is a decent starting point
 thresholds = [-1,0, 95, 135, 175, 215, 255, 256]
 
 #this algorithm is better at preserving color

@@ -22,17 +22,6 @@ else
   let g:vimade = defaults
 endif
 
-if g:vimade.normalid == "" || g:vimade.normalid == 0
-  let i = 0
-  while i < 400
-      if synIDattr(i, 'name') == 'Normal'
-          let g:vimade.normalid = i
-          break
-      endif
-      let i += 1
-  endwhile
-endif
-
 if !exists('g:vimade_py_cmd')
     if has('python3')
         let g:vimade_py_cmd = "py3"

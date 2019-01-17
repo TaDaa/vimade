@@ -70,6 +70,17 @@ function! vimade#ScheduleCheckWindows()
 endfunction
 
 function! vimade#Init()
+  if g:vimade.normalid == "" || g:vimade.normalid == 0
+    let i = 0
+    while i < 400
+        if synIDattr(i, 'name') == 'Normal'
+            let g:vimade.normalid = i
+            break
+        endif
+        let i += 1
+    endwhile
+  endif
+
   call vimade#ScheduleCheckWindows()
   exec g:vimade_py_cmd join([
       \ "import vimade",
