@@ -72,13 +72,7 @@ endfunction
 function! vimade#Init()
   if g:vimade.normalid == "" || g:vimade.normalid == 0
     let i = 0
-    while i < 400
-        if synIDattr(i, 'name') == 'Normal'
-            let g:vimade.normalid = i
-            break
-        endif
-        let i += 1
-    endwhile
+    let g:vimade.normalid = hlID('Normal')
   endif
 
   call vimade#ScheduleCheckWindows()
@@ -86,4 +80,34 @@ function! vimade#Init()
       \ "import vimade",
       \ "vimade.updateState({'activeBuffer': str(vim.current.buffer.number), 'activeTab': '".tabpagenr()."', 'activeWindow': '".win_getid(winnr())."'})",
   \ ], "\n")
+endfunction
+
+function! vimade#GetInfo()
+  exec g:vimade_py_cmd join([
+      \ "import vimade",
+      \ "import vim",
+      \ "vim.vars['vimade_python_info'] = vimade.getInfo()",
+  \ ], "\n")
+  return {
+      \ 'version': '0.0.1', 
+      \ 'config': g:vimade,
+      \ 'python': g:vimade_python_info,
+      \ 'other': {
+        \ 'normal_id': g:vimade.normalid,
+        \ 'normal_hi': vimade#GetHi(g:vimade.normalid),
+        \ 'syntax': &syntax,
+        \ 'colorscheme': execute(':colorscheme'),
+        \ 'background': &background,
+        \ 'has_python': has('python'),
+        \ 'has_python3': has('python3'),
+        \ 'has_gui': has('gui'),
+        \ 'has_nvim': has('nvim'),
+        \ 'has_gui_running': has('gui_running'),
+        \ 'vimade_py_cmd': g:vimade_py_cmd,
+        \ 'vimade_running': g:vimade_running,
+        \ 'vimade_timer': g:vimade_timer,
+        \ 'vimade_gvim': g:vimade_gvim,
+        \ 'vimade_loaded': g:vimade_loaded,
+      \ }
+  \ }
 endfunction
