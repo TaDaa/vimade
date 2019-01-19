@@ -1,39 +1,13 @@
-import re
 import sys
 import vim
 import math
 import time
-import subprocess
-import os
 from term_256 import RGB_256
 
 IS_V3 = False
 if (sys.version_info > (3, 0)):
     IS_V3 = True
 
-def getInfo():
-  return {
-      'FADE_LEVEL': FADE_LEVEL,
-      'BASE_HI': BASE_HI,
-      'BASE_FADE': BASE_FADE,
-      'BACKGROUND': BACKGROUND,
-      'COLORSCHEME': COLORSCHEME,
-      'ROW_BUF_SIZE': ROW_BUF_SIZE,
-      'COL_BUF_SIZE': COL_BUF_SIZE,
-      'NORMAL_ID': NORMAL_ID,
-      'BASE_BG': BASE_BG,
-      'BASE_FG': BASE_FG,
-      'IS_NVIM': IS_NVIM,
-      'IS_TERM': IS_TERM,
-      'IS_TMUX': IS_TMUX,
-      'HI_FG': HI_FG,
-      'HI_BG': HI_BG,
-      'TERM_FG': TERM_FG,
-      'TERM_BG': TERM_BG
-  }
-
-DIR = os.path.dirname(__file__)
-TMUX_SH = ['bash' , os.path.realpath(os.path.join(DIR, '..', 'tmux.sh'))]
 FADE_LEVEL = None
 BASE_HI = [None, None]
 BASE_FADE = None
@@ -46,6 +20,7 @@ BASE_BG = ''
 BASE_FG = ''
 FADE_STATE = {
   'windows' : {},
+  'background': '',
   'prevent': False,
   'buffers': {},
   'activeWindow': str(vim.current.window.number),
@@ -53,44 +28,9 @@ FADE_STATE = {
 }
 HI_CACHE = {}
 IS_NVIM = vim.eval('has("nvim")')
-IS_TERM = vim.eval('has("gui_running")') == '0'
-IS_TMUX = vim.eval('$TMUX') != ''
 FADE = None
 HI_FG = ''
 HI_BG = ''
-TERM_FG = '248'
-TERM_FG_GUI = '#FFFFFF'
-TERM_BG = '0'
-TERM_BG_GUI = '#000000'
-
-def termCheck():
-  global TERM_FG
-  global TERM_BG
-  if IS_TERM:
-    (fg, bg) = vim.eval('[v:termrfgresp, v:termrbgresp]')
-    if not fg and not bg and IS_TMUX:
-      try:
-        fg = str(subprocess.check_output(TMUX_SH + ['10']))
-        bg = str(subprocess.check_output(TMUX_SH + ['11']))
-      except:
-        print("could not load tmux defaults, using global default")
-        return
-
-    fg = fg.split('rgb:')[1:]
-    fg = fg[0] if len(fg) else ''
-    bg = bg.split('rgb:')[1:]
-    bg = bg[0] if len(bg) else ''
-
-
-    output = [fg, bg]
-    output = list(map(lambda x: re.findall("[0-9a-zA-Z]{2,}", x), output))
-
-    if output[0] and len(output[0]):
-      TERM_FG = list(map(lambda x: int(x[0:2], 16), output[0]))
-    if output[1] and len(output[1]):
-      TERM_BG = list(map(lambda x: int(x[0:2], 16), output[1]))
-
-termCheck()
 
 def fadeHex(source, to):
     source = [int(source[1:3], 16), int(source[3:5], 16), int(source[5:7], 16)]
@@ -103,10 +43,8 @@ thresholds = [-1,0, 95, 135, 175, 215, 255, 256]
 #this algorithm is better at preserving color
 #TODO we need to handle grays better
 def fade256(source, to):
-  if not isinstance(source, list):
-    source = RGB_256[int(source)]
-  if not isinstance(to, list):
-    to = RGB_256[int(to)]
+  source = RGB_256[int(source)]
+  to = RGB_256[int(to)]
   rgb = [int(math.floor(to[0]+(source[0]-to[0])*FADE_LEVEL)), int(math.floor(to[1]+(source[1]-to[1])*FADE_LEVEL)), int(math.floor(to[2]+(source[2]-to[2])*FADE_LEVEL))]
   dir = (to[0]+to[1]+to[2]) / 3 - (source[0]+source[1]+source[2]) / 3
 
@@ -200,11 +138,10 @@ def updateGlobals():
   global BACKGROUND
 
   returnState = READY 
-  allGlobals = vim.eval('[g:vimade, &background, execute(":colorscheme"), &termguicolors]')
+  allGlobals = vim.eval('[g:vimade, &background, execute(":colorscheme")]')
   nextGlobals = allGlobals[0]
   background = allGlobals[1]
   colorscheme = allGlobals[2]
-  termguicolors = int(allGlobals[3])
   fadelevel = float(nextGlobals['fadelevel'])
   rowbufsize = int(nextGlobals['rowbufsize'])
   colbufsize = int(nextGlobals['colbufsize'])
@@ -235,12 +172,6 @@ def updateGlobals():
     if not basebg:
       basebg = base_hi[1]
 
-  if IS_TERM:
-    if not basefg:
-      basefg = TERM_FG_GUI if termguicolors else TERM_FG
-    if not basebg:
-      basebg = TERM_BG_GUI if termguicolors else TERM_BG
-
   if basefg and BASE_FG != basefg:
     BASE_HI[0] = BASE_FG = basefg
     returnState = FULL_INVALIDATE
@@ -248,8 +179,7 @@ def updateGlobals():
     BASE_HI[1] = BASE_BG = basebg
     returnState = FULL_INVALIDATE
 
-
-  if returnState == FULL_INVALIDATE and len(BASE_FG) > 0 and len(BASE_BG) > 0:
+  if returnState == FULL_INVALIDATE and len(BASE_FG) > 2 and len(BASE_BG) > 2:
     BASE_HI[0] = BASE_FG
     BASE_HI[1] = BASE_BG
     if len(BASE_FG) == 7 or len(BASE_BG) == 7:
