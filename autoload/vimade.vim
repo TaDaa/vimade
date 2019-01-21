@@ -18,7 +18,7 @@ function! vimade#Toggle()
 endfunction
 
 function! vimade#CheckWindows(num)
-  if !g:vimade_gvim
+  if !g:vimade_usecursorhold
     unlet g:vimade_timer
   endif
   if g:vimade_running
@@ -64,26 +64,21 @@ function! vimade#GetHi(id)
 endfunction
 
 function! vimade#ScheduleCheckWindows()
-  if !g:vimade_gvim && !exists('g:vimade_timer')
+  if !g:vimade_usecursorhold && !exists('g:vimade_timer')
     let g:vimade_timer = timer_start(g:vimade.checkinterval, 'vimade#CheckWindows')
   endif
 endfunction
 
 function! vimade#Init()
   if g:vimade.normalid == "" || g:vimade.normalid == 0
-    let i = 0
-    while i < 400
-        if synIDattr(i, 'name') == 'Normal'
-            let g:vimade.normalid = i
-            break
-        endif
-        let i += 1
-    endwhile
+    let g:vimade.normalid = hlID('Normal')
   endif
 
   call vimade#ScheduleCheckWindows()
-  exec g:vimade_py_cmd join([
-      \ "import vimade",
-      \ "vimade.updateState({'activeBuffer': str(vim.current.buffer.number), 'activeTab': '".tabpagenr()."', 'activeWindow': '".win_getid(winnr())."'})",
-  \ ], "\n")
+  call vimade#CheckWindows(0)
+
+  try
+    call timer_start(g:vimade.checkinterval, 'vimade#CheckWindows')
+  catch
+  endtry
 endfunction

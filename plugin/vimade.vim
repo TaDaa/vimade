@@ -5,7 +5,9 @@ if !exists('g:vimade_running')
   let g:vimade_running = 1
 endif
 let g:vimade_loaded = 1
-let g:vimade_gvim = has('gui_running') && !has('nvim') && execute('version')=~"GUI version"
+if !exists('g:vimade_usecursorhold')
+  let g:vimade_usecursorhold = has('gui_running') && !has('nvim') && execute('version')=~"GUI version"
+endif
 
 let defaults = {
   \ "normalid": '',
@@ -53,7 +55,7 @@ augroup vimade
     au BufLeave * call vimade#FadeCurrentBuffer()
     au BufEnter * call vimade#UnfadeCurrentBuffer()
     au OptionSet diff call vimade#DiffToggled()
-    if g:vimade_gvim
+    if g:vimade_usecursorhold
       au CursorHold * call vimade#CheckWindows(0)
       au VimResized * call vimade#CheckWindows(0)
     endif
