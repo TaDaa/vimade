@@ -2,13 +2,46 @@ import sys
 import vim
 import math
 import time
-from term_256 import RGB_256
+import subprocess
+import os
+from term_256 import RGB_256, LOOKUP_256_RGB
 
 IS_V3 = False
 if (sys.version_info > (3, 0)):
     IS_V3 = True
 
+def getInfo():
+  return {
+      'FADE_LEVEL': FADE_LEVEL,
+      'BASE_HI': BASE_HI,
+      'BASE_FADE': BASE_FADE,
+      'BACKGROUND': BACKGROUND,
+      'COLORSCHEME': COLORSCHEME,
+      'ROW_BUF_SIZE': ROW_BUF_SIZE,
+      'COL_BUF_SIZE': COL_BUF_SIZE,
+      'NORMAL_ID': NORMAL_ID,
+      'BASE_BG': BASE_BG,
+      'BASE_FG': BASE_FG,
+      'BASE_BG_LAST': BASE_BG_LAST,
+      'BASE_FG_LAST': BASE_FG_LAST,
+      'BASE_BG_EXP': BASE_BG_EXP,
+      'BASE_FG_EXP': BASE_FG_EXP,
+      'IS_NVIM': IS_NVIM,
+      'IS_TERM': IS_TERM,
+      'IS_TMUX': IS_TMUX,
+      'HI_FG': HI_FG,
+      'HI_BG': HI_BG,
+      'TERM_FG': TERM_FG,
+      'TERM_BG': TERM_BG,
+      'TERMGUICOLORS': TERMGUICOLORS,
+      'ORIGINAL_BACKGROUND': ORIGINAL_BACKGROUND
+  }
+
+# DIR = os.path.dirname(__file__)
+# TMUX_SH = ['bash' , os.path.realpath(os.path.join(DIR, '..', 'tmux.sh'))]
+
 FADE_LEVEL = None
+TERMGUICOLORS = None
 BASE_HI = [None, None]
 BASE_FADE = None
 BACKGROUND = None
@@ -18,6 +51,10 @@ COL_BUF_SIZE = None
 NORMAL_ID = None
 BASE_BG = ''
 BASE_FG = ''
+BASE_BG_EXP = ''
+BASE_FG_EXP = ''
+BASE_BG_LAST = ''
+BASE_FG_LAST = ''
 FADE_STATE = {
   'windows' : {},
   'background': '',
@@ -27,19 +64,67 @@ FADE_STATE = {
   'activeBuffer': str(vim.current.buffer.number)
 }
 HI_CACHE = {}
-IS_NVIM = vim.eval('has("nvim")')
+(IS_NVIM, IS_TERM, IS_TMUX, ORIGINAL_BACKGROUND) = vim.eval('[has("nvim"), has("gui_running"), $TMUX, &background]')
+IS_NVIM = int(IS_NVIM) == 1
+IS_TERM = int(IS_TERM) == 0
+IS_TMUX = IS_TMUX != ''
 FADE = None
 HI_FG = ''
 HI_BG = ''
+(TERM_FG, TERM_BG) = ('#FFFFFF','#000000') if ORIGINAL_BACKGROUND.index('dark') > -1 else ('#000000', '#FFFFFF')
+def fromHexStringToRGB(source):
+  return [int(source[1:3], 16), int(source[3:5], 16), int(source[5:7], 16)]
+def fromRGBToHexString(source):
+  return '#' + ''.join([(x if len(x) > 1 else ('0' + x)) for x in [(hex(int(x))[2:]) for x in source]])
+def from256ToRGB(source):
+  return RGB_256[source]
+def from256RGBToHexString(source):
+  return fromRGBToHexString(from256ToRGB(source))
+
+
+# def termCheck():
+  # global TERM_FG
+  # global TERM_BG
+  # if IS_TERM:
+    # (fg, bg) = vim.eval('[v:termrfgresp, v:termrbgresp]')
+    # if not fg and not bg and IS_TMUX:
+      # try:
+        # fg = str(subprocess.check_output(TMUX_SH + ['10']))
+        # bg = str(subprocess.check_output(TMUX_SH + ['11']))
+      # except:
+        # print("could not load tmux defaults, using global default")
+        # return
+
+    # fg = fg.split('rgb:')[1:]
+    # fg = fg[0] if len(fg) else ''
+    # bg = bg.split('rgb:')[1:]
+    # bg = bg[0] if len(bg) else ''
+
+
+    # output = [fg, bg]
+    # output = list(map(lambda x: re.findall("[0-9a-zA-Z]{2,}", x), output))
+
+    # if output[0] and len(output[0]):
+      # TERM_FG = list(map(lambda x: int(x[0:2], 16), output[0]))
+    # if output[1] and len(output[1]):
+      # TERM_BG = list(map(lambda x: int(x[0:2], 16), output[1]))
+
+# termCheck()
 
 def fadeHex(source, to):
     if not isinstance(source, list):
       source = [int(source[1:3], 16), int(source[3:5], 16), int(source[5:7], 16)]
     if not isinstance(to, list):
       to = [int(to[1:3], 16), int(to[3:5], 16), int(to[5:7], 16)]
-    r = hex(int(math.floor(to[0]+(source[0]-to[0])*FADE_LEVEL)))[2:]
-    g = hex(int(math.floor(to[1]+(source[1]-to[1])*FADE_LEVEL)))[2:]
-    b = hex(int(math.floor(to[2]+(source[2]-to[2])*FADE_LEVEL)))[2:]
+    if source != to:
+      r = hex(int(math.floor(to[0]+(source[0]-to[0])*FADE_LEVEL)))[2:]
+      g = hex(int(math.floor(to[1]+(source[1]-to[1])*FADE_LEVEL)))[2:]
+      b = hex(int(math.floor(to[2]+(source[2]-to[2])*FADE_LEVEL)))[2:]
+    else:
+      r = hex(to[0])[2:]
+      g = hex(to[1])[2:]
+      b = hex(to[2])[2:]
+
     if len(r) < 2:
       r = '0' + r
     if len(g) < 2:
@@ -54,80 +139,84 @@ thresholds = [-1,0, 95, 135, 175, 215, 255, 256]
 #this algorithm is better at preserving color
 #TODO we need to handle grays better
 def fade256(source, to):
-  source = RGB_256[int(source)]
-  to = RGB_256[int(to)]
-  rgb = [int(math.floor(to[0]+(source[0]-to[0])*FADE_LEVEL)), int(math.floor(to[1]+(source[1]-to[1])*FADE_LEVEL)), int(math.floor(to[2]+(source[2]-to[2])*FADE_LEVEL))]
-  dir = (to[0]+to[1]+to[2]) / 3 - (source[0]+source[1]+source[2]) / 3
+  if not isinstance(source, list):
+    source = RGB_256[int(source)]
+  if not isinstance(to, list):
+    to = RGB_256[int(to)]
+  if source != to:
+    rgb = [int(math.floor(to[0]+(source[0]-to[0])*FADE_LEVEL)), int(math.floor(to[1]+(source[1]-to[1])*FADE_LEVEL)), int(math.floor(to[2]+(source[2]-to[2])*FADE_LEVEL))]
+    dir = (to[0]+to[1]+to[2]) / 3 - (source[0]+source[1]+source[2]) / 3
 
-  i = -1
-  result = [0,0,0]
-  for v in rgb: 
-    i += 1
-    j = 1
-    last = - 1
-    while j < len(thresholds) - 1:
-      if v > thresholds[j]:
-        j += 1
-        continue
-      if v < (thresholds[j]/2.5 + thresholds[j-1]/2):
-        result[i] = j - 1
-      else:
-        result[i] = j
-      break
+    i = -1
+    result = [0,0,0]
+    for v in rgb: 
+      i += 1
+      j = 1
+      last = - 1
+      while j < len(thresholds) - 1:
+        if v > thresholds[j]:
+          j += 1
+          continue
+        if v < (thresholds[j]/2.5 + thresholds[j-1]/2):
+          result[i] = j - 1
+        else:
+          result[i] = j
+        break
 
-  r = result[0]
-  g = result[1]
-  b = result[2]
+    r = result[0]
+    g = result[1]
+    b = result[2]
 
-  i = -1
-  r0 = rgb[0]
-  g0 = rgb[1]
-  b0 = rgb[2]
-  
-  thres = 25
-  dir = -1 if dir > thres  else 1
-  if dir < 0:
-    r += dir
-    g += dir
-    b += dir
+    i = -1
+    r0 = rgb[0]
+    g0 = rgb[1]
+    b0 = rgb[2]
+    
+    thres = 25
+    dir = -1 if dir > thres  else 1
+    if dir < 0:
+      r += dir
+      g += dir
+      b += dir
 
-  #color fix
-  if r == g and g == b and r == b:
-    if (r0 >= g0 or r0 >= b0) and (r0 <= g0 or r0 <= b0):
-      if g0 - thres > r0: g = result[1]+dir
-      if b0 - thres > r0: b = result[2]+dir
-      if g0 + thres < r0: g = result[1]-dir
-      if b0 + thres < r0: b = result[2]-dir
-    elif (g0 >= r0 or g0 >= b0) and (g0 <= r0 or g0 <= b0):
-      if r0 - thres > g0: r = result[0]+dir
-      if b0 - thres > g0: b = result[2]+dir
-      if r0 + thres < g0: r = result[0]-dir
-      if b0 + thres < g0: b = result[2]-dir
-    elif (b0 >= g0 or b0 >= r0) and (b0 <= g0 or b0 <= r0):
-      if g0 - thres > b0: g = result[1]+dir
-      if r0 - thres > b0: r = result[0]+dir
-      if g0 + thres < b0: g = result[1]-dir
-      if r0 + thres < b0: r = result[0]-dir
+    #color fix
+    if r == g and g == b and r == b:
+      if (r0 >= g0 or r0 >= b0) and (r0 <= g0 or r0 <= b0):
+        if g0 - thres > r0: g = result[1]+dir
+        if b0 - thres > r0: b = result[2]+dir
+        if g0 + thres < r0: g = result[1]-dir
+        if b0 + thres < r0: b = result[2]-dir
+      elif (g0 >= r0 or g0 >= b0) and (g0 <= r0 or g0 <= b0):
+        if r0 - thres > g0: r = result[0]+dir
+        if b0 - thres > g0: b = result[2]+dir
+        if r0 + thres < g0: r = result[0]-dir
+        if b0 + thres < g0: b = result[2]-dir
+      elif (b0 >= g0 or b0 >= r0) and (b0 <= g0 or b0 <= r0):
+        if g0 - thres > b0: g = result[1]+dir
+        if r0 - thres > b0: r = result[0]+dir
+        if g0 + thres < b0: g = result[1]-dir
+        if r0 + thres < b0: r = result[0]-dir
 
-  if r == 0 or g == 0 or b == 0:
-    r += 1
-    g += 1
-    b += 1
+    if r == 0 or g == 0 or b == 0:
+      r += 1
+      g += 1
+      b += 1
 
-  if b == 7 or r == 7 or g == 7:
-    r -= 1
-    g -= 1
-    b -= 1
+    if b == 7 or r == 7 or g == 7:
+      r -= 1
+      g -= 1
+      b -= 1
 
-  r = thresholds[r]
-  g = thresholds[g]
-  b = thresholds[b]
+    r = thresholds[r]
+    g = thresholds[g]
+    b = thresholds[b]
+  else:
+    r = source[0]
+    g = source[1]
+    b = source[2]
 
-  i = -1
-  for v in RGB_256:
-    i += 1
-    if v[0] ==  r and v[1] == g and v[2] == b:
-      return str(i)
+  key = str(r) + '-' + str(g) + '-' + str(b)
+  return str(LOOKUP_256_RGB[key])
 
 
 ERROR = -1
@@ -147,12 +236,18 @@ def updateGlobals():
   global HI_BG
   global COLORSCHEME
   global BACKGROUND
+  global BASE_BG_EXP
+  global BASE_FG_EXP
+  global BASE_BG_LAST
+  global BASE_FG_LAST
+  global TERMGUICOLORS
 
   returnState = READY 
-  allGlobals = vim.eval('[g:vimade, &background, execute(":colorscheme")]')
+  allGlobals = vim.eval('[g:vimade, &background, execute(":colorscheme"), &termguicolors]')
   nextGlobals = allGlobals[0]
   background = allGlobals[1]
   colorscheme = allGlobals[2]
+  termguicolors = int(allGlobals[3]) == 1
   fadelevel = float(nextGlobals['fadelevel'])
   rowbufsize = int(nextGlobals['rowbufsize'])
   colbufsize = int(nextGlobals['colbufsize'])
@@ -175,6 +270,9 @@ def updateGlobals():
   if NORMAL_ID != normalid:
     NORMAL_ID = normalid
     returnState = FULL_INVALIDATE
+  if TERMGUICOLORS != termguicolors:
+    TERMGUICOLORS = termguicolors
+    returnState = FULL_INVALIDATE
 
   if normalid:
     base_hi = vim.eval('vimade#GetHi('+NORMAL_ID+')')
@@ -183,17 +281,38 @@ def updateGlobals():
     if not basebg:
       basebg = base_hi[1]
 
-  if basefg and BASE_FG != basefg:
+  if IS_TERM:
+    if not basefg:
+      basefg = TERM_FG
+    if not basebg:
+      basebg = TERM_BG
+
+  if basefg and BASE_FG_LAST != basefg:
+    BASE_FG_LAST = basefg
+    if isinstance(basefg, list):
+      basefg = [int(x) for x in basefg]
+    elif len(basefg) == 7:
+      basefg = fromHexStringToRGB(basefg)
+    elif basefg.isdigit() and int(basefg) < len(RGB_256):
+      basefg = from256ToRGB(int(basefg))
     BASE_HI[0] = BASE_FG = basefg
     returnState = FULL_INVALIDATE
-  if basebg and BASE_BG != basebg:
+
+  if basebg and BASE_BG_LAST != basebg:
+    BASE_BG_LAST = basebg
+    if isinstance(basebg, list):
+      basebg = [int(x) for x in basebg]
+    elif len(basebg) == 7:
+      basebg = fromHexStringToRGB(basebg)
+    elif basebg.isdigit() and int(basebg) < len(RGB_256):
+      basebg = from256ToRGB(int(basebg))
     BASE_HI[1] = BASE_BG = basebg
     returnState = FULL_INVALIDATE
 
-  if returnState == FULL_INVALIDATE and len(BASE_FG) > 2 and len(BASE_BG) > 2:
+  if returnState == FULL_INVALIDATE and len(BASE_FG) > 0 and len(BASE_BG) > 0:
     BASE_HI[0] = BASE_FG
     BASE_HI[1] = BASE_BG
-    if len(BASE_FG) == 7 or len(BASE_BG) == 7:
+    if not IS_TERM or termguicolors:
       HI_FG = ' guifg='
       HI_BG = ' guibg='
       FADE = fadeHex
@@ -202,6 +321,8 @@ def updateGlobals():
       HI_BG = ' ctermbg='
       FADE = fade256
     BASE_FADE = FADE(BASE_FG, BASE_BG)
+    BASE_FG_EXP = FADE(BASE_FG, BASE_FG).upper()
+    BASE_BG_EXP = FADE(BASE_BG, BASE_BG).upper()
 
   if BASE_FG == None or BASE_BG == None or BASE_FADE == None:
     returnState = ERROR
@@ -373,7 +494,10 @@ def unfadeWin(winState):
             del item[winid]
   if matches:
     for match in matches:
-        vim.command('call matchdelete('+match+')')
+        try:
+          vim.command('call matchdelete('+match+')')
+        except:
+          continue
   winState['matches'] = []
   if lastWin != winid:
     vim.command('noautocmd call win_gotoid('+lastWin+')')
@@ -518,8 +642,8 @@ def fadeHi(hi):
   guibg = hi[1]
   result = {}
 
-  if guibg != '':
-    if guibg == BASE_BG:
+  if guibg:
+    if guibg == BASE_BG_EXP:
       guibg = None
     else:
       guibg = FADE(guibg, BASE_BG)
@@ -527,7 +651,7 @@ def fadeHi(hi):
   else:
     guibg = result['guibg'] = None
 
-  if guifg == '':
+  if not guifg:
     guifg = BASE_FADE
   else:
     guifg = FADE(guifg, BASE_BG)

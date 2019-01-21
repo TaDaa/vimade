@@ -44,6 +44,8 @@ exec g:vimade_py_cmd  join([
 command! VimadeEnable call vimade#Enable()
 command! VimadeDisable call vimade#Disable()
 command! VimadeToggle call vimade#Toggle()
+command! VimadeInfo echo json_encode(vimade#GetInfo())
+command! VimadeRedraw call vimade#Redraw()
 
 if v:vim_did_enter
   call vimade#Init()
