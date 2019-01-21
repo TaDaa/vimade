@@ -114,7 +114,6 @@ def termCheck():
     output = [fg, bg]
     output = list(map(lambda x: re.findall("[0-9a-zA-Z]{2,}", x), output))
 
-    print(output)
     if output[0] and len(output[0]):
       TERM_FG = list(map(lambda x: int(x[0:2], 16), output[0]))
       TERM_RESPONSE = True
@@ -341,11 +340,13 @@ def updateGlobals():
     try:
       BASE_FG_EXP = FADE(BASE_FG, BASE_FG).upper()
     except:
-      print('Vimade: BASE_FG had no 256 color value, not a big deal, we can still interpolate.  You can also set "set termguicolors" for a better visual')
+      #consider logging here, nothing bad should happen -- vimade should still work
+      pass
     try:
       BASE_BG_EXP = FADE(BASE_BG, BASE_BG).upper()
     except:
-      print('Vimade: BASE_BG had no 256 color value, not a big deal, we can still interpolate.  You can also set "set termguicolors" for a better visual')
+      #consider logging here, nothing bad should happen -- vimade should still work
+      pass
 
   if BASE_FG == None or BASE_BG == None or BASE_FADE == None:
     returnState = ERROR
