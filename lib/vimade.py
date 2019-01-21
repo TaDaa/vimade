@@ -241,6 +241,8 @@ def updateGlobals():
   global BASE_BG_LAST
   global BASE_FG_LAST
   global TERMGUICOLORS
+  global TERM_FG
+  global TERM_BG
 
   returnState = READY 
   allGlobals = vim.eval('[g:vimade, &background, execute(":colorscheme"), &termguicolors]')
@@ -263,6 +265,8 @@ def updateGlobals():
     returnState = FULL_INVALIDATE
   if BACKGROUND != background:
     BACKGROUND = background
+    if IS_TERM and not termguicolors:
+      (TERM_FG, TERM_BG) = ('#FFFFFF','#000000') if 'dark' in BACKGROUND else ('#000000', '#FFFFFF')
     returnState = FULL_INVALIDATE
   if FADE_LEVEL != fadelevel:
     FADE_LEVEL = fadelevel 
