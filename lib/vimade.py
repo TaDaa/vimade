@@ -71,7 +71,7 @@ IS_TMUX = IS_TMUX != ''
 FADE = None
 HI_FG = ''
 HI_BG = ''
-(TERM_FG, TERM_BG) = ('#FFFFFF','#000000') if ORIGINAL_BACKGROUND.index('dark') > -1 else ('#000000', '#FFFFFF')
+(TERM_FG, TERM_BG) = ('#FFFFFF','#000000') if 'dark' in ORIGINAL_BACKGROUND else ('#000000', '#FFFFFF')
 def fromHexStringToRGB(source):
   return [int(source[1:3], 16), int(source[3:5], 16), int(source[5:7], 16)]
 def fromRGBToHexString(source):
