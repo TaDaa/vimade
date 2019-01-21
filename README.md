@@ -37,7 +37,7 @@ Bundle 'TaDaa/vimade'
 ```
 
 ##### Init Config
-- **g:vimade_usecursorhold** - Default is `1` on Windows GVIM due to the timer breaking movements.  If you find that the timer is causing performance problems or other issues you can disable it by setting this option to `1`.  Default value on non Windows GVIM is `0`
+- **g:vimade_usecursorhold** - When enabled, this optional config disables the timer running in the background and instead relies `OnCursorHold` and `updatetime` (see h:updatetime).  The default value is `0` except on Windows GVIM, which defaults to `1` due to the timer breaking movements.  If you find that the timer is causing performance problems or other issues you can disable it by setting this option to `1`. 
 
 ##### Live Config
 Vimade is initialized with the following configuration:
