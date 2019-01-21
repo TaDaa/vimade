@@ -36,7 +36,10 @@
 Bundle 'TaDaa/vimade'
 ```
 
-##### Config
+##### Init Config
+- **g:vimade_usecursorhold** - Default is `1` on Windows GVIM due to the timer breaking movements.  If you find that the timer is causing performance problems or other issues you can disable it by setting this option to `1`.  Default value on non Windows GVIM is `0`
+
+##### Live Config
 Vimade is initialized with the following configuration:
 ```
 let g:vimade = {
@@ -68,6 +71,9 @@ let g:vimade.fadelevel = 0.7
 - **VimadeDisable** - Turns vimade off and unfades all buffers
 - **VimadeToggle** - Toggles between on/off states
 
+##### FAQ/HELP
+I am using GVIM and my mappings are not working
+***Add `let g:vimade_usecursorhold=1` to your vimrc***
 
 ##### Features
 - [X] Fade inactive buffers
