@@ -9,7 +9,7 @@ if [ "$2" = "tmux" ]
 then
     printf "\033Ptmux;\e\033]$col;?\007\033\\" > /dev/tty
 else
-    printf "\033]$col;?\007\033\\" > /dev/tty
+    printf "\033]$col;?\033\\" > /dev/tty
 fi
 result=
 if IFS=';' read -t 1 -r -d '\' color ; then
