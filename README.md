@@ -70,7 +70,8 @@ let g:vimade.fadelevel = 0.7
 - **VimadeEnable** - Turns vimade on (Vimade is on by default)
 - **VimadeDisable** - Turns vimade off and unfades all buffers
 - **VimadeToggle** - Toggles between on/off states
-
+- **VimadeRedraw** - Forces vimade to redraw fading for every window.
+- **VimadeInfo** - Provides debug information for Vimade.  Please include this info in bug reports
 
 
 ##### Features
