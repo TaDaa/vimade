@@ -71,15 +71,6 @@ let g:vimade.fadelevel = 0.7
 - **VimadeDisable** - Turns vimade off and unfades all buffers
 - **VimadeToggle** - Toggles between on/off states
 
-##### FAQ/HELP
-I am using GVIM and my mappings are not working
-- #Add `let g:vimade_usecursorhold=1` to your vimrc#
-
-What about Vim < 8?
-- #Vim 7 is currently untested/experimental, but may work if you add `let g:vimade_usecursorhold=1` to your vimrc#
-
-My colors look off!
-- #Make sure that you either use a colorscheme or manually define the fg and bg for 'Normal'.  You can also manually define the tint in your vimade config (g:vimade.basebg and g:vimade.basefg)#
 
 
 ##### Features
@@ -104,3 +95,14 @@ My colors look off!
 - [ ] Wrapped Text
 - [ ] Experiment with highlighted text within current window (limelight behavior)
 - [ ] Investigate sign column
+
+##### FAQ/HELP
+I am using GVIM and my mappings are not working
+- *Add `let g:vimade_usecursorhold=1` to your vimrc*
+
+What about Vim < 8?
+- *Vim 7 is currently untested/experimental, but may work if you add `let g:vimade_usecursorhold=1` to your vimrc*
+
+My colors look off!
+- *Make sure that you either use a colorscheme or manually define the fg and bg for 'Normal'.  You can also manually define the tint in your vimade config (g:vimade.basebg and g:vimade.basefg)*
+
