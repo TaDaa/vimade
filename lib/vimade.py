@@ -43,9 +43,9 @@ def fadeHex(source, to):
     if len(r) < 2:
       r = '0' + r
     if len(g) < 2:
-      r = '0' + g
+      g = '0' + g
     if len(b) < 2:
-      r = '0' + b
+      b = '0' + b
 
     return '#' + r + g + b
 
