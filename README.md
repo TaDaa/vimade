@@ -96,6 +96,12 @@ let g:vimade.fadelevel = 0.7
 - [ ] Experiment with highlighted text within current window (limelight behavior)
 - [ ] Investigate sign column
 
+
+
+
+
+
+
 ##### FAQ/HELP
 I am using GVIM and my mappings are not working
 - *Add `let g:vimade_usecursorhold=1` to your vimrc*
