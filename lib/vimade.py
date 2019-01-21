@@ -33,10 +33,21 @@ HI_FG = ''
 HI_BG = ''
 
 def fadeHex(source, to):
-    source = [int(source[1:3], 16), int(source[3:5], 16), int(source[5:7], 16)]
-    to = [int(to[1:3], 16), int(to[3:5], 16), int(to[5:7], 16)]
-    rgb = [int(math.floor(to[0]+(source[0]-to[0])*FADE_LEVEL)), int(math.floor(to[1]+(source[1]-to[1])*FADE_LEVEL)), int(math.floor(to[2]+(source[2]-to[2])*FADE_LEVEL))]
-    return '#' + hex(rgb[0])[2:] + hex(rgb[1])[2:] + hex(rgb[2])[2:]
+    if not isinstance(source, list):
+      source = [int(source[1:3], 16), int(source[3:5], 16), int(source[5:7], 16)]
+    if not isinstance(to, list):
+      to = [int(to[1:3], 16), int(to[3:5], 16), int(to[5:7], 16)]
+    r = hex(int(math.floor(to[0]+(source[0]-to[0])*FADE_LEVEL)))[2:]
+    g = hex(int(math.floor(to[1]+(source[1]-to[1])*FADE_LEVEL)))[2:]
+    b = hex(int(math.floor(to[2]+(source[2]-to[2])*FADE_LEVEL)))[2:]
+    if len(r) < 2:
+      r = '0' + r
+    if len(g) < 2:
+      r = '0' + g
+    if len(b) < 2:
+      r = '0' + b
+
+    return '#' + r + g + b
 
 thresholds = [-1,0, 95, 135, 175, 215, 255, 256]
 
