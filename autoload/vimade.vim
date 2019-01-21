@@ -61,10 +61,7 @@ function! vimade#GetInfo()
 endfunction
 
 function! vimade#CheckWindows(num)
-<<<<<<< HEAD
-=======
   "check to see if any vim/window/cursor/scroll/height/etc info changed
->>>>>>> Add VimadeInfo, VimadeRedraw commands.  Improve terminal support, termguicolors detection, same background detection, terminal interpolation speed
   if !g:vimade_usecursorhold
     unlet g:vimade_timer
   endif
@@ -115,10 +112,7 @@ function! vimade#GetHi(id)
 endfunction
 
 function! vimade#ScheduleCheckWindows()
-<<<<<<< HEAD
-=======
   "timer is disabled when usecursorhold=1
->>>>>>> Add VimadeInfo, VimadeRedraw commands.  Improve terminal support, termguicolors detection, same background detection, terminal interpolation speed
   if !g:vimade_usecursorhold && !exists('g:vimade_timer')
     let g:vimade_timer = timer_start(g:vimade.checkinterval, 'vimade#CheckWindows')
   endif
