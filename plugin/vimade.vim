@@ -54,6 +54,7 @@ endif
 augroup vimade 
     au!
     au VimEnter * call vimade#Init()
+    au VimLeave * call vimade#Disable()
     au BufLeave * call vimade#FadeCurrentBuffer()
     au BufEnter * call vimade#UnfadeCurrentBuffer()
     au OptionSet diff call vimade#DiffToggled()
