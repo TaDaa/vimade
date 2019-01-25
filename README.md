@@ -74,35 +74,6 @@ let g:vimade.fadelevel = 0.7
 - **VimadeRedraw** - Forces vimade to redraw fading for every window.
 - **VimadeInfo** - Provides debug information for Vimade.  Please include this info in bug reports
 
-
-##### Features
-- [X] Fade inactive buffers
-- [X] Fade/Unfade diffs together
-- [X] Automatically adjust to colorscheme changes
-- [X] Automatically adjust to basebg changes
-- [X] Automatically adjust to fadelevel changes
-- [X] React to window resize + scroll changes
-- [X] Vim8+ (gui)
-- [X] Neovim (gui)
-- [X] Python3
-- [X] Python2
-- [X] 256 color terminal support (Xterm)
-- [X] Toggle vimade on/off (VimadeEnable, VimadeDisable, VimadeToggle)
-- [X] Supports terminal backgrounds for Vim8(not nvim yet) and Tilix, Kitty, Gnome, rxvt
-- [ ] Secondary buffer window highlighting
-- [ ] Vim Documentation/Help
-
-###### Todo
-- [ ] Support other terminals palletes? -- Open an issue if you need support for a different palette
-- [ ] Improve terminal color rounding for grays
-- [ ] Wrapped Text
-- [ ] Experiment with highlighted text within current window (limelight behavior)
-- [ ] Investigate sign column
-
-
-
-
-
 ##### FAQ/HELP
 I am using GVIM and my mappings are not working
 - *Add `let g:vimade_usecursorhold=1` to your vimrc*
@@ -118,3 +89,33 @@ My colors look off in terminal mode!
 
 Tmux is not working!
 - *Vimade only works in 256 color mode, it is recommended that you set `export TERM=xterm-256color` before starting vim*
+
+##### Features
+- [X] Fade inactive buffers
+- [X] Fade/Unfade diffs together
+- [X] Automatically adjust to colorscheme changes
+- [X] Automatically adjust to basebg changes
+- [X] Automatically adjust to fadelevel changes
+- [X] React to window resize + scroll changes
+- [X] Vim8+ (gui)
+- [X] Neovim (gui)
+- [X] Python3
+- [X] Python2
+- [X] 256 color terminal support (Xterm)
+- [X] Toggle vimade on/off (VimadeEnable, VimadeDisable, VimadeToggle)
+- [X] Supports terminal backgrounds for Vim8(not nvim yet) and Tilix, Kitty, Gnome, rxvt
+- [ ] Supports $COLORFGBG
+- [ ] Secondary buffer window highlighting
+- [ ] Vim Documentation/Help
+
+###### Todo
+- [ ] Support other terminals palletes? -- Open an issue if you need support for a different palette
+- [ ] Improve terminal color rounding for grays
+- [ ] Wrapped Text
+- [ ] Experiment with threading to improve performance, this may be necessary to implement limelight
+- [ ] Experiment with highlighted text within current window (limelight behavior)
+- [ ] Investigate sign column
+- [ ] Cleanup this Readme!
+- [ ] Code cleanup
+
+
