@@ -95,15 +95,19 @@ def detectTermColors():
       bg = str(subprocess.check_output(COLORS_SH + ['11'])).strip()
     except:
       try:
-        fg = str(subprocess.check_output(COLORS_SH + ['10', 'tmux'])).strip()
-        bg = str(subprocess.check_output(COLORS_SH + ['11', 'tmux'])).strip()
+        fg = str(subprocess.check_output(COLORS_SH + ['10', '7'])).strip()
+        bg = str(subprocess.check_output(COLORS_SH + ['11', '7'])).strip()
       except:
         try:
-          fg = str(subprocess.check_output(COLORS_SH + ['10', 'tmux', '7'])).strip()
-          bg = str(subprocess.check_output(COLORS_SH + ['11', 'tmux', '7'])).strip()
+          fg = str(subprocess.check_output(COLORS_SH + ['10', 'tmux'])).strip()
+          bg = str(subprocess.check_output(COLORS_SH + ['11', 'tmux'])).strip()
         except:
-          fg = ''
-          bg= ''
+          try:
+            fg = str(subprocess.check_output(COLORS_SH + ['10', 'tmux', '7'])).strip()
+            bg = str(subprocess.check_output(COLORS_SH + ['11', 'tmux', '7'])).strip()
+          except:
+            fg = ''
+            bg= ''
 
     fg = re.findall("[a-zA-Z0-9]{4}/[a-zA-Z0-9]{4}/[a-zA-Z0-9]{4}", fg)
     if len(fg):
