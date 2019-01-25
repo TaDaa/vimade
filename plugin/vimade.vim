@@ -8,6 +8,9 @@ let g:vimade_loaded = 1
 if !exists('g:vimade_usecursorhold')
   let g:vimade_usecursorhold = has('gui_running') && !has('nvim') && execute('version')=~"GUI version"
 endif
+if !exists('g:vimade_detect_term_colors')
+  let g:vimade_detect_term_colors = 1
+endif
 
 let defaults = {
   \ "normalid": '',

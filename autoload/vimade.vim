@@ -11,6 +11,12 @@ function! vimade#Disable()
       \ "vimade.unfadeAll()",
   \ ], "\n")
 endfunction
+function! vimade#DetectTermColors()
+  exec g:vimade_py_cmd join([
+      \ "import vimade",
+      \ "vimade.detectTermColors()",
+  \ ], "\n")
+endfunction
 function! vimade#Toggle()
   "toggle enabled state
   if g:vimade_running
@@ -124,11 +130,16 @@ function! vimade#Init()
     let g:vimade.normalid = hlID('Normal')
   endif
 
+  if g:vimade_detect_term_colors
+    call vimade#DetectTermColors()
+  endif
+
   call vimade#ScheduleCheckWindows()
   "check immediately
   call vimade#CheckWindows(0)
 
   "run the timer once during startup
+  "we use try here to possibly support vim 7
   if g:vimade_usecursorhold
     try
       call timer_start(g:vimade.checkinterval, 'vimade#CheckWindows')

@@ -84,7 +84,7 @@ def from256RGBToHexString(source):
   return fromRGBToHexString(from256ToRGB(source))
 
 
-def termCheck():
+def detectTermColors():
   global TERM_FG
   global TERM_BG
   global TERM_RESPONSE
@@ -94,22 +94,25 @@ def termCheck():
       fg = str(subprocess.check_output(COLORS_SH + ['10'])).strip()
       bg = str(subprocess.check_output(COLORS_SH + ['11'])).strip()
     except:
-      if not IS_TMUX:
-        print("Vimade: could not load colors, make sure you either use a colorscheme that defines a background and foreground for 'Normal' or configure g:vimade.basefg and g:vimade.basebg")
-        return
-      else:
-        print("Vimade: could not load terminal ansi colors, trying tmux...")
+      try:
+        fg = str(subprocess.check_output(COLORS_SH + ['10', 'tmux'])).strip()
+        bg = str(subprocess.check_output(COLORS_SH + ['11', 'tmux'])).strip()
+      except:
         try:
-          fg = str(subprocess.check_output(COLORS_SH + ['10', 'tmux'])).strip()
-          bg = str(subprocess.check_output(COLORS_SH + ['11', 'tmux'])).strip()
+          fg = str(subprocess.check_output(COLORS_SH + ['10', 'tmux', '7'])).strip()
+          bg = str(subprocess.check_output(COLORS_SH + ['11', 'tmux', '7'])).strip()
         except:
-          print("Vimade: could not load tmux colors, make sure you either use a colorscheme that defines a background and foreground for 'Normal' or configure g:vimade.basefg and g:vimade.basebg")
-          return
+          fg = ''
+          bg= ''
 
-    fg = fg.split('rgb:')[1:]
-    fg = fg[0] if len(fg) else ''
-    bg = bg.split('rgb:')[1:]
-    bg = bg[0] if len(bg) else ''
+    fg = re.findall("[a-zA-Z0-9]{4}/[a-zA-Z0-9]{4}/[a-zA-Z0-9]{4}", fg)
+    if len(fg):
+      fg = fg[0]
+    fg = fg if len(fg) else ''
+    bg = re.findall("[a-zA-Z0-9]{4}/[a-zA-Z0-9]{4}/[a-zA-Z0-9]{4}", bg)
+    if len(bg):
+      bg = bg[0]
+    bg = bg if len(bg) else ''
 
     output = [fg, bg]
     output = list(map(lambda x: re.findall("[0-9a-zA-Z]{2,}", x), output))
@@ -120,8 +123,6 @@ def termCheck():
     if output[1] and len(output[1]):
       TERM_BG = list(map(lambda x: int(x[0:2], 16), output[1]))
       TERM_RESPONSE = True
-
-termCheck()
 
 def fadeHex(source, to):
     if not isinstance(source, list):
