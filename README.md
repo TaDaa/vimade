@@ -108,7 +108,7 @@ Tmux is not working!
 - [ ] Vim Documentation/Help
 
 ###### Todo
-- [ ] Support other terminals palletes? -- Open an issue if you need support for a different palette
+- [ ] Support other terminals palletes? -- Open an issue if you need support for a different terminal or palette
 - [ ] Improve terminal color rounding for grays
 - [ ] Wrapped Text
 - [ ] Experiment with threading to improve performance, this may be necessary to implement limelight
