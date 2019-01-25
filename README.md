@@ -103,15 +103,17 @@ let g:vimade.fadelevel = 0.7
 
 
 
-
-
 ##### FAQ/HELP
 I am using GVIM and my mappings are not working
 - *Add `let g:vimade_usecursorhold=1` to your vimrc*
+Sometimes I hear an annoying bell sound when starting vim/nvim
+- *Add `let g:vimade_detect_term_color=0` to your vimrc -- the color detection may cause this sound on unsupported terminals
 
 What about Vim < 8?
 - *Vim 7 is currently untested/experimental, but may work if you add `let g:vimade_usecursorhold=1` to your vimrc*
 
-My colors look off!
-- *Make sure that you either use a colorscheme or manually define the fg and bg for 'Normal'.  You can also manually define the tint in your vimade config (g:vimade.basebg and g:vimade.basefg)*
+My colors look off in terminal mode!
+- *Make sure that you either use a supported terminal or colorscheme or manually define the fg and bg for 'Normal'.  You can also manually define the tint in your vimade config (g:vimade.basebg and g:vimade.basefg)*
 
+Tmux is not working!
+- *Vimade only works in 256 color mode, it is recommended that you set `export TERM=xterm-256color` before starting vim
