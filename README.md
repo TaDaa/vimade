@@ -116,5 +116,6 @@ Tmux is not working!
 - [ ] Investigate sign column
 - [ ] Cleanup this Readme!
 - [ ] Code cleanup
+- [ ] Tests
 
 
