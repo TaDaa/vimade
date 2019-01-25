@@ -104,7 +104,6 @@ Tmux is not working!
 - [X] 256 color terminal support (Xterm)
 - [X] Toggle vimade on/off (VimadeEnable, VimadeDisable, VimadeToggle)
 - [X] Supports terminal backgrounds for Vim8(not nvim yet) and Tilix, Kitty, Gnome, rxvt
-- [ ] Supports $COLORFGBG
 - [ ] Secondary buffer window highlighting
 - [ ] Vim Documentation/Help
 
