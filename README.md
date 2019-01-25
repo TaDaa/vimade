@@ -33,11 +33,12 @@
 ##### Install
 *Add `TaDaa/vimade` to your vimrc -- you can use any plugin manager e.g:*
 ```
-Bundle 'TaDaa/vimade'
+Plugin 'TaDaa/vimade'
 ```
 
 ##### Init Config
 - **g:vimade_usecursorhold** - When enabled, this optional config disables the timer running in the background and instead relies `OnCursorHold` and `updatetime` (see h:updatetime).  The default value is `0` except on Windows GVIM, which defaults to `1` due to the timer breaking movements.  If you find that the timer is causing performance problems or other issues you can disable it by setting this option to `1`. 
+- **g:vimade_detect_term_colors** - Enabled by default.  When enabled, Vimade will try to detect the terminal background and foreground colors during init.  This will work for Vim8 + Tilix, Kitty, Gnome, Rxvt, and other editors that support the following query (```\033]11;?\007``` or ```\033]11;?\033\\```). 
 
 ##### Live Config
 Vimade is initialized with the following configuration:
@@ -87,6 +88,7 @@ let g:vimade.fadelevel = 0.7
 - [X] Python2
 - [X] 256 color terminal support (Xterm)
 - [X] Toggle vimade on/off (VimadeEnable, VimadeDisable, VimadeToggle)
+- [X] Supports terminal backgrounds for Vim8(not nvim yet) and Tilix, Kitty, Gnome, rxvt
 - [ ] Secondary buffer window highlighting
 - [ ] Vim Documentation/Help
 
