@@ -64,7 +64,7 @@ function! vimade#GetInfo()
         \ 'has_gui_running': has('gui_running'),
         \ 'vimade_py_cmd': g:vimade_py_cmd,
         \ 'vimade_running': g:vimade_running,
-        \ 'vimade_timer': g:vimade_timer,
+        \ 'vimade_timer': exists('g:vimade_timer') ? g:vimade_timer : -1,
         \ 'vimade_usecursorhold': g:vimade_usecursorhold,
         \ 'vimade_loaded': g:vimade_loaded,
         \ 't_Co': &t_Co,
