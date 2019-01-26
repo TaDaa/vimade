@@ -1,11 +1,16 @@
 function! vimade#Enable()
   "enable vimade
   let g:vimade_running = 1
-  call vimade#CheckWindows(0)
+  call vimade#CheckWindows()
+  call vimade#ScheduleTick()
 endfunction
 function! vimade#Disable()
   "disable vimade
   let g:vimade_running = 0
+  if exists('g:vimade_timer')
+    call timer_stop(g:vimade_timer)
+    unlet g:vimade_timer
+  endif
   exec g:vimade_py_cmd join([
       \ "import vimade",
       \ "vimade.unfadeAll()",
@@ -29,9 +34,9 @@ function! vimade#Redraw()
   if g:vimade_running
     let tmp = g:vimade.fadelevel
     let g:vimade.fadelevel = 0
-    call vimade#CheckWindows(0)
+    call vimade#CheckWindows()
     let g:vimade.fadelevel = l:tmp 
-    call vimade#CheckWindows(0)
+    call vimade#CheckWindows()
   endif
 endfunction
 
@@ -62,22 +67,26 @@ function! vimade#GetInfo()
         \ 'vimade_timer': g:vimade_timer,
         \ 'vimade_usecursorhold': g:vimade_usecursorhold,
         \ 'vimade_loaded': g:vimade_loaded,
+        \ 't_Co': &t_Co,
       \ }
   \ }
 endfunction
 
-function! vimade#CheckWindows(num)
-  "check to see if any vim/window/cursor/scroll/height/etc info changed
-  if !g:vimade_usecursorhold
-    unlet g:vimade_timer
-  endif
+function! vimade#CheckWindows()
   if g:vimade_running
     exec g:vimade_py_cmd join([
         \ "import vimade",
         \ "vimade.updateState({'activeBuffer': str(vim.current.buffer.number), 'activeTab': '".tabpagenr()."', 'activeWindow': '".win_getid(winnr())."'})",
     \ ], "\n")
   endif
-  call vimade#ScheduleCheckWindows()
+endfunction
+
+function! vimade#Tick(num)
+  if exists('g:vimade_timer')
+    unlet g:vimade_timer
+  endif
+  call vimade#CheckWindows()
+  call vimade#ScheduleTick()
 endfunction
 
 function! vimade#FadeCurrentBuffer()
@@ -117,10 +126,10 @@ function! vimade#GetHi(id)
   return [synIDattr(tid, 'fg#'), synIDattr(tid, 'bg#')]
 endfunction
 
-function! vimade#ScheduleCheckWindows()
+function! vimade#ScheduleTick()
   "timer is disabled when usecursorhold=1
-  if !g:vimade_usecursorhold && !exists('g:vimade_timer')
-    let g:vimade_timer = timer_start(g:vimade.checkinterval, 'vimade#CheckWindows')
+  if !g:vimade_usecursorhold && !exists('g:vimade_timer') && g:vimade_running
+    let g:vimade_timer = timer_start(g:vimade.checkinterval, 'vimade#Tick')
   endif
 endfunction
 
@@ -134,15 +143,15 @@ function! vimade#Init()
     call vimade#DetectTermColors()
   endif
 
-  call vimade#ScheduleCheckWindows()
   "check immediately
-  call vimade#CheckWindows(0)
+  call vimade#CheckWindows()
+  call vimade#ScheduleTick()
 
   "run the timer once during startup
   "we use try here to possibly support vim 7
   if g:vimade_usecursorhold
     try
-      call timer_start(g:vimade.checkinterval, 'vimade#CheckWindows')
+      call timer_start(g:vimade.checkinterval, 'vimade#Tick')
     catch
     endtry
   endif

@@ -647,7 +647,7 @@ def fadeWin(winState):
 
   if len(items):
     # this is required, the matchaddpos window ID config does not seem to work in nvim
-    if IS_NVIM and not setWin:
+    if not setWin:
       setWin = True
       if lastWin != winid:
         vim.command('noautocmd call win_gotoid('+winid+')')
