@@ -62,7 +62,7 @@ augroup vimade
     au BufEnter * call vimade#UnfadeCurrentBuffer()
     au OptionSet diff call vimade#DiffToggled()
     if g:vimade_usecursorhold
-      au CursorHold * call vimade#CheckWindows(0)
-      au VimResized * call vimade#CheckWindows(0)
+      au CursorHold * call vimade#CheckWindows()
+      au VimResized * call vimade#CheckWindows()
     endif
 augroup END
