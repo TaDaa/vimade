@@ -5,12 +5,6 @@ if !exists('g:vimade_running')
   let g:vimade_running = 1
 endif
 let g:vimade_loaded = 1
-if !exists('g:vimade_usecursorhold')
-  let g:vimade_usecursorhold = has('gui_running') && !has('nvim') && execute('version')=~"GUI version"
-endif
-if !exists('g:vimade_detect_term_colors')
-  let g:vimade_detect_term_colors = 1
-endif
 
 let defaults = {
   \ "normalid": '',
@@ -20,11 +14,21 @@ let defaults = {
   \ "colbufsize": 30,
   \ "rowbufsize": 30,
   \ "checkinterval": 32,
+  \ 'usecursorhold': has('gui_running') && !has('nvim') && execute('version')=~"GUI version",
+  \ 'detecttermcolors': 1,
 \ }
 if exists('g:vimade')
   let g:vimade = extend(defaults, g:vimade)
 else
   let g:vimade = defaults
+endif
+
+if exists('g:vimade_detect_term_colors')
+  let g:vimade.detecttermcolors = g:vimade_detect_term_colors
+endif
+
+if exists('g:vimade_usecursorhold')
+  let g:vimade.usecursorhold = g:vimade_usecursorhold
 endif
 
 if !exists('g:vimade_py_cmd')
@@ -36,6 +40,8 @@ if !exists('g:vimade_py_cmd')
         finish
     endif
 endif
+
+let g:vimade_last = extend({}, g:vimade)
 
 let g:vimade_plugin_current_directory = resolve(expand('<sfile>:p:h').'/../lib')
 exec g:vimade_py_cmd  join([
@@ -49,20 +55,10 @@ command! VimadeDisable call vimade#Disable()
 command! VimadeToggle call vimade#Toggle()
 command! VimadeInfo echo json_encode(vimade#GetInfo())
 command! VimadeRedraw call vimade#Redraw()
+command! -nargs=1 VimadeFadeLevel call vimade#FadeLevel(<q-args>)
 
 if v:vim_did_enter
   call vimade#Init()
 endif
 
-augroup vimade 
-    au!
-    au VimEnter * call vimade#Init()
-    au VimLeave * call vimade#Disable()
-    au BufLeave * call vimade#FadeCurrentBuffer()
-    au BufEnter * call vimade#UnfadeCurrentBuffer()
-    au OptionSet diff call vimade#DiffToggled()
-    if g:vimade_usecursorhold
-      au CursorHold * call vimade#CheckWindows()
-      au VimResized * call vimade#CheckWindows()
-    endif
-augroup END
+call vimade#UpdateEvents()

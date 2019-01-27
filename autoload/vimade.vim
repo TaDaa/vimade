@@ -2,15 +2,12 @@ function! vimade#Enable()
   "enable vimade
   let g:vimade_running = 1
   call vimade#CheckWindows()
-  call vimade#ScheduleTick()
+  call vimade#StartTimer()
 endfunction
 function! vimade#Disable()
   "disable vimade
   let g:vimade_running = 0
-  if exists('g:vimade_timer')
-    call timer_stop(g:vimade_timer)
-    unlet g:vimade_timer
-  endif
+  call vimade#StopTimer()
   exec g:vimade_py_cmd join([
       \ "import vimade",
       \ "vimade.unfadeAll()",
@@ -65,14 +62,19 @@ function! vimade#GetInfo()
         \ 'vimade_py_cmd': g:vimade_py_cmd,
         \ 'vimade_running': g:vimade_running,
         \ 'vimade_timer': exists('g:vimade_timer') ? g:vimade_timer : -1,
-        \ 'vimade_usecursorhold': g:vimade_usecursorhold,
         \ 'vimade_loaded': g:vimade_loaded,
         \ 't_Co': &t_Co,
       \ }
   \ }
 endfunction
 
+function! vimade#FadeLevel(level)
+  let g:vimade.fadelevel = a:level
+  call vimade#CheckWindows()
+endfunction
+
 function! vimade#CheckWindows()
+  call vimade#UpdateState()
   if g:vimade_running
     exec g:vimade_py_cmd join([
         \ "import vimade",
@@ -81,12 +83,46 @@ function! vimade#CheckWindows()
   endif
 endfunction
 
-function! vimade#Tick(num)
-  if exists('g:vimade_timer')
-    unlet g:vimade_timer
+function! vimade#UpdateEvents()
+  augroup vimade 
+      au!
+      au VimEnter * call vimade#Init()
+      au VimLeave * call vimade#Disable()
+      au BufLeave * call vimade#FadeCurrentBuffer()
+      au BufEnter * call vimade#UnfadeCurrentBuffer()
+      au OptionSet diff call vimade#DiffToggled()
+      if g:vimade.usecursorhold
+        au CursorHold * call vimade#CheckWindows()
+        au VimResized * call vimade#CheckWindows()
+      endif
+  augroup END
+endfunction
+
+function! vimade#UpdateState()
+  if g:vimade.usecursorhold != g:vimade_last.usecursorhold
+    let g:vimade_last.usecursorhold = g:vimade.usecursorhold
+    if g:vimade.usecursorhold
+      call vimade#StopTimer()
+    else
+      call vimade#StartTimer()
+    endif
+    call vimade#UpdateEvents()
   endif
+  if g:vimade.checkinterval != g:vimade_last.checkinterval
+    let g:vimade_last.checkinterval = g:vimade.checkinterval
+    call vimade#StopTimer()
+    call vimade#StartTimer()
+  endif
+  if g:vimade.detecttermcolors != g:vimade.detecttermcolors
+    let g:vimade_last.detecttermcolors = g:vimade.detecttermcolors
+    if g:vimade.detecttermcolors
+      call vimade#DetectTermColors()
+    endif
+  endif
+endfunction
+
+function! vimade#Tick(num)
   call vimade#CheckWindows()
-  call vimade#ScheduleTick()
 endfunction
 
 function! vimade#FadeCurrentBuffer()
@@ -126,10 +162,16 @@ function! vimade#GetHi(id)
   return [synIDattr(tid, 'fg#'), synIDattr(tid, 'bg#')]
 endfunction
 
-function! vimade#ScheduleTick()
+function! vimade#StartTimer()
   "timer is disabled when usecursorhold=1
-  if !g:vimade_usecursorhold && !exists('g:vimade_timer') && g:vimade_running
-    let g:vimade_timer = timer_start(g:vimade.checkinterval, 'vimade#Tick')
+  if !g:vimade.usecursorhold && !exists('g:vimade_timer') && g:vimade_running
+    let g:vimade_timer = timer_start(g:vimade.checkinterval, 'vimade#Tick', {'repeat': -1})
+  endif
+endfunction
+function! vimade#StopTimer()
+  if exists('g:vimade_timer')
+    call timer_stop(g:vimade_timer)
+    unlet g:vimade_timer
   endif
 endfunction
 
@@ -139,17 +181,17 @@ function! vimade#Init()
     let g:vimade.normalid = hlID('Normal')
   endif
 
-  if g:vimade_detect_term_colors
+  if g:vimade.detecttermcolors
     call vimade#DetectTermColors()
   endif
 
   "check immediately
   call vimade#CheckWindows()
-  call vimade#ScheduleTick()
+  call vimade#StartTimer()
 
   "run the timer once during startup
   "we use try here to possibly support vim 7
-  if g:vimade_usecursorhold
+  if g:vimade.usecursorhold
     try
       call timer_start(g:vimade.checkinterval, 'vimade#Tick')
     catch

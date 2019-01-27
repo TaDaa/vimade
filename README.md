@@ -19,11 +19,34 @@
 ![](http://tadaa.github.io/images/vimade_diff.gif)
 
 
-##### Compatibility
-- gui vim8+
-- gui nvim
-- xterm 256 colors
-- leave an issue if you need a different terminal palette supported
+##### Features
+- [X] Fade inactive buffers
+- [X] Fade/Unfade diffs together
+- [X] Automatically adjust to colorscheme changes
+- [X] Automatically adjust to basebg changes
+- [X] Automatically adjust to fadelevel changes
+- [X] React to window resize + scroll changes
+- [X] Vim8+
+- [X] Neovim
+- [X] Python3
+- [X] Python2
+- [X] 256 color terminal support (Xterm)
+- [X] Toggle vimade on/off (VimadeEnable, VimadeDisable, VimadeToggle)
+- [X] Supports terminal backgrounds for Vim8(not nvim yet) and Tilix, Kitty, Gnome, rxvt
+- [ ] Sign column support
+- [ ] Secondary buffer window highlighting
+- [ ] Vim Documentation/Help
+
+###### Todo
+- [ ] Support other terminals palletes? -- Open an issue if you need support for a different terminal or palette
+- [ ] Improve terminal color rounding for grays
+- [ ] Wrapped Text
+- [ ] Experiment with threading to improve performance, this may be necessary to implement limelight.  This will also be beneficial to the SignColumn logic
+- [ ] Experiment with highlighted text within current window (limelight behavior)
+- [X] Investigate sign column
+- [ ] Cleanup this Readme!
+- [ ] Code cleanup
+- [ ] Tests
 
 ##### What/Why?
 - Vimade fades inactive/unfocused buffer text and removes the fade from focused buffers. 
@@ -36,12 +59,8 @@
 Plugin 'TaDaa/vimade'
 ```
 
-##### Init Config
-- **g:vimade_usecursorhold** - When enabled, this optional config disables the timer running in the background and instead relies `OnCursorHold` and `updatetime` (see h:updatetime).  The default value is `0` except on Windows GVIM, which defaults to `1` due to the timer breaking movements.  If you find that the timer is causing performance problems or other issues you can disable it by setting this option to `1`. 
-- **g:vimade_detect_term_colors** - Enabled by default.  When enabled, Vimade will try to detect the terminal background and foreground colors during init.  This will work for Vim8 + Tilix, Kitty, Gnome, Rxvt, and other editors that support the following query (```\033]11;?\007``` or ```\033]11;?\033\\```). 
-
-##### Live Config
-Vimade is initialized with the following configuration:
+##### Config
+Vimade is initialized with the following configuration.  Vimade will react to configuration changes on the fly:
 ```
 let g:vimade = {
   \ "normalid": '',
@@ -51,6 +70,8 @@ let g:vimade = {
   \ "colbufsize": 30,
   \ "rowbufsize": 30,
   \ "checkinterval": 32,
+  \ "usecursorhold": 0, "0 is default, but will automatically set to 1 for Windows GVIM
+  \ "detecttermcolors": 1
 }
 ```
 - **vimade.normalid** - if not specified, the normalid is determined when vimade is first loaded.  normalid provides the id of the "Normal" highlight which is used to calculate fading.  You can override this config with another highlight group.
@@ -60,6 +81,8 @@ let g:vimade = {
 - **vimade.rowbufsize** - the number of rows above and below of the determined scroll area that should be precalculated. Default is 30.
 - **vimade.colbufsize** - the number of cols left and right of the determined scroll area that should be precalculated. Default is 30.
 - **vimade.checkinterval** - the amount of time in milliseconds that vimade should check the screen for changes.  This config is mainly used to detect resize and scroll changes that occur on inactive windows. Checkinterval does nothing on gvim, if you want to control the refresh time, see 'h updatetime'. Default is 32.  
+- **vimade.usecursorhold** -  disables the timer running in the background and instead relies `OnCursorHold` and `updatetime` (see h:updatetime).  The default value is `0` except on Windows GVIM, which defaults to `1` due to the timer breaking movements.  If you find that the timer is causing performance problems or other issues you can disable it by setting this option to `1`. 
+- **vimade.detecttermcolors** - detect the terminal background and foreground colors.  This will work for Vim8 + Tilix, Kitty, Gnome, Rxvt, and other editors that support the following query (```\033]11;?\007``` or ```\033]11;?\033\\```).  Default is 1.
 
 ##### Example
 *this example reduces the amount of fading applied to text*
@@ -72,14 +95,15 @@ let g:vimade.fadelevel = 0.7
 - **VimadeDisable** - Turns vimade off and unfades all buffers
 - **VimadeToggle** - Toggles between on/off states
 - **VimadeRedraw** - Forces vimade to redraw fading for every window.
+- **VimadeFadeLevel** - Sets the FadeLevel config and forces an immediate redraw.
 - **VimadeInfo** - Provides debug information for Vimade.  Please include this info in bug reports
 
 ##### FAQ/HELP
 I am using GVIM and my mappings are not working
-- *Add `let g:vimade_usecursorhold=1` to your vimrc*
+- *Add `let g:vimade.usecursorhold=1` to your vimrc*
 
 Sometimes I hear an annoying bell sound when starting vim/nvim
-- *Add `let g:vimade_detect_term_color=0` to your vimrc -- the color detection may cause this sound on unsupported terminals*
+- *Add `let g:vimade.detecttermcolors=0` to your vimrc -- the color detection may cause this sound on unsupported terminals*
 
 What about Vim < 8?
 - *Vim 7 is currently untested/experimental, but may work if you add `let g:vimade_usecursorhold=1` to your vimrc*
@@ -88,34 +112,6 @@ My colors look off in terminal mode!
 - *Make sure that you either use a supported terminal or colorscheme or manually define the fg and bg for 'Normal'.  You can also manually define the tint in your vimade config (g:vimade.basebg and g:vimade.basefg)*
 
 Tmux is not working!
-- *Vimade only works in 256 color mode, it is recommended that you set `export TERM=xterm-256color` before starting vim*
-
-##### Features
-- [X] Fade inactive buffers
-- [X] Fade/Unfade diffs together
-- [X] Automatically adjust to colorscheme changes
-- [X] Automatically adjust to basebg changes
-- [X] Automatically adjust to fadelevel changes
-- [X] React to window resize + scroll changes
-- [X] Vim8+ (gui)
-- [X] Neovim (gui)
-- [X] Python3
-- [X] Python2
-- [X] 256 color terminal support (Xterm)
-- [X] Toggle vimade on/off (VimadeEnable, VimadeDisable, VimadeToggle)
-- [X] Supports terminal backgrounds for Vim8(not nvim yet) and Tilix, Kitty, Gnome, rxvt
-- [ ] Secondary buffer window highlighting
-- [ ] Vim Documentation/Help
-
-###### Todo
-- [ ] Support other terminals palletes? -- Open an issue if you need support for a different terminal or palette
-- [ ] Improve terminal color rounding for grays
-- [ ] Wrapped Text
-- [ ] Experiment with threading to improve performance, this may be necessary to implement limelight
-- [ ] Experiment with highlighted text within current window (limelight behavior)
-- [ ] Investigate sign column
-- [ ] Cleanup this Readme!
-- [ ] Code cleanup
-- [ ] Tests
+- *Vimade only works in 256 color mode and by default TMUX may set t_Co to 8.   it is recommended that you set `export TERM=xterm-256color` before starting vim*
 
 
