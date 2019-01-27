@@ -112,6 +112,6 @@ My colors look off in terminal mode!
 - *Make sure that you either use a supported terminal or colorscheme or manually define the fg and bg for 'Normal'.  You can also manually define the tint in your vimade config (g:vimade.basebg and g:vimade.basefg)*
 
 Tmux is not working!
-- *Vimade only works in 256 color mode and by default TMUX may set t_Co to 8.   it is recommended that you set `export TERM=xterm-256color` before starting vim.  You can also set 'set termguicolors' inside vim if your term supports it for an even more accurate level of fading.*
+- *Vimade only works in 256 color mode and by default TMUX may set t_Co to 8.   it is recommended that you set `export TERM=xterm-256color` before starting vim.  You can also set `set termguicolors` inside vim if your term supports it for an even more accurate level of fading.*
 
 
