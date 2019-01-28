@@ -26,6 +26,7 @@
 - [X] Automatically adjust to basebg changes
 - [X] Automatically adjust to fadelevel changes
 - [X] React to window resize + scroll changes
+- [X] Apply custom tints (not necessarily your background color to text)
 - [X] Vim8+
 - [X] Neovim
 - [X] Python3
@@ -34,13 +35,13 @@
 - [X] Toggle vimade on/off (VimadeEnable, VimadeDisable, VimadeToggle)
 - [X] Supports terminal backgrounds for Vim8(not nvim yet) and Tilix, Kitty, Gnome, rxvt
 - [ ] Sign column support
+- [ ] Wrapped Text
 - [ ] Secondary buffer window highlighting
 - [ ] Vim Documentation/Help
 
 ###### Todo
 - [ ] Support other terminals palletes? -- Open an issue if you need support for a different terminal or palette
 - [ ] Improve terminal color rounding for grays
-- [ ] Wrapped Text
 - [ ] Experiment with threading to improve performance, this may be necessary to implement limelight.  This will also be beneficial to the SignColumn logic
 - [ ] Experiment with highlighted text within current window (limelight behavior)
 - [X] Investigate sign column
@@ -76,7 +77,7 @@ let g:vimade = {
 ```
 - **vimade.normalid** - if not specified, the normalid is determined when vimade is first loaded.  normalid provides the id of the "Normal" highlight which is used to calculate fading.  You can override this config with another highlight group.
 - **vimade.basefg** - basefg is a hexidecimal color (in gui) and a 256 color code (in term).  By default basefg is calculated as the "Normal" highlight guifg or ctermfg.
-- **vimade.basebg** - basebg is a hexidecimal color (in gui) and a 256 color code (in term).  basebg is used as the color that text is faded against.  You can override this config with another hexidecimal color.
+- **vimade.basebg** - basebg can be either be six digit hexidecimal, rgb array ([0-255,0-255,0-255], or cterm code (in terminal).  basebg is used as the color that text is faded against.  You can override this config with another hexidecimal color.  A cool feature of basebg is to use it to change the tint of faded text even if its not your background!
 - **vimade.fadelevel** - amount of fading applied between text and basebg.  0 will make the text the same color as the background and 1 applies no fading.  The default value is 0.4.  If you are using terminal, you may need to tweak this value to get better results.
 - **vimade.rowbufsize** - the number of rows above and below of the determined scroll area that should be precalculated. Default is 30.
 - **vimade.colbufsize** - the number of cols left and right of the determined scroll area that should be precalculated. Default is 30.
