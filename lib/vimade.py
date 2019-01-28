@@ -50,6 +50,7 @@ COLORSCHEME = None
 ROW_BUF_SIZE = None
 COL_BUF_SIZE = None
 NORMAL_ID = None
+NORMAL_BG = ''
 BASE_BG = ''
 BASE_FG = ''
 BASE_BG_EXP = ''
@@ -251,6 +252,7 @@ def updateGlobals():
   global FADE
   global HI_FG
   global HI_BG
+  global NORMAL_BG
   global COLORSCHEME
   global BACKGROUND
   global BASE_BG_EXP
@@ -297,6 +299,7 @@ def updateGlobals():
 
   if normalid:
     base_hi = vim.eval('vimade#GetHi('+NORMAL_ID+')')
+    NORMAL_BG = base_hi[1]
     if not basefg:
       basefg = base_hi[0]
     if not basebg:
@@ -655,7 +658,7 @@ def fadeWin(winState):
       i = 0
       end = len(coords)
       while i < end:
-        winMatches.append(vim.eval('matchaddpos("'+group+'",['+','.join(map(lambda tup:'['+str(tup[0])+','+str(tup[1])+','+str(tup[2])+']' , coords[i:i+8]))+'],10,-1,{"window":'+winid+'})'))
+        winMatches.append(vim.eval('matchaddpos("'+group+'",['+','.join(map(lambda tup:'['+str(tup[0])+','+str(tup[1])+','+str(tup[2])+']' , coords[i:i+8]))+'],10,-1)'))
         i += 8
 
 
@@ -672,7 +675,7 @@ def fadeHi(hi):
   result = {}
 
   if guibg:
-    if guibg == BASE_BG_EXP:
+    if guibg == BASE_BG_EXP or guibg == NORMAL_BG:
       guibg = None
     else:
       guibg = FADE(guibg, BASE_BG)
