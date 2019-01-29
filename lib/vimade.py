@@ -369,6 +369,13 @@ def unfadeAll():
       unfadeWin(winState)
       winState['faded'] = False
 
+def readyCheckBuffer(config):
+  bufnr = config['bufnr']
+  currentWindows = FADE_STATE['windows']
+  for winState in currentWindows.values():
+    if winState['buffer'] == bufnr and winState['faded'] == True:
+      winState['faded'] = False
+
 def updateState(nextState = None):
   global HI_CACHE
   if FADE_STATE['prevent']:

@@ -83,6 +83,16 @@ function! vimade#CheckWindows()
   endif
 endfunction
 
+function! vimade#ReadyCheckBuffer(bufnr)
+  if g:vimade_running
+    exec g:vimade_py_cmd join([
+        \ "import vimade",
+        \ "vimade.readyCheckBuffer({'bufnr':'".a:bufnr."'})",
+    \ ], "\n")
+  endif
+  call vimade#CheckWindows()
+endfunction
+
 function! vimade#UpdateEvents()
   augroup vimade 
       au!
@@ -91,6 +101,7 @@ function! vimade#UpdateEvents()
       au BufEnter * call vimade#CheckWindows()
       au OptionSet diff call vimade#CheckWindows()
       au OptionSet wrap call vimade#CheckWindows()
+      au FileChangedShellPost * call vimade#ReadyCheckBuffer(expand("<abuf>"))
       if g:vimade.usecursorhold
         au CursorHold * call vimade#CheckWindows()
         au VimResized * call vimade#CheckWindows()
@@ -137,17 +148,6 @@ endfunction
 
 function! vimade#UnfadeCurrentBuffer()
     call vimade#CheckWindows()
-endfunction
-
-function! vimade#DiffToggled()
-    "let python vimade know that diff was enabled on window
-    let winid = win_getid(winnr())
-    if g:vimade_running
-      exec g:vimade_py_cmd join([
-          \ "import vimade,vim",
-          \ "vimade.updateState({'diff': {'winid':".winid.",'value':".&diff."}, 'activeBuffer': str(vim.current.buffer.number), 'activeTab': '".tabpagenr()."', 'activeWindow': '".winid. "'})",
-      \ ], "\n")
-  endif
 endfunction
 
 function! vimade#GetHi(id)
