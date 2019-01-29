@@ -111,11 +111,11 @@ def detectTermColors():
             fg = ''
             bg= ''
 
-    fg = re.findall("[a-zA-Z0-9]{4}/[a-zA-Z0-9]{4}/[a-zA-Z0-9]{4}", fg)
+    fg = re.findall("[a-zA-Z0-9]{2,4}/[a-zA-Z0-9]{2,4}/[a-zA-Z0-9]{2,4}", fg)
     if len(fg):
       fg = fg[0]
     fg = fg if len(fg) else ''
-    bg = re.findall("[a-zA-Z0-9]{4}/[a-zA-Z0-9]{4}/[a-zA-Z0-9]{4}", bg)
+    bg = re.findall("[a-zA-Z0-9]{2,4}/[a-zA-Z0-9]{2,4}/[a-zA-Z0-9]{2,4}", bg)
     if len(bg):
       bg = bg[0]
     bg = bg if len(bg) else ''
@@ -722,6 +722,7 @@ def fadeWin(winState):
     if lastWin != winid:
       vim.command('noautocmd call win_gotoid('+lastWin+')')
   FADE_STATE['prevent'] = False
+  # print((time.time() - startTime) * 1000)
 def fadeHi(hi):
   guifg = hi[0]
   guibg = hi[1]
