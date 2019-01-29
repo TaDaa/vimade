@@ -34,8 +34,8 @@
 - [X] 256 color terminal support (Xterm)
 - [X] Toggle vimade on/off (VimadeEnable, VimadeDisable, VimadeToggle)
 - [X] Supports terminal backgrounds for Vim8(not nvim yet) and Tilix, Kitty, Gnome, rxvt
+- [X] Wrapped Text
 - [ ] Sign column support
-- [ ] Wrapped Text
 - [ ] Secondary buffer window highlighting
 - [ ] Vim Documentation/Help
 
@@ -44,7 +44,6 @@
 - [ ] Improve terminal color rounding for grays
 - [ ] Experiment with threading to improve performance, this may be necessary to implement limelight.  This will also be beneficial to the SignColumn logic
 - [ ] Experiment with highlighted text within current window (limelight behavior)
-- [X] Investigate sign column
 - [ ] Cleanup this Readme!
 - [ ] Code cleanup
 - [ ] Tests

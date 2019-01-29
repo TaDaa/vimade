@@ -78,7 +78,7 @@ function! vimade#CheckWindows()
   if g:vimade_running
     exec g:vimade_py_cmd join([
         \ "import vimade",
-        \ "vimade.updateState({'activeBuffer': str(vim.current.buffer.number), 'activeTab': '".tabpagenr()."', 'activeWindow': '".win_getid(winnr())."'})",
+        \ "vimade.updateState({'activeBuffer': str(vim.current.buffer.number), 'activeTab': '".tabpagenr()."', 'activeWindow': '".win_getid(winnr())."','wrap': ".&wrap.", 'diff': ".&diff."})",
     \ ], "\n")
   endif
 endfunction
@@ -88,9 +88,9 @@ function! vimade#UpdateEvents()
       au!
       au VimEnter * call vimade#Init()
       au VimLeave * call vimade#Disable()
-      au BufLeave * call vimade#FadeCurrentBuffer()
-      au BufEnter * call vimade#UnfadeCurrentBuffer()
-      au OptionSet diff call vimade#DiffToggled()
+      au BufEnter * call vimade#CheckWindows()
+      au OptionSet diff call vimade#CheckWindows()
+      au OptionSet wrap call vimade#CheckWindows()
       if g:vimade.usecursorhold
         au CursorHold * call vimade#CheckWindows()
         au VimResized * call vimade#CheckWindows()
@@ -130,19 +130,13 @@ function! vimade#FadeCurrentBuffer()
     if g:vimade_running
       exec g:vimade_py_cmd join([
           \ "import vimade",
-          \ "vimade.updateState({'activeBuffer': -1, 'activeTab': '".tabpagenr()."', 'activeWindow': '".win_getid(winnr())."'})",
+          \ "vimade.updateState({'activeBuffer': -1, 'activeTab': '".tabpagenr()."', 'activeWindow': '".win_getid(winnr())."', 'wrap': ".&wrap.", 'diff': ".&diff."})",
       \ ], "\n")
     endif
 endfunction
 
 function! vimade#UnfadeCurrentBuffer()
-    "immediately unfade current buffer
-    if g:vimade_running
-      exec g:vimade_py_cmd join([
-          \ "import vimade,vim",
-          \ "vimade.updateState({'activeBuffer': str(vim.current.buffer.number), 'activeTab': '".tabpagenr()."', 'activeWindow': '".win_getid(winnr())."'})",
-      \ ], "\n")
-    endif
+    call vimade#CheckWindows()
 endfunction
 
 function! vimade#DiffToggled()

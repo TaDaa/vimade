@@ -90,7 +90,8 @@ def detectTermColors():
   global TERM_BG
   global TERM_RESPONSE
 
-  if IS_TERM:
+  #no point in running the script for nvim atm
+  if IS_TERM and not IS_NVIM:
     try:
       fg = str(subprocess.check_output(COLORS_SH + ['10'])).strip()
       bg = str(subprocess.check_output(COLORS_SH + ['11'])).strip()
@@ -403,8 +404,8 @@ def updateState(nextState = None):
   activeBuffer = nextState["activeBuffer"]
   activeWindow = nextState['activeWindow']
   activeTab = nextState['activeTab']
-  updateDiff = nextState['diff'] if nextState and 'diff' in nextState else {'winid': -1, 'value': False}
-  activeDiff = int(vim.eval('&diff'))
+  activeDiff = nextState['diff']
+  activeWrap = nextState['wrap']
   nextWindows = {}
   nextBuffers = {}
   diff = []
@@ -434,6 +435,7 @@ def updateState(nextState = None):
         'win': window,
         'id': winid,
         'diff': False,
+        'wrap': False,
         'number': winnr,
 	'height': window.height,
 	'width': window.width,
@@ -450,10 +452,9 @@ def updateState(nextState = None):
     state['win'] = window
     state['number'] = winnr
 
-    if str(updateDiff['winid']) == winid:
-      state['diff'] = updateDiff['value']
-    elif hasActiveWindow:
+    if hasActiveWindow:
       state['diff'] = activeDiff
+      state['wrap'] = activeWrap
 
     if state['diff']:
       diff.append(state)
@@ -487,8 +488,7 @@ def updateState(nextState = None):
     for state in diff:
       if state['id'] in fade:
         del fade[state['id']]
-      if updateDiff['winid'] == -1:
-        unfade[state['id']] = state
+      unfade[state['id']] = state
 
   for win in list(FADE_STATE['windows'].keys()):
     if not win in nextWindows:
@@ -544,18 +544,58 @@ def fadeWin(winState):
   width = winState['width']
   height = winState['height']
   cursor = winState['cursor']
+  wrap = winState['wrap']
   lastWin = vim.eval('win_getid('+str(vim.current.window.number)+')')
   setWin = False
   buf = win.buffer
   cursorCol = cursor[1]
   startRow = cursor[0] - height - ROW_BUF_SIZE
-  startRow = max(startRow, 1)
   endRow = cursor[0] +  height + ROW_BUF_SIZE
-  endRow = min(endRow, len(buf))
   startCol = cursorCol - width + 1 - COL_BUF_SIZE
   startCol = max(startCol, 1)
   maxCol = cursorCol + 1 + width + COL_BUF_SIZE
   matches = {}
+
+  # attempted working backwards through synID as well, but this precomputation nets in
+  # the highest performance gains
+  if wrap:
+    #set startCol to 1
+    #maxCol gets set to text_ln a bit lower
+    startCol = 1
+
+    #first calculate virtual rows above the cursor
+    row = cursor[0] - 1
+    sRow = startRow
+    real_row = row
+    text_ln = 0
+    while row >= sRow and real_row > 0:
+      text = bytes(buf[real_row - 1], 'utf-8') if IS_V3 else buf[real_row-1]
+      text_ln = len(text)
+      virtual_rows = math.floor(text_ln / width)
+      row -= virtual_rows + 1
+      real_row -= 1
+    d = sRow - row
+    wrap_first_row_colStart = int(max(text_ln - d * width if d > 0 else 1,1))
+    startRow = real_row
+    
+    #next calculate virtual rows equal to and below the cursor
+    row = cursor[0]
+    real_row = row 
+    text_ln = 0
+    while row <= endRow and real_row <= len(buf):
+      text = bytes(buf[real_row - 1], 'utf-8') if IS_V3 else buf[real_row-1]
+      text_ln = len(text)
+      virtual_rows = math.floor(text_ln / width)
+      row += virtual_rows + 1
+      if row <= endRow:
+        real_row += 1
+    d = row - min(endRow, len(buf))
+    wrap_last_row_colEnd =  int(min(d * width if d > 0 else width , text_ln))
+    endRow = real_row
+
+  #clamp values
+  startRow = max(startRow, 1)
+  endRow = min(endRow, len(buf))
 
   bufState = FADE_STATE['buffers'][winState['buffer']]
   coords = bufState['coords']
@@ -576,21 +616,35 @@ def fadeWin(winState):
     if IS_V3:
       rawText = buf[index]
       text = bytes(rawText, 'utf-8')
+      text_ln = len(text)
+      mCol = text_ln if wrap else maxCol
       adjustStart = rawText[0:cursorCol]
       adjustStart = len(bytes(adjustStart, 'utf-8')) - len(adjustStart)
-      adjustEnd = rawText[cursorCol:maxCol]
+      adjustEnd = rawText[cursorCol:mCol]
       adjustEnd = len(bytes(adjustEnd, 'utf-8')) - len(adjustEnd)
     else:
       text = buf[index]
+      text_ln = len(text)
+      mCol = text_ln if wrap else maxCol
       rawText = text.decode('utf-8')
       adjustStart = rawText[0:cursorCol]
       adjustStart = len(adjustStart.encode('utf-8')) - len(adjustStart)
-      adjustEnd = rawText[cursorCol:maxCol]
+      adjustEnd = rawText[cursorCol:mCol]
       adjustEnd = len(adjustEnd.encode('utf-8')) - len(adjustEnd)
-    text_ln = len(text)
-    column -= adjustStart
-    column = max(column, 1)
-    endCol = min(maxCol + adjustEnd, text_ln)
+
+    if wrap:
+      if row == startRow:
+        column = wrap_first_row_colStart
+      else:
+        column = 1
+      if row == endRow:
+        endCol = wrap_last_row_colEnd
+      else:
+        endCol = text_ln
+    else:
+      column -= adjustStart
+      column = max(column, 1)
+      endCol = min(mCol + adjustEnd, text_ln)
     colors = coords[index]
     if colors == None:
       colors = coords[index] = [None] * text_ln
@@ -599,6 +653,7 @@ def fadeWin(winState):
     ids = []
     gaps = []
 
+    sCol = column
     while column <= endCol:
       #get syntax id and cache
       current = colors[column - 1]
@@ -630,7 +685,7 @@ def fadeWin(winState):
     if len(exprs):
       vim.command('|'.join(exprs))
 
-    column = startCol
+    column = sCol
     while column <= endCol:
       current = colors[column - 1]
       if current and not winid in current:
@@ -667,8 +722,6 @@ def fadeWin(winState):
     if lastWin != winid:
       vim.command('noautocmd call win_gotoid('+lastWin+')')
   FADE_STATE['prevent'] = False
-  # print((time.time() - startTime) * 1000)
-
 def fadeHi(hi):
   guifg = hi[0]
   guibg = hi[1]
