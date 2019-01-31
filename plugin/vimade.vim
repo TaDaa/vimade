@@ -13,7 +13,7 @@ let defaults = {
   \ "fadelevel": 0.4,
   \ "colbufsize": 30,
   \ "rowbufsize": 30,
-  \ "checkinterval": 32,
+  \ "checkinterval": 100,
   \ 'usecursorhold': has('gui_running') && !has('nvim') && execute('version')=~"GUI version",
   \ 'detecttermcolors': 1,
 \ }

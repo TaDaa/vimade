@@ -69,7 +69,7 @@ let g:vimade = {
   \ "fadelevel": 0.4,
   \ "colbufsize": 30,
   \ "rowbufsize": 30,
-  \ "checkinterval": 32,
+  \ "checkinterval": 100,
   \ "usecursorhold": 0, "0 is default, but will automatically set to 1 for Windows GVIM
   \ "detecttermcolors": 1
 }
@@ -80,7 +80,7 @@ let g:vimade = {
 - **vimade.fadelevel** - amount of fading applied between text and basebg.  0 will make the text the same color as the background and 1 applies no fading.  The default value is 0.4.  If you are using terminal, you may need to tweak this value to get better results.
 - **vimade.rowbufsize** - the number of rows above and below of the determined scroll area that should be precalculated. Default is 30.
 - **vimade.colbufsize** - the number of cols left and right of the determined scroll area that should be precalculated. Default is 30.
-- **vimade.checkinterval** - the amount of time in milliseconds that vimade should check the screen for changes.  This config is mainly used to detect resize and scroll changes that occur on inactive windows. Checkinterval does nothing on gvim, if you want to control the refresh time, see 'h updatetime'. Default is 32.  
+- **vimade.checkinterval** - the amount of time in milliseconds that vimade should check the screen for changes.  This config is mainly used to detect resize and scroll changes that occur on inactive windows. Checkinterval does nothing on gvim, if you want to control the refresh time, see 'h updatetime'. Default is 100.  
 - **vimade.usecursorhold** -  disables the timer running in the background and instead relies `OnCursorHold` and `updatetime` (see h:updatetime).  The default value is `0` except on Windows GVIM, which defaults to `1` due to the timer breaking movements.  If you find that the timer is causing performance problems or other issues you can disable it by setting this option to `1`. 
 - **vimade.detecttermcolors** - detect the terminal background and foreground colors.  This will work for Vim8 + iTerm, Tilix, Kitty, Gnome, Rxvt, and other editors that support the following query (```\033]11;?\007``` or ```\033]11;?\033\\```).  Default is 1.
 
