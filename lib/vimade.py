@@ -241,6 +241,7 @@ def fade256(source, to):
 ERROR = -1
 READY = 0
 FULL_INVALIDATE = 1
+RECALCULATE = 2
 def updateGlobals():
   global ROW_BUF_SIZE
   global COL_BUF_SIZE
@@ -282,21 +283,21 @@ def updateGlobals():
 
   if COLORSCHEME != colorscheme:
     COLORSCHEME = colorscheme
-    returnState = FULL_INVALIDATE
+    returnState = RECALCULATE
   if BACKGROUND != background:
     BACKGROUND = background
     if not TERM_RESPONSE and IS_TERM and not termguicolors:
       (TERM_FG, TERM_BG) = ('#FFFFFF','#000000') if 'dark' in BACKGROUND else ('#000000', '#FFFFFF')
-    returnState = FULL_INVALIDATE
+    returnState = RECALCULATE
   if FADE_LEVEL != fadelevel:
     FADE_LEVEL = fadelevel 
-    returnState = FULL_INVALIDATE
+    returnState = RECALCULATE
   if NORMAL_ID != normalid:
     NORMAL_ID = normalid
-    returnState = FULL_INVALIDATE
+    returnState = RECALCULATE
   if TERMGUICOLORS != termguicolors:
     TERMGUICOLORS = termguicolors
-    returnState = FULL_INVALIDATE
+    returnState = RECALCULATE
 
   if normalid:
     base_hi = vim.eval('vimade#GetHi('+NORMAL_ID+')')
@@ -321,7 +322,7 @@ def updateGlobals():
     elif basefg.isdigit() and int(basefg) < len(RGB_256):
       basefg = from256ToRGB(int(basefg))
     BASE_HI[0] = BASE_FG = basefg
-    returnState = FULL_INVALIDATE
+    returnState = RECALCULATE
 
   if basebg and BASE_BG_LAST != basebg:
     BASE_BG_LAST = basebg
@@ -332,9 +333,9 @@ def updateGlobals():
     elif basebg.isdigit() and int(basebg) < len(RGB_256):
       basebg = from256ToRGB(int(basebg))
     BASE_HI[1] = BASE_BG = basebg
-    returnState = FULL_INVALIDATE
+    returnState = RECALCULATE
 
-  if returnState == FULL_INVALIDATE and len(BASE_FG) > 0 and len(BASE_BG) > 0:
+  if (returnState == FULL_INVALIDATE or returnState == RECALCULATE) and len(BASE_FG) > 0 and len(BASE_BG) > 0:
     BASE_HI[0] = BASE_FG
     BASE_HI[1] = BASE_BG
     if not IS_TERM or termguicolors:
@@ -391,7 +392,10 @@ def updateState(nextState = None):
     return
 
   #Full invalidate - clean cache and unfade all windows + reset buffesr
-  if status == FULL_INVALIDATE:
+  if status == RECALCULATE:
+    highlightIds(list(HI_CACHE.keys()), True)
+    return
+  elif status == FULL_INVALIDATE:
     HI_CACHE = {}
     for winState in currentWindows.values():
       if winState['faded']:
@@ -675,22 +679,11 @@ def fadeWin(winState):
 
     ids = vim.eval('[' + ','.join(ids) + ']')
 
+    highlights = highlightIds(ids)
     i = 0
-    exprs = []
-    for id in ids:
-      if not id in HI_CACHE:
-        hi = HI_CACHE[id] = fadeHi(vim.eval('vimade#GetHi('+id+')'))
-        vim_expr = 'hi ' + hi['group'] + HI_FG + hi['guifg']
-        if hi['guibg']:
-          vim_expr += HI_BG + hi['guibg']
-        exprs.append(vim_expr)
-      else:
-        hi = HI_CACHE[id]
-      colors[gaps[i]] = {'id': id, 'hi': hi}
+    for hi in highlights:
+      colors[gaps[i]] = {'id': ids[i], 'hi': hi}
       i += 1
-
-    if len(exprs):
-      vim.command('|'.join(exprs))
 
     column = sCol
     while column <= endCol:
@@ -730,10 +723,30 @@ def fadeWin(winState):
       vim.command('noautocmd call win_gotoid('+lastWin+')')
   FADE_STATE['prevent'] = False
   # print((time.time() - startTime) * 1000)
+
+def highlightIds(ids, force = False):
+  result = ids[:]
+  exprs = []
+  i = 0
+  for id in ids:
+      if not id in HI_CACHE or force:
+          result[i] = HI_CACHE[id] = hi = fadeHi(vim.eval('vimade#GetHi('+id+')'))
+          group = hi['group'] = 'vimade_' + id
+          expr = 'hi ' + group + HI_FG + hi['guifg']
+          if hi['guibg']:
+            expr += HI_BG + hi['guibg']
+          exprs.append(expr)
+      else:
+          result[i] = HI_CACHE[id]
+      i += 1
+  if len(exprs):
+      vim.command('|'.join(exprs))
+  return result
+
 def fadeHi(hi):
+  result = {}
   guifg = hi[0]
   guibg = hi[1]
-  result = {}
 
   if guibg:
     if guibg == BASE_BG_EXP or guibg == NORMAL_BG:
@@ -750,11 +763,5 @@ def fadeHi(hi):
     guifg = FADE(guifg, BASE_BG)
 
   result['guifg'] = guifg
-
-  group = 'fade_'
-  group += guifg[1:] if guifg and len(guifg) > 3 else str(guifg)
-  group += guibg[1:] if guibg and len(guibg) > 3 else str(guibg)
-
-  result['group'] = group
 
   return result
