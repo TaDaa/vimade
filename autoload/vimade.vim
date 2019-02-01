@@ -45,7 +45,7 @@ function! vimade#GetInfo()
       \ "vim.vars['vimade_python_info'] = vimade.getInfo()",
   \ ], "\n")
   return {
-      \ 'version': '0.0.1', 
+      \ 'version': '0.0.2', 
       \ 'config': g:vimade,
       \ 'python': g:vimade_python_info,
       \ 'other': {
@@ -61,6 +61,7 @@ function! vimade#GetInfo()
         \ 'has_gui_running': has('gui_running'),
         \ 'vimade_py_cmd': g:vimade_py_cmd,
         \ 'vimade_running': g:vimade_running,
+        \ 'vimade_error_count': g:vimade_error_count,
         \ 'vimade_timer': exists('g:vimade_timer') ? g:vimade_timer : -1,
         \ 'vimade_loaded': g:vimade_loaded,
         \ 't_Co': &t_Co,
@@ -103,8 +104,8 @@ function! vimade#UpdateEvents()
       au OptionSet wrap call vimade#CheckWindows()
       au FileChangedShellPost * call vimade#ReadyCheckBuffer(expand("<abuf>"))
       if g:vimade.usecursorhold
-        au CursorHold * call vimade#CheckWindows()
-        au VimResized * call vimade#CheckWindows()
+        au CursorHold * call vimade#Tick(0)
+        au VimResized * call vimade#Tick(0)
       endif
   augroup END
 endfunction
@@ -151,7 +152,20 @@ function! vimade#UpdateState()
 endfunction
 
 function! vimade#Tick(num)
-  call vimade#CheckWindows()
+  try
+    call vimade#CheckWindows()
+  catch
+    let g:vimade_error_count += 1
+    if g:vimade_error_count >= 3
+      let g:vimade_error_count = 0
+      try
+        VimadeDisable
+      catch
+        let g:vimade_running = 0
+      endtry
+    endif
+    throw 'Vimade Error='.g:vimade_error_count . '\n' . v:exception
+  endtry
 endfunction
 
 function! vimade#FadeCurrentBuffer()

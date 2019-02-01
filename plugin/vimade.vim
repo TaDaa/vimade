@@ -5,6 +5,7 @@ if !exists('g:vimade_running')
   let g:vimade_running = 1
 endif
 let g:vimade_loaded = 1
+let g:vimade_error_count = 0
 
 let g:vimade_defaults = {
   \ "normalid": '',
