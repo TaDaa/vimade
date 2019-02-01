@@ -109,7 +109,25 @@ function! vimade#UpdateEvents()
   augroup END
 endfunction
 
+function! vimade#ExtendState()
+  for prop in g:vimade_defaults_keys
+    if !has_key(g:vimade, prop)
+      let g:vimade[prop] = g:vimade_defaults[prop]
+    endif
+  endfor
+  "get the normal id
+  if g:vimade.normalid == "" || g:vimade.normalid == 0
+    let g:vimade.normalid = hlID('Normal')
+  endif
+endfunction
+
 function! vimade#UpdateState()
+  if !exists('g:vimade')
+    let g:vimade = {}
+  endif
+  if !has_key(g:vimade, '$extended')
+    call vimade#ExtendState()
+  endif
   if g:vimade.usecursorhold != g:vimade_last.usecursorhold
     let g:vimade_last.usecursorhold = g:vimade.usecursorhold
     if g:vimade.usecursorhold
@@ -170,10 +188,6 @@ function! vimade#StopTimer()
 endfunction
 
 function! vimade#Init()
-  "get the normal id
-  if g:vimade.normalid == "" || g:vimade.normalid == 0
-    let g:vimade.normalid = hlID('Normal')
-  endif
 
   if g:vimade.detecttermcolors
     call vimade#DetectTermColors()

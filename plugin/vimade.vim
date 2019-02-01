@@ -6,22 +6,23 @@ if !exists('g:vimade_running')
 endif
 let g:vimade_loaded = 1
 
-let defaults = {
+let g:vimade_defaults = {
   \ "normalid": '',
   \ "basefg": '',
   \ "basebg": '',
   \ "fadelevel": 0.4,
-  \ "colbufsize": 30,
-  \ "rowbufsize": 30,
+  \ "colbufsize": 15,
+  \ "rowbufsize": 15,
   \ "checkinterval": 100,
   \ 'usecursorhold': has('gui_running') && !has('nvim') && execute('version')=~"GUI version",
   \ 'detecttermcolors': 1,
+  \ '$extended': 1,
 \ }
-if exists('g:vimade')
-  let g:vimade = extend(defaults, g:vimade)
-else
-  let g:vimade = defaults
+let g:vimade_defaults_keys = keys(g:vimade_defaults)
+if !exists('g:vimade')
+  let g:vimade = {}
 endif
+call vimade#ExtendState()
 
 if exists('g:vimade_detect_term_colors')
   let g:vimade.detecttermcolors = g:vimade_detect_term_colors
