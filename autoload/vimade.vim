@@ -45,7 +45,7 @@ function! vimade#GetInfo()
       \ "vim.vars['vimade_python_info'] = vimade.getInfo()",
   \ ], "\n")
   return {
-      \ 'version': '0.0.2', 
+      \ 'version': '0.0.3', 
       \ 'config': g:vimade,
       \ 'python': g:vimade_python_info,
       \ 'other': {
