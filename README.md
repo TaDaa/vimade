@@ -35,7 +35,7 @@
 - [X] Toggle vimade on/off (VimadeEnable, VimadeDisable, VimadeToggle)
 - [X] Supports terminal backgrounds for Vim8(not nvim yet) and iTerm, Tilix, Kitty, Gnome, rxvt
 - [X] Wrapped Text
-- [ ] Sign column support
+- [ ] Sign column support (Experimental)
 - [ ] Secondary buffer window highlighting
 - [ ] Vim Documentation/Help
 
@@ -71,7 +71,10 @@ let g:vimade = {
   \ "rowbufsize": 15,
   \ "checkinterval": 100,
   \ "usecursorhold": 0, "0 is default, but will automatically set to 1 for Windows GVIM
-  \ "detecttermcolors": 1
+  \ "detecttermcolors": 1,
+  \ 'experimentalsigns': 0,
+  \ 'signshistory': 2,
+  \ 'signshistoryretentionperiod': 4000,
 }
 ```
 - **vimade.normalid** - if not specified, the normalid is determined when vimade is first loaded.  normalid provides the id of the "Normal" highlight which is used to calculate fading.  You can override this config with another highlight group.
@@ -83,6 +86,9 @@ let g:vimade = {
 - **vimade.checkinterval** - the amount of time in milliseconds that vimade should check the screen for changes.  This config is mainly used to detect resize and scroll changes that occur on inactive windows. Checkinterval does nothing on gvim, if you want to control the refresh time, see 'h updatetime'. Default is 100.  
 - **vimade.usecursorhold** -  disables the timer running in the background and instead relies `OnCursorHold` and `updatetime` (see h:updatetime).  The default value is `0` except on Windows GVIM, which defaults to `1` due to the timer breaking movements.  If you find that the timer is causing performance problems or other issues you can disable it by setting this option to `1`. 
 - **vimade.detecttermcolors** - detect the terminal background and foreground colors.  This will work for Vim8 + iTerm, Tilix, Kitty, Gnome, Rxvt, and other editors that support the following query (```\033]11;?\007``` or ```\033]11;?\033\\```).  Default is 1.
+- **vimade.experimentalsigns** - Enables sign fading.  This feature is experimental and disabled by default.  Enable it by settings its value to 1.
+- **vimade.signshistory** - The number of faded buffers to track for sign changes.  Priority is given to most recently faded buffers. Specify a value between 0-10, the default value is 2.
+- **vimade.signshistoryretentionperiod** - The amount of time in milliseconds that faded buffers should be tracked for sign changes.  Default value is 4000.
 
 ##### Example
 *this example reduces the amount of fading applied to text*

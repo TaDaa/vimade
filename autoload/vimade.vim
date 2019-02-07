@@ -79,16 +79,16 @@ function! vimade#CheckWindows()
   if g:vimade_running
     exec g:vimade_py_cmd join([
         \ "import vimade",
-        \ "vimade.updateState({'activeBuffer': str(vim.current.buffer.number), 'activeTab': '".tabpagenr()."', 'activeWindow': '".win_getid(winnr())."','wrap': ".&wrap.", 'diff': ".&diff."})",
+        \ "vimade.update({'activeBuffer': str(vim.current.buffer.number), 'activeTab': '".tabpagenr()."', 'activeWindow': '".win_getid(winnr())."','wrap': ".&wrap.", 'diff': ".&diff."})",
     \ ], "\n")
   endif
 endfunction
 
-function! vimade#ReadyCheckBuffer(bufnr)
+function! vimade#softInvalidateBuffer(bufnr)
   if g:vimade_running
     exec g:vimade_py_cmd join([
         \ "import vimade",
-        \ "vimade.readyCheckBuffer({'bufnr':'".a:bufnr."'})",
+        \ "vimade.softInvalidateBuffer('".bufnr."')",
     \ ], "\n")
   endif
   call vimade#CheckWindows()
@@ -102,7 +102,7 @@ function! vimade#UpdateEvents()
       au BufEnter * call vimade#CheckWindows()
       au OptionSet diff call vimade#CheckWindows()
       au OptionSet wrap call vimade#CheckWindows()
-      au FileChangedShellPost * call vimade#ReadyCheckBuffer(expand("<abuf>"))
+      au FileChangedShellPost * call vimade#softInvalidateBuffer(expand("<abuf>"))
       if g:vimade.usecursorhold
         au CursorHold * call vimade#Tick(0)
         au VimResized * call vimade#Tick(0)
@@ -173,7 +173,7 @@ function! vimade#FadeCurrentBuffer()
     if g:vimade_running
       exec g:vimade_py_cmd join([
           \ "import vimade",
-          \ "vimade.updateState({'activeBuffer': -1, 'activeTab': '".tabpagenr()."', 'activeWindow': '".win_getid(winnr())."', 'wrap': ".&wrap.", 'diff': ".&diff."})",
+          \ "vimade.update({'activeBuffer': -1, 'activeTab': '".tabpagenr()."', 'activeWindow': '".win_getid(winnr())."', 'wrap': ".&wrap.", 'diff': ".&diff."})",
       \ ], "\n")
     endif
 endfunction
