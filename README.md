@@ -35,7 +35,7 @@
 - [X] Toggle vimade on/off (VimadeEnable, VimadeDisable, VimadeToggle)
 - [X] Supports terminal backgrounds for Vim8(not nvim yet) and iTerm, Tilix, Kitty, Gnome, rxvt
 - [X] Wrapped Text
-- [ ] Sign column support (Experimental)
+- [X] Sign column support (Experimental -- see config below to enable)
 - [ ] Secondary buffer window highlighting
 - [ ] Vim Documentation/Help
 
