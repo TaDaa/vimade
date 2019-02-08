@@ -47,16 +47,17 @@ def unfade_bufs(bufs):
   if len(changes):
     place = []
     for sign in changes:
+      # place.append('sign unplace ' + sign['id'])
       place.append('sign place ' + sign['id'] + ' name=' + sign['name'][7:] + ' buffer='+sign['bufnr'])
     vim.command('function! VimadeSignTemp() \n' + '\n'.join(place) + '\nendfunction')
     if not RESET_SIGNCOLUMN:
       RESET_SIGNCOLUMN = True
-      vim.command('redraw | let g:vimade_lastsc=&signcolumn | set signcolumn=no | call VimadeSignTemp()')
+      vim.command('redraw | call VimadeSignTemp()')
     else:
       vim.command('call VimadeSignTemp()')
   if RESET_SIGNCOLUMN:
     RESET_SIGNCOLUMN = False
-    vim.command('let &signcolumn=g:vimade_lastsc')
+    # vim.command('let &signcolumn=g:vimade_lastsc')
 
   # FADE.prevent = False
   # print('unfade',(time.time() - start) * 1000)
@@ -119,12 +120,13 @@ def fade_bufs(bufs):
   if len(changes):
     place = []
     for sign in changes:
+      # place.append('sign unplace ' + sign['id'])
       place.append('sign place ' + sign['id'] + ' name=vimade_' + sign['name'] + ' buffer=' + sign['bufnr'] )
 
     RESET_SIGNCOLUMN = True
     #batch commands within a function (higher nvim perf)
     vim.command('function! VimadeSignTemp() \n'+ '\n'.join(place) + '\nendfunction')
-    vim.command('redraw | let g:vimade_lastsc=&signcolumn | set signcolumn=no | call VimadeSignTemp()')
+    vim.command('redraw | call VimadeSignTemp()')
   # FADE.prevent = False
   # print('fade',(time.time() - start) * 1000)
 
