@@ -1,7 +1,7 @@
 import vim
 import sys
-import colors
-from term_256 import RGB_256
+from vimade import colors
+from vimade.term_256 import RGB_256
 
 GLOBALS = sys.modules[__name__]
 
@@ -145,14 +145,14 @@ def update():
       GLOBALS.hi_fg = ' ctermfg='
       GLOBALS.hi_bg = ' ctermbg='
       GLOBALS.fade = colors.interpolate256
-    GLOBALS.base_fade = GLOBALS.fade(GLOBALS.base_fg, GLOBALS.base_bg)
+    GLOBALS.base_fade = GLOBALS.fade(GLOBALS.base_fg, GLOBALS.base_bg, GLOBALS.fade_level)
     try:
-      GLOBALS.base_fg_exp = GLOBALS.fade(GLOBALS.base_fg, GLOBALS.base_fg).upper()
+      GLOBALS.base_fg_exp = GLOBALS.fade(GLOBALS.base_fg, GLOBALS.base_fg, GLOBALS.fade_level).upper()
     except:
       #consider logging here, nothing bad should happen -- vimade should still work
       pass
     try:
-      GLOBALS.base_bg_exp = GLOBALS.fade(GLOBALS.base_bg, GLOBALS.base_bg).upper()
+      GLOBALS.base_bg_exp = GLOBALS.fade(GLOBALS.base_bg, GLOBALS.base_bg, GLOBALS.fade_level).upper()
     except:
       #consider logging here, nothing bad should happen -- vimade should still work
       pass

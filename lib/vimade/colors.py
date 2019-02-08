@@ -1,6 +1,5 @@
-from term_256 import RGB_256, LOOKUP_256_RGB
-import global_state as GLOBALS
 import math
+from vimade.term_256 import RGB_256, LOOKUP_256_RGB
 
 def fromHexStringToRGB(source):
   return [int(source[1:3], 16), int(source[3:5], 16), int(source[5:7], 16)]
@@ -11,15 +10,15 @@ def from256ToRGB(source):
 def from256RGBToHexString(source):
   return fromRGBToHexString(from256ToRGB(source))
 
-def interpolate24b(source, to):
+def interpolate24b(source, to, fade_level):
     if not isinstance(source, list):
       source = [int(source[1:3], 16), int(source[3:5], 16), int(source[5:7], 16)]
     if not isinstance(to, list):
       to = [int(to[1:3], 16), int(to[3:5], 16), int(to[5:7], 16)]
     if source != to:
-      r = hex(int(math.floor(to[0]+(source[0]-to[0])*GLOBALS.fade_level)))[2:]
-      g = hex(int(math.floor(to[1]+(source[1]-to[1])*GLOBALS.fade_level)))[2:]
-      b = hex(int(math.floor(to[2]+(source[2]-to[2])*GLOBALS.fade_level)))[2:]
+      r = hex(int(math.floor(to[0]+(source[0]-to[0])*fade_level)))[2:]
+      g = hex(int(math.floor(to[1]+(source[1]-to[1])*fade_level)))[2:]
+      b = hex(int(math.floor(to[2]+(source[2]-to[2])*fade_level)))[2:]
     else:
       r = hex(to[0])[2:]
       g = hex(to[1])[2:]
@@ -37,13 +36,13 @@ def interpolate24b(source, to):
 #this algorithm is better at preserving color
 #TODO we need to handle grays better
 thresholds = [-1,0, 95, 135, 175, 215, 255, 256]
-def interpolate256(source, to):
+def interpolate256(source, to, fade_level):
   if not isinstance(source, list):
     source = RGB_256[int(source)]
   if not isinstance(to, list):
     to = RGB_256[int(to)]
   if source != to:
-    rgb = [int(math.floor(to[0]+(source[0]-to[0])*GLOBALS.fade_level)), int(math.floor(to[1]+(source[1]-to[1])*GLOBALS.fade_level)), int(math.floor(to[2]+(source[2]-to[2])*GLOBALS.fade_level))]
+    rgb = [int(math.floor(to[0]+(source[0]-to[0])*fade_level)), int(math.floor(to[1]+(source[1]-to[1])*fade_level)), int(math.floor(to[2]+(source[2]-to[2])*fade_level))]
     dir = (to[0]+to[1]+to[2]) / 3 - (source[0]+source[1]+source[2]) / 3
 
     i = -1

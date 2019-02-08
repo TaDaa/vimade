@@ -1,7 +1,7 @@
-import terminal
-import signs
-import fader
-import global_state as GLOBALS
+from vimade import terminal
+from vimade import signs
+from vimade import fader
+from vimade import global_state as GLOBALS
 
 def getInfo():
   return GLOBALS.getInfo()

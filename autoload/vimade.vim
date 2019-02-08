@@ -9,14 +9,14 @@ function! vimade#Disable()
   let g:vimade_running = 0
   call vimade#StopTimer()
   exec g:vimade_py_cmd join([
-      \ "import vimade",
-      \ "vimade.unfadeAll()",
+      \ "from vimade import bridge",
+      \ "bridge.unfadeAll()",
   \ ], "\n")
 endfunction
 function! vimade#DetectTermColors()
   exec g:vimade_py_cmd join([
-      \ "import vimade",
-      \ "vimade.detectTermColors()",
+      \ "from vimade import bridge",
+      \ "bridge.detectTermColors()",
   \ ], "\n")
 endfunction
 function! vimade#Toggle()
@@ -40,9 +40,9 @@ endfunction
 function! vimade#GetInfo()
   "get debug info
   exec g:vimade_py_cmd join([
-      \ "import vimade",
+      \ "from vimade import bridge",
       \ "import vim",
-      \ "vim.vars['vimade_python_info'] = vimade.getInfo()",
+      \ "vim.vars['vimade_python_info'] = bridge.getInfo()",
   \ ], "\n")
   return {
       \ 'version': '0.0.3', 
@@ -78,8 +78,8 @@ function! vimade#CheckWindows()
   call vimade#UpdateState()
   if g:vimade_running
     exec g:vimade_py_cmd join([
-        \ "import vimade",
-        \ "vimade.update({'activeBuffer': str(vim.current.buffer.number), 'activeTab': '".tabpagenr()."', 'activeWindow': '".win_getid(winnr())."','wrap': ".&wrap.", 'diff': ".&diff."})",
+        \ "from vimade import bridge",
+        \ "bridge.update({'activeBuffer': str(vim.current.buffer.number), 'activeTab': '".tabpagenr()."', 'activeWindow': '".win_getid(winnr())."','wrap': ".&wrap.", 'diff': ".&diff."})",
     \ ], "\n")
   endif
 endfunction
@@ -87,8 +87,8 @@ endfunction
 function! vimade#softInvalidateBuffer(bufnr)
   if g:vimade_running
     exec g:vimade_py_cmd join([
-        \ "import vimade",
-        \ "vimade.softInvalidateBuffer('".bufnr."')",
+        \ "from vimade import bridge",
+        \ "bridge.softInvalidateBuffer('".bufnr."')",
     \ ], "\n")
   endif
   call vimade#CheckWindows()
@@ -172,7 +172,7 @@ function! vimade#FadeCurrentBuffer()
     "immediately fade current buffer
     if g:vimade_running
       exec g:vimade_py_cmd join([
-          \ "import vimade",
+          \ "from vimade import bridge",
           \ "vimade.update({'activeBuffer': -1, 'activeTab': '".tabpagenr()."', 'activeWindow': '".win_getid(winnr())."', 'wrap': ".&wrap.", 'diff': ".&diff."})",
       \ ], "\n")
     endif

@@ -4,14 +4,14 @@ if (sys.version_info > (3, 0)):
     IS_V3 = True
 
 import vim
-import signs
 import math
 import time
-import highlighter
-import colors
-from buf_state import BufState
-from win_state import WinState
-import global_state as GLOBALS
+from vimade import highlighter
+from vimade import signs
+from vimade import colors
+from vimade.buf_state import BufState
+from vimade.win_state import WinState
+from vimade import global_state as GLOBALS
 
 FADE = sys.modules[__name__]
 

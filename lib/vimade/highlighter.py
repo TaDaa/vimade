@@ -1,5 +1,5 @@
 import vim
-import global_state as GLOBALS
+from vimade import global_state as GLOBALS
 
 HI_CACHE = {}
 
@@ -39,14 +39,14 @@ def __fade_id(id):
     if guibg == GLOBALS.base_bg_exp or guibg == GLOBALS.normal_bg:
       guibg = None
     else:
-      guibg = GLOBALS.fade(guibg, GLOBALS.base_bg)
+      guibg = GLOBALS.fade(guibg, GLOBALS.base_bg, GLOBALS.fade_level)
   else:
     guibg = None
 
   if not guifg:
     guifg = GLOBALS.base_fade
   else:
-    guifg = GLOBALS.fade(guifg, GLOBALS.base_bg)
+    guifg = GLOBALS.fade(guifg, GLOBALS.base_bg, GLOBALS.fade_level)
 
 
   return ('vimade_' + id, guifg, guibg)

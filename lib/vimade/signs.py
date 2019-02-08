@@ -1,10 +1,9 @@
 import re
 import time
-import global_state as GLOBALS
 import vim
-import vimade
-import highlighter
-import fader as FADE
+from vimade import global_state as GLOBALS
+from vimade import highlighter
+# from vimade import fader as FADE
 
 SIGN_CACHE = {}
 RESET_SIGNCOLUMN = None
@@ -31,7 +30,7 @@ def get_signs(bufnr):
 def unfade_bufs(bufs):
   global RESET_SIGNCOLUMN
   start = time.time()
-  FADE.prevent = True
+  # FADE.prevent = True
   infos = vim.eval('[' + ','.join(['get(getbufinfo('+x+')[0],"signs",[])' for x in bufs ]) + ']' )
 
   changes = []
@@ -59,13 +58,13 @@ def unfade_bufs(bufs):
     RESET_SIGNCOLUMN = False
     vim.command('let &signcolumn=g:vimade_lastsc')
 
-  FADE.prevent = False
+  # FADE.prevent = False
   # print('unfade',(time.time() - start) * 1000)
 
 def fade_bufs(bufs):
   global RESET_SIGNCOLUMN
   start = time.time()
-  FADE.prevent = True
+  # FADE.prevent = True
   infos = vim.eval('[' + ','.join(['get(getbufinfo('+x+')[0],"signs",[])' for x in bufs ]) + ']' )
   changes = []
   requests = []
@@ -126,7 +125,7 @@ def fade_bufs(bufs):
     #batch commands within a function (higher nvim perf)
     vim.command('function! VimadeSignTemp() \n'+ '\n'.join(place) + '\nendfunction')
     vim.command('redraw | let g:vimade_lastsc=&signcolumn | set signcolumn=no | call VimadeSignTemp()')
-  FADE.prevent = False
+  # FADE.prevent = False
   # print('fade',(time.time() - start) * 1000)
 
 

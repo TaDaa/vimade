@@ -1,10 +1,10 @@
 import subprocess
 import re
 import os
-import global_state as GLOBALS
+from vimade import global_state as GLOBALS
 
 DIR = os.path.dirname(__file__)
-COLORS_SH = ['bash' , os.path.realpath(os.path.join(DIR, '..', 'colors.sh'))]
+COLORS_SH = ['bash' , os.path.realpath(os.path.join(DIR, '..', '..', 'colors.sh'))]
 
 def detectColors():
   params = ([''], ['7'], ['tmux'], ['tmux', '7'])
