@@ -7,6 +7,7 @@ import highlighter
 import fader as FADE
 
 SIGN_CACHE = {}
+RESET_SIGNCOLUMN = None
 def parseParts(line):
   parts = re.split('[\s\t]+', line)
   item = {}
@@ -28,6 +29,7 @@ def get_signs(bufnr):
   return result
 
 def unfade_bufs(bufs):
+  global RESET_SIGNCOLUMN
   start = time.time()
   FADE.prevent = True
   infos = vim.eval('[' + ','.join(['get(getbufinfo('+x+')[0],"signs",[])' for x in bufs ]) + ']' )
@@ -48,12 +50,20 @@ def unfade_bufs(bufs):
     for sign in changes:
       place.append('sign place ' + sign['id'] + ' name=' + sign['name'][7:] + ' buffer='+sign['bufnr'])
     vim.command('function! VimadeSignTemp() \n' + '\n'.join(place) + '\nendfunction')
-    vim.command('redraw | call VimadeSignTemp()')
+    if not RESET_SIGNCOLUMN:
+      RESET_SIGNCOLUMN = True
+      vim.command('redraw | let g:vimade_lastsc=&signcolumn | set signcolumn=no | call VimadeSignTemp()')
+    else:
+      vim.command('call VimadeSignTemp()')
+  if RESET_SIGNCOLUMN:
+    RESET_SIGNCOLUMN = False
+    vim.command('let &signcolumn=g:vimade_lastsc')
 
   FADE.prevent = False
   # print('unfade',(time.time() - start) * 1000)
 
 def fade_bufs(bufs):
+  global RESET_SIGNCOLUMN
   start = time.time()
   FADE.prevent = True
   infos = vim.eval('[' + ','.join(['get(getbufinfo('+x+')[0],"signs",[])' for x in bufs ]) + ']' )
@@ -112,9 +122,10 @@ def fade_bufs(bufs):
     for sign in changes:
       place.append('sign place ' + sign['id'] + ' name=vimade_' + sign['name'] + ' buffer=' + sign['bufnr'] )
 
+    RESET_SIGNCOLUMN = True
     #batch commands within a function (higher nvim perf)
     vim.command('function! VimadeSignTemp() \n'+ '\n'.join(place) + '\nendfunction')
-    vim.command('redraw | call VimadeSignTemp()')
+    vim.command('redraw | let g:vimade_lastsc=&signcolumn | set signcolumn=no | call VimadeSignTemp()')
   FADE.prevent = False
   # print('fade',(time.time() - start) * 1000)
 
