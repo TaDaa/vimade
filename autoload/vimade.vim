@@ -173,7 +173,7 @@ function! vimade#FadeCurrentBuffer()
     if g:vimade_running
       exec g:vimade_py_cmd join([
           \ "from vimade import bridge",
-          \ "vimade.update({'activeBuffer': -1, 'activeTab': '".tabpagenr()."', 'activeWindow': '".win_getid(winnr())."', 'wrap': ".&wrap.", 'diff': ".&diff."})",
+          \ "bridge.update({'activeBuffer': -1, 'activeTab': '".tabpagenr()."', 'activeWindow': '".win_getid(winnr())."', 'wrap': ".&wrap.", 'diff': ".&diff."})",
       \ ], "\n")
     endif
 endfunction
