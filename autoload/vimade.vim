@@ -88,7 +88,7 @@ function! vimade#softInvalidateBuffer(bufnr)
   if g:vimade_running
     exec g:vimade_py_cmd join([
         \ "from vimade import bridge",
-        \ "bridge.softInvalidateBuffer('".bufnr."')",
+        \ "bridge.softInvalidateBuffer('".a:bufnr."')",
     \ ], "\n")
   endif
   call vimade#CheckWindows()
