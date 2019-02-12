@@ -73,7 +73,7 @@ let g:vimade = {
   \ "usecursorhold": 0, "0 is default, but will automatically set to 1 for Windows GVIM
   \ "detecttermcolors": 1,
   \ 'enablesigns': 0,
-  \ 'signshistoryretentionperiod': 4000,
+  \ 'signsretentionperiod': 4000,
 }
 ```
 - **vimade.normalid** - if not specified, the normalid is determined when vimade is first loaded.  normalid provides the id of the "Normal" highlight which is used to calculate fading.  You can override this config with another highlight group.
