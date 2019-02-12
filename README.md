@@ -86,7 +86,7 @@ let g:vimade = {
 - **vimade.usecursorhold** -  disables the timer running in the background and instead relies `OnCursorHold` and `updatetime` (see h:updatetime).  The default value is `0` except on Windows GVIM, which defaults to `1` due to the timer breaking movements.  If you find that the timer is causing performance problems or other issues you can disable it by setting this option to `1`. 
 - **vimade.detecttermcolors** - detect the terminal background and foreground colors.  This will work for Vim8 + iTerm, Tilix, Kitty, Gnome, Rxvt, and other editors that support the following query (```\033]11;?\007``` or ```\033]11;?\033\\```).  Default is 1.
 - **vimade.enablesigns** - Enables sign fading.  This feature is disabled by default due to how signs affect performance, however this plugin is heavily optimized and alleviates most sign performance issues. Give it a go and open an issue if you see performance drops.  Default is 0.
-- **vimade.signshistoryretentionperiod** - The amount of time in milliseconds that faded buffers should be tracked for sign changes.  Default value is 4000.
+- **vimade.signsretentionperiod** - The amount of time in milliseconds that faded buffers should be tracked for sign changes.  Default value is 4000.
 
 ##### Example
 *this example reduces the amount of fading applied to text*
