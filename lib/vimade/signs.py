@@ -6,6 +6,7 @@ from vimade import fader as FADE
 from vimade import highlighter
 
 SIGN_CACHE = {}
+PLACES = []
 def parseParts(line):
   parts = re.split('[\s\t]+', line)
   item = {}
@@ -27,6 +28,7 @@ def get_signs(bufnr):
   return result
 
 def unfade_bufs(bufs):
+  global PLACES
   start = time.time()
   FADE.prevent = True
   infos = vim.eval('[' + ','.join(['get(getbufinfo('+x+')[0],"signs",[])' for x in bufs ]) + ']' )
@@ -45,11 +47,13 @@ def unfade_bufs(bufs):
   if len(changes):
     place = []
     for sign in changes:
-      place.append('sign place ' + sign['id'] + ' name=' + sign['name'][7:] + ' buffer='+sign['bufnr'])
+      PLACES.append('sign place ' + sign['id'] + ' name=' + sign['name'][7:] + ' buffer='+sign['bufnr'])
 
+  if len(PLACES):
     cmdheight = int(vim.eval('&cmdheight'))
-    vim.command('function! VimadeSignTemp() \n' + '\n'.join(place) + '\nendfunction')
+    vim.command('function! VimadeSignTemp() \n' + '\n'.join(PLACES) + '\nendfunction')
     vim.command('echon "'+'\n'*cmdheight+'" | call VimadeSignTemp() | redraw')
+    PLACES = []
   FADE.prevent = False
   # print('unfade',(time.time() - start) * 1000)
 
@@ -111,11 +115,7 @@ def fade_bufs(bufs):
   if len(changes):
     place = []
     for sign in changes:
-      place.append('sign place ' + sign['id'] + ' name=vimade_' + sign['name'] + ' buffer=' + sign['bufnr'] )
-
-    cmdheight = int(vim.eval('&cmdheight'))
-    vim.command('function! VimadeSignTemp() \n'+ '\n'.join(place) + '\nendfunction')
-    vim.command('echon "'+'\n'*cmdheight+'" | call VimadeSignTemp() | redraw')
+      PLACES.append('sign place ' + sign['id'] + ' name=vimade_' + sign['name'] + ' buffer=' + sign['bufnr'] )
   FADE.prevent = False
   # print('fade',(time.time() - start) * 1000)
 
