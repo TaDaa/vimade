@@ -18,7 +18,7 @@ let g:vimade_defaults = {
   \ 'usecursorhold': has('gui_running') && !has('nvim') && execute('version')=~"GUI version",
   \ 'detecttermcolors': 1,
   \ 'enablesigns': 0,
-  \ 'signshistoryretentionperiod': 4000,
+  \ 'signsretentionperiod': 4000,
   \ '$extended': 1,
 \ }
 let g:vimade_defaults_keys = keys(g:vimade_defaults)
