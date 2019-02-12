@@ -21,5 +21,8 @@ def unfadeSigns(bufnr):
 def softInvalidateBuffer(bufnr):
   fader.softInvalidateBuffer(bufnr)
 
+def softInvalidateSigns():
+  fader.softInvalidateSigns()
+
 def update(nextState = None):
   fader.update(nextState)

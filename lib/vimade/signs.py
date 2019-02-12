@@ -2,11 +2,10 @@ import re
 import time
 import vim
 from vimade import global_state as GLOBALS
+from vimade import fader as FADE
 from vimade import highlighter
-# from vimade import fader as FADE
 
 SIGN_CACHE = {}
-RESET_SIGNCOLUMN = None
 def parseParts(line):
   parts = re.split('[\s\t]+', line)
   item = {}
@@ -28,9 +27,8 @@ def get_signs(bufnr):
   return result
 
 def unfade_bufs(bufs):
-  global RESET_SIGNCOLUMN
   start = time.time()
-  # FADE.prevent = True
+  FADE.prevent = True
   infos = vim.eval('[' + ','.join(['get(getbufinfo('+x+')[0],"signs",[])' for x in bufs ]) + ']' )
 
   changes = []
@@ -47,25 +45,17 @@ def unfade_bufs(bufs):
   if len(changes):
     place = []
     for sign in changes:
-      # place.append('sign unplace ' + sign['id'])
       place.append('sign place ' + sign['id'] + ' name=' + sign['name'][7:] + ' buffer='+sign['bufnr'])
-    vim.command('function! VimadeSignTemp() \n' + '\n'.join(place) + '\nendfunction')
-    if not RESET_SIGNCOLUMN:
-      RESET_SIGNCOLUMN = True
-      vim.command('redraw | call VimadeSignTemp()')
-    else:
-      vim.command('call VimadeSignTemp()')
-  if RESET_SIGNCOLUMN:
-    RESET_SIGNCOLUMN = False
-    # vim.command('let &signcolumn=g:vimade_lastsc')
 
-  # FADE.prevent = False
+    cmdheight = int(vim.eval('&cmdheight'))
+    vim.command('function! VimadeSignTemp() \n' + '\n'.join(place) + '\nendfunction')
+    vim.command('echon "'+'\n'*cmdheight+'" | call VimadeSignTemp() | redraw')
+  FADE.prevent = False
   # print('unfade',(time.time() - start) * 1000)
 
 def fade_bufs(bufs):
-  global RESET_SIGNCOLUMN
   start = time.time()
-  # FADE.prevent = True
+  FADE.prevent = True
   infos = vim.eval('[' + ','.join(['get(getbufinfo('+x+')[0],"signs",[])' for x in bufs ]) + ']' )
   changes = []
   requests = []
@@ -107,11 +97,12 @@ def fade_bufs(bufs):
       ids.append(texthl_id)
       definition += ' texthl=vimade_' + texthl_id
 
-      if 'linehl' in item:
-        linehl_id = vim.eval('hlID("'+item['linehl']+'")')
-        if linehl_id:
-          ids.append(linehl_id)
-        definition += ' linehl=vimade_' + linehl_id
+      # linehl adds high performance hit -- maybe add toggle for this
+      # if 'linehl' in item:
+        # linehl_id = vim.eval('hlID("'+item['linehl']+'")')
+        # if linehl_id:
+          # ids.append(linehl_id)
+        # definition += ' linehl=vimade_' + linehl_id
       vim.command(definition)
 
   if len(ids):
@@ -120,14 +111,12 @@ def fade_bufs(bufs):
   if len(changes):
     place = []
     for sign in changes:
-      # place.append('sign unplace ' + sign['id'])
       place.append('sign place ' + sign['id'] + ' name=vimade_' + sign['name'] + ' buffer=' + sign['bufnr'] )
 
-    RESET_SIGNCOLUMN = True
-    #batch commands within a function (higher nvim perf)
+    cmdheight = int(vim.eval('&cmdheight'))
     vim.command('function! VimadeSignTemp() \n'+ '\n'.join(place) + '\nendfunction')
-    vim.command('redraw | call VimadeSignTemp()')
-  # FADE.prevent = False
+    vim.command('echon "'+'\n'*cmdheight+'" | call VimadeSignTemp() | redraw')
+  FADE.prevent = False
   # print('fade',(time.time() - start) * 1000)
 
 

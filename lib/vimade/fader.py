@@ -19,8 +19,6 @@ windows = {}
 background = ''
 prevent = False
 buffers = {}
-buffer_history = []
-max_buffer_history = 10
 activeWindow = str(vim.current.window.number)
 activeBuffer = str(vim.current.buffer.number)
 
@@ -34,10 +32,11 @@ def update(nextState = None):
 
   #Check our globals/settings for changes
   status = GLOBALS.update()
-  #Error condition - just return
-  if status == GLOBALS.ERROR:
-    return
 
+  if status & GLOBALS.DISABLE_SIGNS:
+    unfadeAllSigns()
+  elif status & GLOBALS.ERROR:
+    return
   if status == GLOBALS.RECALCULATE:
     highlighter.recalculate()
     return
@@ -61,33 +60,32 @@ def update(nextState = None):
   activeBuffer = nextState["activeBuffer"]
   activeWindow = nextState['activeWindow']
   activeTab = nextState['activeTab']
-  activeDiff = nextState['diff']
-  activeWrap = nextState['wrap']
+  activeDiff = False
   nextWindows = {}
   nextBuffers = {}
-  diff = []
+  fade_signs = []
+  unfade_signs = []
+  diffs = []
 
   FADE.activeBuffer = activeBuffer
 
-  if activeBuffer in buffer_history:
-    buffer_history.remove(activeBuffer)
-  buffer_history.insert(0, activeBuffer)
-  if len(buffer_history) >= max_buffer_history:
-    buffer_history.pop()
-
   for window in vim.windows:
     winnr = str(window.number)
-    winid = str(vim.eval('win_getid('+winnr+')'))
     bufnr = str(window.buffer.number)
     tabnr = str(window.tabpage.number)
-    hasActiveBuffer = bufnr == activeBuffer
-    hasActiveWindow = winid == activeWindow
     if activeTab != tabnr:
       continue
+    (winid, diff, wrap) = vim.eval('[win_getid('+winnr+'), gettabwinvar('+tabnr+','+winnr+',"&diff"), gettabwinvar('+tabnr+','+winnr+',"&wrap")]')
+    diff = int(diff)
+    wrap = int(wrap)
+    hasActiveBuffer = bufnr == activeBuffer
+    hasActiveWindow = winid == activeWindow
 
     # window was unhandled -- add to FADE
     if not bufnr in FADE.buffers:
-      FADE.buffers[bufnr] = BufState()
+      bufState = FADE.buffers[bufnr] = BufState(bufnr)
+    else:
+      bufState = FADE.buffers[bufnr]
     if not winid in FADE.windows:
       state = FADE.windows[winid] = WinState(winid, window, hasActiveBuffer, hasActiveWindow)
     else:
@@ -95,20 +93,25 @@ def update(nextState = None):
 
     state.win = window
     state.number = winnr
+    state.tab = tabnr
 
-    if hasActiveWindow:
-      state.diff = activeDiff
-      state.wrap = activeWrap
+    state.diff = diff
 
-    if state.diff:
-      diff.append(state)
+    if state.wrap != wrap:
+      state.wrap = wrap
+      if not hasActiveWindow:
+        fade[winid] = state
+
+    if diff:
+      diffs.append(state)
+      if hasActiveBuffer:
+        activeDiff = True
 
     # window state changed
     if (window.height != state.height or window.width != state.width or window.cursor[0] != state.cursor[0] or window.cursor[1] != state.cursor[1]):
       state.height = window.height
       state.width = window.width
       state.cursor = (window.cursor[0], window.cursor[1])
-      #TODO
       if not hasActiveBuffer:
         fade[winid] = state
     if state.buffer != bufnr:
@@ -129,18 +132,17 @@ def update(nextState = None):
 
     nextBuffers[bufnr] = nextWindows[winid] = True
 
-  if activeDiff and len(diff) > 1:
-    for state in diff:
+  if activeDiff and len(diffs) > 1:
+    for state in diffs:
       if state.id in fade:
         del fade[state.id]
       unfade[state.id] = state
 
-  fade_signs = []
-  unfade_signs = []
 
   for win in fade.values():
     fadeWin(win)
-    if not win.faded:
+    if not FADE.buffers[win.buffer].faded:
+      fade_signs.append(win.buffer)
       FADE.buffers[win.buffer].faded = time.time()
     win.faded = True
   for win in unfade.values():
@@ -151,45 +153,71 @@ def update(nextState = None):
         FADE.buffers[win.buffer].faded = 0
         unfade_signs.append(win.buffer)
 
+  expr = []
+  ids = []
   for win in list(FADE.windows.keys()):
     if not win in nextWindows:
-      tabwin = vim.eval('win_id2tabwin('+win+')')
-      if tabwin[0] == '0' and tabwin[1] == '0':
-        del FADE.windows[win]
+      expr.append('win_id2tabwin('+win+')')
+      ids.append(win)
+  expr = vim.eval('['+','.join(expr)+']')
+  i = 0
+  for item in expr:
+    if item[0] == '0' and item[1] == '0':
+      del FADE.windows[ids[i]]
+    i += 1
 
+
+  expr = []
+  ids = []
   for key in list(FADE.buffers.keys()):
     if not key in nextBuffers:
-      if len(vim.eval('win_findbuf('+key+')')) == 0:
-        del FADE.buffers[key]
+      expr.append('win_findbuf('+key+')')
+      ids.append(key)
+  expr = vim.eval('['+','.join(expr)+ ']')
+  i = 0
+  for item in expr:
+    if len(item) == 0:
+      del FADE.buffers[ids[i]]
+    i += 1
 
   
-  i = 0
-  if GLOBALS.experimental_signs:
-    cared_for_sign_history = buffer_history[1:1+GLOBALS.signs_history]
-    for buf in cared_for_sign_history:
-      if buf != activeBuffer and buf in nextBuffers:
-        if not buf in fade_signs:
-          if buf in cared_for_sign_history and (GLOBALS.signs_history_retention_period == -1 or (time.time() - FADE.buffers[buf].faded) * 1000 < GLOBALS.signs_history_retention_period):
-            fade_signs.append(buf)
+  if GLOBALS.enable_signs:
+    now = time.time()
+    signs_retention_period = GLOBALS.signs_retention_period
+    for bufnr in nextBuffers:
+      if bufnr in buffers:
+        buf = buffers[bufnr]
+        if buf.faded and not bufnr in fade_signs  and (signs_retention_period == -1 or (now - buf.faded) * 1000 < signs_retention_period):
+            fade_signs.append(bufnr)
+
     if len(fade_signs) or len(unfade_signs):
       if len(fade_signs):
         signs.fade_bufs(fade_signs)
       signs.unfade_bufs(unfade_signs)
-
   # print('update',(time.time() - start) * 1000)
+
+def unfadeAllSigns():
+  currentBuffers = buffers
+  bufs = []
+  for bufState in currentBuffers.values():
+    if bufState.faded:
+      bufState.faded = 0
+      bufs.append(bufState.bufnr)
+  if len(bufs):
+    signs.unfade_bufs(bufs)
 
 def unfadeAll():
   currentWindows = windows
-  bufs = []
   for winState in currentWindows.values():
-    if winState.faded:
-      buf = winState.buffer
-      if not buf in bufs:
-        bufs.append(buf)
-      unfadeWin(winState)
-      winState.faded = False
-  if len(bufs):
-    signs.unfade_bufs(bufs)
+      if winState.faded:
+        winState.faded = False
+        unfadeWin(winState)
+  unfadeAllSigns()
+
+def softInvalidateSigns():
+  for buf in FADE.buffers.values():
+    if buf.faded:
+      buf.faded = time.time()
 
 def softInvalidateBuffer(bufnr):
   currentWindows = windows

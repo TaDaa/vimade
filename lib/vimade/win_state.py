@@ -13,4 +13,5 @@ class WinState:
     self.invalid = False
     self.cursor = (window.cursor[0], window.cursor[1])
     self.buffer = window.buffer.number
+    self.tab = window.tabpage.number
     self.faded = False

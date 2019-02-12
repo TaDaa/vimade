@@ -27,6 +27,15 @@ function! vimade#Toggle()
     call vimade#Enable()
   endif
 endfunction
+function! vimade#InvalidateSigns()
+  if g:vimade_running
+    exec g:vimade_py_cmd join([
+        \ "from vimade import bridge",
+        \ "bridge.softInvalidateSigns()",
+    \ ], "\n")
+    call vimade#CheckWindows()
+  endif
+endfunction
 function! vimade#Redraw()
   if g:vimade_running
     let tmp = g:vimade.fadelevel
@@ -79,7 +88,7 @@ function! vimade#CheckWindows()
   if g:vimade_running
     exec g:vimade_py_cmd join([
         \ "from vimade import bridge",
-        \ "bridge.update({'activeBuffer': str(vim.current.buffer.number), 'activeTab': '".tabpagenr()."', 'activeWindow': '".win_getid(winnr())."','wrap': ".&wrap.", 'diff': ".&diff."})",
+        \ "bridge.update({'activeBuffer': str(vim.current.buffer.number), 'activeTab': '".tabpagenr()."', 'activeWindow': '".win_getid(winnr())."'})",
     \ ], "\n")
   endif
 endfunction
@@ -99,9 +108,9 @@ function! vimade#UpdateEvents()
       au!
       au VimEnter * call vimade#Init()
       au VimLeave * call vimade#Disable()
+      au FocusGained * call vimade#InvalidateSigns()
       au BufEnter * call vimade#CheckWindows()
       au OptionSet diff call vimade#CheckWindows()
-      au OptionSet wrap call vimade#CheckWindows()
       au FileChangedShellPost * call vimade#softInvalidateBuffer(expand("<abuf>"))
       if g:vimade.usecursorhold
         au CursorHold * call vimade#Tick(0)
@@ -173,7 +182,7 @@ function! vimade#FadeCurrentBuffer()
     if g:vimade_running
       exec g:vimade_py_cmd join([
           \ "from vimade import bridge",
-          \ "bridge.update({'activeBuffer': -1, 'activeTab': '".tabpagenr()."', 'activeWindow': '".win_getid(winnr())."', 'wrap': ".&wrap.", 'diff': ".&diff."})",
+          \ "bridge.update({'activeBuffer': -1, 'activeTab': '".tabpagenr()."', 'activeWindow': '".win_getid(winnr())."'})",
       \ ], "\n")
     endif
 endfunction

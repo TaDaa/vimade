@@ -36,14 +36,15 @@ is_term = is_term
 is_tmux = is_tmux
 original_background = original_background
 term_response = False
-signs_history = 0
-experimental_signs = False
-signs_history_retention_period = 0
+enable_signs = False
+signs_retention_period = 0
 
-ERROR = -1
 READY = 0
-FULL_INVALIDATE = 1
-RECALCULATE = 2
+ERROR = 1
+FULL_INVALIDATE = 2
+RECALCULATE = 4
+ENABLE_SIGNS = 8
+DISABLE_SIGNS = 16
 
 def getInfo():
   global_vars = vars(GLOBALS)
@@ -57,7 +58,7 @@ def getInfo():
   return result
 
 def update():
-  returnState = READY 
+  returnState = READY
   allGlobals = vim.eval('[g:vimade, &background, execute(":colorscheme"), &termguicolors]')
   nextGlobals = allGlobals[0]
   background = allGlobals[1]
@@ -66,37 +67,39 @@ def update():
   fadelevel = float(nextGlobals['fadelevel'])
   rowbufsize = int(nextGlobals['rowbufsize'])
   colbufsize = int(nextGlobals['colbufsize'])
-  signshistory = int(nextGlobals['signshistory'])
-  signshistoryretentionperiod = int(nextGlobals['signshistoryretentionperiod'])
+  signsretentionperiod = int(nextGlobals['signsretentionperiod'])
   basefg = nextGlobals['basefg']
   basebg = nextGlobals['basebg']
   normalid = nextGlobals['normalid']
-  experimentalsigns = int(nextGlobals['experimentalsigns'])
+  enablesigns = int(nextGlobals['enablesigns'])
   GLOBALS.row_buf_size = rowbufsize
   GLOBALS.col_buf_size = colbufsize
-  GLOBALS.experimental_signs = experimentalsigns
-  GLOBALS.signs_history_retention_period = signshistoryretentionperiod
+  GLOBALS.signs_retention_period = signsretentionperiod
 
-  if GLOBALS.signs_history != signshistory:
-    GLOBALS.signs_history = min(max(signshistory,0), 10)
+  if enablesigns != GLOBALS.enable_signs:
+    GLOBALS.enable_signs = enablesigns
+    if enablesigns:
+      returnState |= ENABLE_SIGNS
+    else:
+      returnState |= DISABLE_SIGNS
 
   if GLOBALS.colorscheme != colorscheme:
     GLOBALS.colorscheme = colorscheme
-    returnState = RECALCULATE
+    returnState |= RECALCULATE
   if GLOBALS.background != background:
     GLOBALS.background = background
     if not GLOBALS.term_response and GLOBALS.is_term and not termguicolors:
       (GLOBALS.term_fg, GLOBALS.term_bg) = ('#FFFFFF','#000000') if 'dark' in GLOBALS.background else ('#000000', '#FFFFFF')
-    returnState = RECALCULATE
+    returnState |= RECALCULATE
   if GLOBALS.fade_level != fadelevel:
     GLOBALS.fade_level = fadelevel 
-    returnState = RECALCULATE
+    returnState |= RECALCULATE
   if GLOBALS.normal_id != normalid:
     GLOBALS.normal_id = normalid
-    returnState = RECALCULATE
+    returnState |= RECALCULATE
   if GLOBALS.termguicolors != termguicolors:
     GLOBALS.termguicolors = termguicolors
-    returnState = RECALCULATE
+    returnState |= RECALCULATE
 
   if normalid:
     base_hi = vim.eval('vimade#GetHi('+GLOBALS.normal_id+')')
@@ -121,7 +124,7 @@ def update():
     elif basefg.isdigit() and int(basefg) < len(RGB_256):
       basefg = colors.from256ToRGB(int(basefg))
     GLOBALS.base_hi[0] = GLOBALS.base_fg = basefg
-    returnState = RECALCULATE
+    returnState |= RECALCULATE
 
   if basebg and GLOBALS.base_bg_last != basebg:
     GLOBALS.base_bg_last = basebg
@@ -132,9 +135,9 @@ def update():
     elif basebg.isdigit() and int(basebg) < len(RGB_256):
       basebg = colors.from256ToRGB(int(basebg))
     GLOBALS.base_hi[1] = GLOBALS.base_bg = basebg
-    returnState = RECALCULATE
+    returnState |= RECALCULATE
 
-  if (returnState == FULL_INVALIDATE or returnState == RECALCULATE) and len(GLOBALS.base_fg) > 0 and len(GLOBALS.base_bg) > 0:
+  if (returnState & FULL_INVALIDATE or returnState & RECALCULATE) and len(GLOBALS.base_fg) > 0 and len(GLOBALS.base_bg) > 0:
     GLOBALS.base_hi[0] = GLOBALS.base_fg
     GLOBALS.base_hi[1] = GLOBALS.base_bg
     if not GLOBALS.is_term or termguicolors:
@@ -158,6 +161,6 @@ def update():
       pass
 
   if GLOBALS.base_fg == None or GLOBALS.base_bg == None or GLOBALS.base_fade == None:
-    returnState = ERROR
+    returnState |= ERROR
 
   return returnState
