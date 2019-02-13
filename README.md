@@ -28,7 +28,7 @@
 - [X] React to window resize + scroll changes
 - [X] Apply custom tints (not necessarily your background color to text)
 - [X] Vim8+
-- [X] Neovim
+- [X] Neovim + also plays well with NormalNC
 - [X] Python3
 - [X] Python2
 - [X] 256 color terminal support (Xterm)
@@ -64,6 +64,7 @@ Vimade is initialized with the following configuration.  Vimade will react to co
 ```
 let g:vimade = {
   \ "normalid": '',
+  \ "normalncid": '',
   \ "basefg": '',
   \ "basebg": '',
   \ "fadelevel": 0.4,
@@ -77,6 +78,7 @@ let g:vimade = {
 }
 ```
 - **vimade.normalid** - if not specified, the normalid is determined when vimade is first loaded.  normalid provides the id of the "Normal" highlight which is used to calculate fading.  You can override this config with another highlight group.
+- **vimade.normalncid** - if not specified, the normalncid is determined when vimade is first loaded.  normalncid provides the id of the "NormalNC" highlight which is used to calculate fading for inactive buffers in NVIM.  You can override this config with another highlight group.
 - **vimade.basefg** - basefg can either be six digit hexidecimal color, rgb array [0-255,0-255,0-255], or cterm code (in terminal).  Basefg is only used to calculate the default fading that should be applied to Normal text.  By default basefg is calculated as the "Normal" highlight guifg or ctermfg.
 - **vimade.basebg** - basebg can be either be six digit hexidecimal color, rgb array [0-255,0-255,0-255], or cterm code (in terminal).  basebg is used as the color that text is faded against.  You can override this config with another hexidecimal color.  A cool feature of basebg is to use it to change the tint of faded text even if its not your background!
 - **vimade.fadelevel** - amount of fading applied between text and basebg.  0 will make the text the same color as the background and 1 applies no fading.  The default value is 0.4.  If you are using terminal, you may need to tweak this value to get better results.

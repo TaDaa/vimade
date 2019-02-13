@@ -54,7 +54,7 @@ function! vimade#GetInfo()
       \ "vim.vars['vimade_python_info'] = bridge.getInfo()",
   \ ], "\n")
   return {
-      \ 'version': '0.0.3', 
+      \ 'version': '0.0.4', 
       \ 'config': g:vimade,
       \ 'python': g:vimade_python_info,
       \ 'other': {
@@ -66,7 +66,7 @@ function! vimade#GetInfo()
         \ 'has_python': has('python'),
         \ 'has_python3': has('python3'),
         \ 'has_gui': has('gui'),
-        \ 'has_nvim': has('nvim'),
+        \ 'has_nvim': g:vimade_is_nvim,
         \ 'has_gui_running': has('gui_running'),
         \ 'vimade_py_cmd': g:vimade_py_cmd,
         \ 'vimade_running': g:vimade_running,
@@ -128,6 +128,9 @@ function! vimade#ExtendState()
   "get the normal id
   if g:vimade.normalid == "" || g:vimade.normalid == 0
     let g:vimade.normalid = hlID('Normal')
+  endif
+  if g:vimade_is_nvim && (g:vimade.normalncid == "" || g:vimade.normalncid == 0)
+    let g:vimade.normalncid = hlID('NormalNC')
   endif
 endfunction
 

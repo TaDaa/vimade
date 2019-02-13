@@ -19,6 +19,7 @@ colorscheme = None
 row_buf_size = None
 col_buf_size = None
 normal_id = None
+normalnc_id = None
 normal_bg = ''
 base_bg = ''
 base_fg = ''
@@ -71,6 +72,7 @@ def update():
   basefg = nextGlobals['basefg']
   basebg = nextGlobals['basebg']
   normalid = nextGlobals['normalid']
+  normalncid = nextGlobals['normalncid']
   enablesigns = int(nextGlobals['enablesigns'])
   GLOBALS.row_buf_size = rowbufsize
   GLOBALS.col_buf_size = colbufsize
@@ -97,12 +99,25 @@ def update():
   if GLOBALS.normal_id != normalid:
     GLOBALS.normal_id = normalid
     returnState |= RECALCULATE
+  if GLOBALS.normalnc_id != normalncid:
+    GLOBALS.normalnc_id = normalncid
+    returnState |= RECALCULATE
   if GLOBALS.termguicolors != termguicolors:
     GLOBALS.termguicolors = termguicolors
     returnState |= RECALCULATE
 
-  if normalid:
-    base_hi = vim.eval('vimade#GetHi('+GLOBALS.normal_id+')')
+  if normalid or normalncid:
+    base_hi = None
+    if normalncid:
+      base_hi = vim.eval('vimade#GetHi('+GLOBALS.normalnc_id+')')
+      if not base_hi[0] or not base_hi[1]:
+        base_fill = vim.eval('vimade#GetHi('+GLOBALS.normal_id+')')
+        if not base_hi[0]:
+          base_hi[0] = base_fill[0]
+        if not base_hi[1]:
+          base_hi[1] = base_fill[1]
+    else:
+      base_hi = vim.eval('vimade#GetHi('+GLOBALS.normal_id+')')
     GLOBALS.normal_bg = base_hi[1]
     if not basefg:
       basefg = base_hi[0]

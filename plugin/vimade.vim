@@ -6,9 +6,11 @@ if !exists('g:vimade_running')
 endif
 let g:vimade_loaded = 1
 let g:vimade_error_count = 0
+let g:vimade_is_nvim = has('nvim')
 
 let g:vimade_defaults = {
   \ "normalid": '',
+  \ "normalncid": '',
   \ "basefg": '',
   \ "basebg": '',
   \ "fadelevel": 0.4,
