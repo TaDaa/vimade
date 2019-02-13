@@ -7,7 +7,7 @@
 
 **Fade inactive windows**
 
-![](http://tadaa.github.io/images/vimade_fade.svg)
+![](http://tadaa.github.io/images/vimade_fade.gif)
 
 **Change the colorscheme and fadelevel on the fly**
 
