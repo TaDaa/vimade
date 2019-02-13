@@ -4,20 +4,40 @@
 ###### An eye catching plugin that fades your inactive buffers and preserves syntax highlighting!!!!
 
 ##### Screenshots
+The images below were taken in terminal 256 color mode.  You can achieve even better results by setting `set termguicolors` or using gui vim/nvim
+
 
 **Fade inactive windows**
 
-![](http://tadaa.github.io/images/vimade_fade.gif)
+![](http://tadaa.github.io/images/vimade_fade.svg)
 
-**Change the colorscheme and fadelevel on the fly**
+**Fade using custom tints**
 
-![](http://tadaa.github.io/images/vimade_colorscheme.gif)
-![](http://tadaa.github.io/images/vimade_fadelevel.gif)
+![](http://tadaa.github.io/images/vimade_tint.svg)
+
+**Change the colorscheme**
+
+![](http://tadaa.github.io/images/vimade_colorscheme.svg)
+
+**Change the fadelevel**
+
+![](http://tadaa.github.io/images/vimade_fadelevel.svg)
+
+**Fade signs (example below does 4000 signs)**
+
+![](http://tadaa.github.io/images/vimade_signs.svg)
 
 **Fade/Unfade diffs together**
 
-![](http://tadaa.github.io/images/vimade_diff.gif)
+![](http://tadaa.github.io/images/vimade_diff.svg)
 
+**Fade/Unfade using word wrap**
+
+![](http://tadaa.github.io/images/vimade_wrap.svg)
+
+**Fade using NormalNC (NVIM only)**
+
+![](http://tadaa.github.io/images/vimade_normalnc.svg)
 
 ##### Features
 - [X] Fade inactive buffers
