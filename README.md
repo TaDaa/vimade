@@ -9,35 +9,31 @@ The images below were taken in terminal 256 color mode.  You can achieve even be
 
 **Fade inactive windows**
 
-![](http://tadaa.github.io/images/vimade_fade.svg)
+![](http://tadaa.github.io/images/vimade_fadek.gif)
 
 **Fade using custom tints**
 
-![](http://tadaa.github.io/images/vimade_tint.svg)
-
-**Change the colorscheme**
-
-![](http://tadaa.github.io/images/vimade_colorscheme.svg)
+![](http://tadaa.github.io/images/vimade_tintk.gif)
 
 **Change the fadelevel**
 
-![](http://tadaa.github.io/images/vimade_fadelevel.svg)
+![](http://tadaa.github.io/images/vimade_fadelevelk.gif)
 
 **Fade signs (example below does 4000 signs)**
 
-![](http://tadaa.github.io/images/vimade_signs.svg)
+![](http://tadaa.github.io/images/vimade_signsk.gif)
 
 **Fade/Unfade diffs together**
 
-![](http://tadaa.github.io/images/vimade_diff.svg)
+![](http://tadaa.github.io/images/vimade_diffk.giff)
 
 **Fade/Unfade using word wrap**
 
-![](http://tadaa.github.io/images/vimade_wrap.svg)
+![](http://tadaa.github.io/images/vimade_wrapk.gif)
 
 **Fade using NormalNC (NVIM only)**
 
-![](http://tadaa.github.io/images/vimade_normalnc.svg)
+![](http://tadaa.github.io/images/vimade_normalnck.gif)
 
 ##### Features
 - [X] Fade inactive buffers
