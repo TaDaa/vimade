@@ -4,8 +4,6 @@
 ###### An eye catching plugin that fades your inactive buffers and preserves syntax highlighting!!!!
 
 ##### Screenshots
-The images below were taken in terminal 256 color mode.  You can achieve even better results by setting `set termguicolors` or using gui vim/nvim
-
 
 **Fade inactive windows**
 
@@ -25,7 +23,7 @@ The images below were taken in terminal 256 color mode.  You can achieve even be
 
 **Fade/Unfade diffs together**
 
-![](http://tadaa.github.io/images/vimade_diffk.giff)
+![](http://tadaa.github.io/images/vimade_diffk.gif)
 
 **Fade/Unfade using word wrap**
 
