@@ -1,3 +1,4 @@
+
 function! vimade#Enable()
   "enable vimade
   let g:vimade_running = 1
@@ -13,12 +14,14 @@ function! vimade#Disable()
       \ "bridge.unfadeAll()",
   \ ], "\n")
 endfunction
+
 function! vimade#DetectTermColors()
   exec g:vimade_py_cmd join([
       \ "from vimade import bridge",
       \ "bridge.detectTermColors()",
   \ ], "\n")
 endfunction
+
 function! vimade#Toggle()
   "toggle enabled state
   if g:vimade_running
@@ -27,12 +30,14 @@ function! vimade#Toggle()
     call vimade#Enable()
   endif
 endfunction
+
 function! vimade#InvalidateSigns()
   if g:vimade_running
     exec g:vimade_py_cmd join([
         \ "from vimade import bridge",
         \ "bridge.softInvalidateSigns()",
     \ ], "\n")
+
     call vimade#CheckWindows()
   endif
 endfunction

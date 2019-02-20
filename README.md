@@ -50,8 +50,8 @@
 - [X] Supports terminal backgrounds for Vim8(not nvim yet) and iTerm, Tilix, Kitty, Gnome, rxvt
 - [X] Wrapped Text
 - [X] Sign column support (disabled by default)
+- [X] Vim Documentation/Help
 - [ ] Secondary buffer window highlighting
-- [ ] Vim Documentation/Help
 
 ###### Todo
 - [ ] Support other terminals palletes? -- Open an issue if you need support for a different terminal or palette
@@ -118,7 +118,7 @@ let g:vimade.fadelevel = 0.7
 - **VimadeFadeLevel [0.0-1.0]** - Sets the FadeLevel config and forces an immediate redraw.
 - **VimadeInfo** - Provides debug information for Vimade.  Please include this info in bug reports
 
-##### FAQ/HELP
+##### FAQ/Help
 I am using GVIM and my mappings are not working
 - *Add `let g:vimade.usecursorhold=1` to your vimrc*
 
