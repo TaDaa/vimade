@@ -29,7 +29,7 @@
 "* iTerm
 "* Tilix
 "* Kitty
-"* Gone
+"* Gnome
 "* Rxvt
 "* Other terminals that support the ansi codes \033]11;?\007 or \033]11;?\033\\
 
