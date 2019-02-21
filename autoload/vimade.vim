@@ -116,6 +116,7 @@ function! vimade#UpdateEvents()
       au FocusGained * call vimade#InvalidateSigns()
       au BufEnter * call vimade#CheckWindows()
       au OptionSet diff call vimade#CheckWindows()
+      au ColorScheme * call vimade#Redraw()
       au FileChangedShellPost * call vimade#softInvalidateBuffer(expand("<abuf>"))
       if g:vimade.usecursorhold
         au CursorHold * call vimade#Tick(0)
