@@ -7,7 +7,6 @@ import vim
 import math
 import time
 from vimade import highlighter
-from vimade import signs
 from vimade import colors
 from vimade.buf_state import BufState
 from vimade.win_state import WinState
