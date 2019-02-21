@@ -2,7 +2,6 @@ import re
 import time
 import vim
 from vimade import global_state as GLOBALS
-from vimade import fader as FADE
 from vimade import highlighter
 
 SIGN_CACHE = {}
@@ -30,7 +29,6 @@ def get_signs(bufnr):
 def unfade_bufs(bufs):
   global PLACES
   start = time.time()
-  FADE.prevent = True
   infos = vim.eval('[' + ','.join(['get(getbufinfo('+x+')[0],"signs",[])' for x in bufs ]) + ']' )
 
   changes = []
@@ -57,12 +55,10 @@ def unfade_bufs(bufs):
     except:
       pass
     PLACES = []
-  FADE.prevent = False
   # print('unfade',(time.time() - start) * 1000)
 
 def fade_bufs(bufs):
   start = time.time()
-  FADE.prevent = True
   infos = vim.eval('[' + ','.join(['get(getbufinfo('+x+')[0],"signs",[])' for x in bufs ]) + ']' )
   changes = []
   requests = []
@@ -119,7 +115,6 @@ def fade_bufs(bufs):
     place = []
     for sign in changes:
       PLACES.append('sign place ' + sign['id'] + ' name=vimade_' + sign['name'] + ' buffer=' + sign['bufnr'] )
-  FADE.prevent = False
   # print('fade',(time.time() - start) * 1000)
 
 
