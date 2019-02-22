@@ -45,6 +45,7 @@
 - [X] Neovim + also plays well with NormalNC
 - [X] Python3
 - [X] Python2
+- [X] GUI Neovim + GUI Vim
 - [X] 256 color terminal support (Xterm)
 - [X] Toggle vimade on/off (VimadeEnable, VimadeDisable, VimadeToggle)
 - [X] Supports terminal backgrounds for Vim8(not nvim yet) and iTerm, Tilix, Kitty, Gnome, rxvt
