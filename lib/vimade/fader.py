@@ -37,17 +37,17 @@ def update(nextState = None):
     unfadeAllSigns()
   elif status & GLOBALS.ERROR:
     return
-  if status == GLOBALS.RECALCULATE:
+  if status & GLOBALS.RECALCULATE:
     highlighter.recalculate()
     return
-  elif status == GLOBALS.FULL_INVALIDATE:
+  elif status & GLOBALS.FULL_INVALIDATE:
     highlighter.reset()
     for winState in currentWindows.values():
       if winState.faded:
         unfadeWin(winState)
         winState.faded = False
     for bufferState in currentBuffers.values():
-      bufferState.coords = None 
+      bufferState.coords = None
 
     #TODO remove this code when possible
     #Ideally this return would not be necessary, but oni current requires a hard refresh here
@@ -180,7 +180,7 @@ def update(nextState = None):
       del FADE.buffers[ids[i]]
     i += 1
 
-  
+
   if GLOBALS.enable_signs:
     now = time.time()
     signs_retention_period = GLOBALS.signs_retention_period
@@ -293,10 +293,10 @@ def fadeWin(winState):
     d = sRow - row
     wrap_first_row_colStart = int(max(text_ln - d * width if d > 0 else 1,1))
     startRow = real_row
-    
+
     #next calculate virtual rows equal to and below the cursor
     row = cursor[0]
-    real_row = row 
+    real_row = row
     text_ln = 0
     while row <= endRow and real_row <= len(buf):
       text = bytes(buf[real_row - 1], 'utf-8') if IS_V3 else buf[real_row-1]
@@ -324,7 +324,7 @@ def fadeWin(winState):
     coords = bufState.coords = [None] * len(buf)
   bufState.last = currentBuf
   winMatches = winState.matches
-  
+
   row = startRow
   while row <= endRow:
     column = startCol

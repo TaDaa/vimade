@@ -94,7 +94,7 @@ def update():
       (GLOBALS.term_fg, GLOBALS.term_bg) = ('#FFFFFF','#000000') if 'dark' in GLOBALS.background else ('#000000', '#FFFFFF')
     returnState |= RECALCULATE
   if GLOBALS.fade_level != fadelevel:
-    GLOBALS.fade_level = fadelevel 
+    GLOBALS.fade_level = fadelevel
     returnState |= RECALCULATE
   if GLOBALS.normal_id != normalid:
     GLOBALS.normal_id = normalid

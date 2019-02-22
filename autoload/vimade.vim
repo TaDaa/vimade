@@ -46,7 +46,7 @@ function! vimade#Redraw()
     let tmp = g:vimade.fadelevel
     let g:vimade.fadelevel = 0
     call vimade#CheckWindows()
-    let g:vimade.fadelevel = l:tmp 
+    let g:vimade.fadelevel = l:tmp
     call vimade#CheckWindows()
   endif
 endfunction
@@ -59,7 +59,7 @@ function! vimade#GetInfo()
       \ "vim.vars['vimade_python_info'] = bridge.getInfo()",
   \ ], "\n")
   return {
-      \ 'version': '0.0.4', 
+      \ 'version': '0.0.5',
       \ 'config': g:vimade,
       \ 'python': g:vimade_python_info,
       \ 'other': {
@@ -109,7 +109,7 @@ function! vimade#softInvalidateBuffer(bufnr)
 endfunction
 
 function! vimade#UpdateEvents()
-  augroup vimade 
+  augroup vimade
       au!
       au VimEnter * call vimade#Init()
       au VimLeave * call vimade#Disable()
@@ -117,6 +117,7 @@ function! vimade#UpdateEvents()
       au BufEnter * call vimade#CheckWindows()
       au OptionSet diff call vimade#CheckWindows()
       au ColorScheme * call vimade#Redraw()
+      au User GoyoLeave call vimade#Redraw()
       au FileChangedShellPost * call vimade#softInvalidateBuffer(expand("<abuf>"))
       if g:vimade.usecursorhold
         au CursorHold * call vimade#Tick(0)
