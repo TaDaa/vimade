@@ -41,15 +41,27 @@ function! vimade#InvalidateSigns()
     call vimade#CheckWindows()
   endif
 endfunction
+
+function! vimade#Recalculate()
+  if g:vimade_running
+    exec g:vimade_py_cmd join([
+        \ "from vimade import bridge",
+        \ "bridge.recalculate()",
+    \ ], "\n")
+  endif
+endfunction
+
 function! vimade#Redraw()
   if g:vimade_running
-    let tmp = g:vimade.fadelevel
-    let g:vimade.fadelevel = 0
-    call vimade#CheckWindows()
-    let g:vimade.fadelevel = l:tmp
+    exec g:vimade_py_cmd join([
+        \ "from vimade import bridge",
+        \ "bridge.unfadeAll()",
+        \ "bridge.recalculate()",
+    \ ], "\n")
     call vimade#CheckWindows()
   endif
 endfunction
+
 
 function! vimade#GetInfo()
   "get debug info
@@ -116,8 +128,7 @@ function! vimade#UpdateEvents()
       au FocusGained * call vimade#InvalidateSigns()
       au BufEnter * call vimade#CheckWindows()
       au OptionSet diff call vimade#CheckWindows()
-      au ColorScheme * call vimade#Redraw()
-      au User GoyoLeave call vimade#Redraw()
+      au ColorScheme * call vimade#CheckWindows()
       au FileChangedShellPost * call vimade#softInvalidateBuffer(expand("<abuf>"))
       if g:vimade.usecursorhold
         au CursorHold * call vimade#Tick(0)

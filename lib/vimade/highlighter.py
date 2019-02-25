@@ -3,6 +3,14 @@ from vimade import global_state as GLOBALS
 
 HI_CACHE = {}
 
+def pre_check():
+  values = list(HI_CACHE.values())
+  if len(values):
+    sample = values[0]
+    result = vim.eval('vimade#GetHi(hlID("'+sample[0]+'"))')
+    if not result[0] and not result[1]:
+      recalculate()
+
 def recalculate():
   fade_ids(list(HI_CACHE.keys()), True)
 

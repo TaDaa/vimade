@@ -1,6 +1,7 @@
 from vimade import terminal
 from vimade import signs
 from vimade import fader
+from vimade import highlighter
 from vimade import global_state as GLOBALS
 
 def getInfo():
@@ -23,6 +24,9 @@ def softInvalidateBuffer(bufnr):
 
 def softInvalidateSigns():
   fader.softInvalidateSigns()
+
+def recalculate():
+  highlighter.recalculate()
 
 def update(nextState = None):
   fader.update(nextState)

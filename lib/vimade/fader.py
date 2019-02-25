@@ -52,6 +52,9 @@ def update(nextState = None):
     #TODO remove this code when possible
     #Ideally this return would not be necessary, but oni current requires a hard refresh here
     return
+  else:
+    #this is a pre check to make sure that highlights have not been wiped (for example by colorscheme changes)
+    highlighter.pre_check()
 
 
   fade = {}
