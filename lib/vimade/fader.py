@@ -78,7 +78,7 @@ def update(nextState = None):
     tabnr = str(window.tabpage.number)
     if activeTab != tabnr:
       continue
-    (winid, diff, wrap) = vim.eval('[win_getid('+winnr+'), gettabwinvar('+tabnr+','+winnr+',"&diff"), gettabwinvar('+tabnr+','+winnr+',"&wrap")]')
+    (winid, diff, wrap, buftype, popup) = vim.eval('[win_getid('+winnr+'), gettabwinvar('+tabnr+','+winnr+',"&diff"), gettabwinvar('+tabnr+','+winnr+',"&wrap"), gettabwinvar('+tabnr+','+winnr+',"&buftype"), gettabwinvar('+tabnr+','+winnr+',"popup")]')
     diff = int(diff)
     wrap = int(wrap)
     hasActiveBuffer = bufnr == activeBuffer
@@ -99,6 +99,16 @@ def update(nextState = None):
     state.tab = tabnr
 
     state.diff = diff
+
+    if popup:
+      unfade[winid] = state
+      continue
+
+    state.buftype = buftype
+    if buftype == 'terminal':
+      if not hasActiveBuffer:
+        fade[winid] = state
+
 
     if state.wrap != wrap:
       state.wrap = wrap
@@ -323,9 +333,9 @@ def fadeWin(winState):
     #todo remove all highlights? - negative impact on perf but better sync highlights
     unfadeWin(winState)
     coords = None
+  bufState.last = currentBuf 
   if coords == None:
     coords = bufState.coords = [None] * len(buf)
-  bufState.last = currentBuf
   winMatches = winState.matches
 
   row = startRow
