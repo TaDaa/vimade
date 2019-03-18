@@ -5,6 +5,27 @@ function! vimade#Enable()
   call vimade#CheckWindows()
   call vimade#StartTimer()
 endfunction
+
+function! vimade#WinEnable()
+  unlet w:vimade_disabled
+  call vimade#CheckWindows()
+endfunction
+
+function! vimade#WinDisable()
+  let w:vimade_disabled=1
+  call vimade#CheckWindows()
+endfunction
+
+function! vimade#BufEnable()
+  unlet b:vimade_disabled
+  call vimade#CheckWindows()
+endfunction
+
+function! vimade#BufDisable()
+  let b:vimade_disabled=1
+  call vimade#CheckWindows()
+endfunction
+
 function! vimade#Disable()
   "disable vimade
   let g:vimade_running = 0

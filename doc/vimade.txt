@@ -133,6 +133,18 @@ COMMANDS                                                     *vimade-commands*
 :VimadeDisable                                                *:VimadeDisable*
   Unfades all buffers, signs, and disables Vimade
 
+:VimadeWinDisable                                          *:VimadeWinDisable*
+  Disables the current window
+
+:VimadeBufDisable                                          *:VimadeBufDisable*
+  Disables the current buffer
+
+:VimadeWinEnable                                            *:VimadeWinEnable*
+  Enables the current window
+
+:VimadeBufEnable                                            *:VimadeBufEnable*
+  Enables the current buffer
+
 :VimadeToggle                                                  *:VimadeToggle*
   Toggles Vimade between enabled and disabled states
 

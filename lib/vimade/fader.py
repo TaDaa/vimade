@@ -78,7 +78,7 @@ def update(nextState = None):
     tabnr = str(window.tabpage.number)
     if activeTab != tabnr:
       continue
-    (winid, diff, wrap, buftype, popup) = vim.eval('[win_getid('+winnr+'), gettabwinvar('+tabnr+','+winnr+',"&diff"), gettabwinvar('+tabnr+','+winnr+',"&wrap"), gettabwinvar('+tabnr+','+winnr+',"&buftype"), gettabwinvar('+tabnr+','+winnr+',"popup")]')
+    (winid, diff, wrap, buftype, popup, win_disabled, buf_disabled) = vim.eval('[win_getid('+winnr+'), gettabwinvar('+tabnr+','+winnr+',"&diff"), gettabwinvar('+tabnr+','+winnr+',"&wrap"), gettabwinvar('+tabnr+','+winnr+',"&buftype"), gettabwinvar('+tabnr+','+winnr+',"popup"), gettabwinvar('+tabnr+','+winnr+',"vimade_disabled"), getbufvar('+bufnr+', "vimade_disabled")]')
     diff = int(diff)
     wrap = int(wrap)
     hasActiveBuffer = bufnr == activeBuffer
@@ -100,7 +100,7 @@ def update(nextState = None):
 
     state.diff = diff
 
-    if popup:
+    if popup or win_disabled or buf_disabled:
       unfade[winid] = state
       continue
 

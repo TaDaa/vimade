@@ -118,6 +118,10 @@ let g:vimade.fadelevel = 0.7
 - **VimadeRedraw** - Forces vimade to redraw fading for every window.
 - **VimadeFadeLevel [0.0-1.0]** - Sets the FadeLevel config and forces an immediate redraw.
 - **VimadeInfo** - Provides debug information for Vimade.  Please include this info in bug reports
+- **VimadeWinDisable** - Disables fading for the current window (useful for combining with autocommands)
+- **VimadeWinEnable** - Enables fading for the current window
+- **VimadeBufDisable** - Disables fading for the current buffer (useful for combining with autocommands)
+- **VimadeBufEnable** - Enables fading for the current buffer
 
 ##### FAQ/Help
 I am using GVIM and my mappings are not working

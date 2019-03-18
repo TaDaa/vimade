@@ -119,6 +119,19 @@ command! VimadeEnable call vimade#Enable()
 ""Unfades all buffers, signs, and disables Vimade
 command! VimadeDisable call vimade#Disable()
 
+""Disables the current window
+command! VimadeWinDisable call vimade#WinDisable()
+
+""Disables the current buffer
+command! VimadeBufDisable call vimade#BufDisable()
+
+
+""Enables the current window
+command! VimadeWinEnable call vimade#WinEnable()
+
+""Enables the current buffer
+command! VimadeBufEnable call vimade#BufEnable()
+
 ""Toggles Vimade between enabled and disabled states
 command! VimadeToggle call vimade#Toggle()
 
