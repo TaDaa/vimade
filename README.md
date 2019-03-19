@@ -118,9 +118,9 @@ let g:vimade.fadelevel = 0.7
 - **VimadeRedraw** - Forces vimade to redraw fading for every window.
 - **VimadeFadeLevel [0.0-1.0]** - Sets the FadeLevel config and forces an immediate redraw.
 - **VimadeInfo** - Provides debug information for Vimade.  Please include this info in bug reports
-- **VimadeWinDisable** - Disables fading for the current window (useful for combining with autocommands)
+- **VimadeWinDisable** - Disables fading for the current window
 - **VimadeWinEnable** - Enables fading for the current window
-- **VimadeBufDisable** - Disables fading for the current buffer (useful for combining with autocommands)
+- **VimadeBufDisable** - Disables fading for the current buffer
 - **VimadeBufEnable** - Enables fading for the current buffer
 
 ##### FAQ/Help
