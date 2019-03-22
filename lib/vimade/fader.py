@@ -14,6 +14,7 @@ from vimade.win_state import WinState
 from vimade import global_state as GLOBALS
 
 FADE = sys.modules[__name__]
+HAS_NVIM_WIN_GET_CONFIG = True if int(vim.eval('exists("*nvim_win_get_config")')) else False
 
 windows = {}
 background = ''
@@ -21,6 +22,9 @@ prevent = False
 buffers = {}
 activeWindow = str(vim.current.window.number)
 activeBuffer = str(vim.current.buffer.number)
+
+
+
 
 def update(nextState = None):
   start = time.time()
@@ -78,7 +82,14 @@ def update(nextState = None):
     tabnr = str(window.tabpage.number)
     if activeTab != tabnr:
       continue
-    (winid, diff, wrap, buftype, popup, win_disabled, buf_disabled) = vim.eval('[win_getid('+winnr+'), gettabwinvar('+tabnr+','+winnr+',"&diff"), gettabwinvar('+tabnr+','+winnr+',"&wrap"), gettabwinvar('+tabnr+','+winnr+',"&buftype"), gettabwinvar('+tabnr+','+winnr+',"popup"), gettabwinvar('+tabnr+','+winnr+',"vimade_disabled"), getbufvar('+bufnr+', "vimade_disabled")]')
+    (winid, diff, wrap, buftype, win_disabled, buf_disabled) = vim.eval('[win_getid('+winnr+'), gettabwinvar('+tabnr+','+winnr+',"&diff"), gettabwinvar('+tabnr+','+winnr+',"&wrap"), gettabwinvar('+tabnr+','+winnr+',"&buftype"), gettabwinvar('+tabnr+','+winnr+',"vimade_disabled"), getbufvar('+bufnr+', "vimade_disabled")]')
+    floating = vim.eval('nvim_win_get_config('+str(winid)+')') if HAS_NVIM_WIN_GET_CONFIG else False
+    if floating and 'relative' in floating:
+      floating = floating['relative']
+    else:
+      floating = False
+
+
     diff = int(diff)
     wrap = int(wrap)
     hasActiveBuffer = bufnr == activeBuffer
@@ -100,7 +111,7 @@ def update(nextState = None):
 
     state.diff = diff
 
-    if popup or win_disabled or buf_disabled:
+    if floating or win_disabled or buf_disabled:
       unfade[winid] = state
       continue
 
