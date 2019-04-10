@@ -51,7 +51,7 @@ def unfade_bufs(bufs):
     cmdheight = int(vim.eval('&cmdheight'))
     vim.command('function! VimadeSignTemp() \n' + '\n'.join(PLACES) + '\nendfunction')
     try:
-      vim.command('echon "'+'\n'*cmdheight+'" | call VimadeSignTemp() | redraw')
+      vim.command('call VimadeSignTemp()')
     except:
       pass
     PLACES = []
