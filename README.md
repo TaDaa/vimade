@@ -102,7 +102,7 @@ let g:vimade = {
 - **vimade.checkinterval** - the amount of time in milliseconds that vimade should check the screen for changes.  This config is mainly used to detect resize and scroll changes that occur on inactive windows. Checkinterval does nothing on gvim, if you want to control the refresh time, see 'h updatetime'. Default is 100.  
 - **vimade.usecursorhold** -  disables the timer running in the background and instead relies `OnCursorHold` and `updatetime` (see h:updatetime).  The default value is `0` except on Windows GVIM, which defaults to `1` due to the timer breaking movements.  If you find that the timer is causing performance problems or other issues you can disable it by setting this option to `1`. 
 - **vimade.detecttermcolors** - detect the terminal background and foreground colors.  This will work for Vim8 + iTerm, Tilix, Kitty, Gnome, Rxvt, and other editors that support the following query (```\033]11;?\007``` or ```\033]11;?\033\\```).  Default is 1.
-- **vimade.enablesigns** - Enables sign fading.  This feature is disabled by default due to how signs affect performance, however this plugin is heavily optimized and alleviates most sign performance issues. Give it a go and open an issue if you see performance drops.  Default is 0.
+- **vimade.enablesigns** - Enables sign fading.  This feature is disabled by default due to how signs affect performance, however these are performance impacts are mostly solved in the latest versions of vim. 
 - **vimade.signsretentionperiod** - The amount of time in milliseconds that faded buffers should be tracked for sign changes.  Default value is 4000.
 
 ##### Example
