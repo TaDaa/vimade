@@ -100,7 +100,8 @@ be precalculated. Default is 15.
 The amount of time in milliseconds that vimade should check the screen for
 changes.  This config is mainly used to detect resize and scroll changes that
 occur on inactive windows. Checkinterval does nothing on gvim, if you want to
-control the refresh time, see 'h updatetime'. Default is 100.
+control the refresh time, see 'h updatetime'. Default is 100 for gui vim and
+500 for neovim/terminal.
 
                                                       *g:vimade.usecursorhold*
 Disables the timer running in the background and instead relies `OnCursorHold`

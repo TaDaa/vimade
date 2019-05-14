@@ -85,7 +85,7 @@ let g:vimade = {
   \ "fadelevel": 0.4,
   \ "colbufsize": 15,
   \ "rowbufsize": 15,
-  \ "checkinterval": 100,
+  \ "checkinterval": 100, "100 is the default for gui vim, 500 is the default for terminals and neovim
   \ "usecursorhold": 0, "0 is default, but will automatically set to 1 for Windows GVIM
   \ "detecttermcolors": 1,
   \ 'enablesigns': 0,
