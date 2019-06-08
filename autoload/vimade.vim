@@ -52,6 +52,13 @@ function! vimade#Toggle()
   endif
 endfunction
 
+function! vimade#FocusGained()
+  let g:vimade_running=1
+  call vimade#InvalidateSigns()
+endfunction
+function! vimade#FocusLost()
+  let g:vimade_running=0
+endfunction
 function! vimade#InvalidateSigns()
   if g:vimade_running
     exec g:vimade_py_cmd join([
@@ -146,7 +153,8 @@ function! vimade#UpdateEvents()
       au!
       au VimEnter * call vimade#Init()
       au VimLeave * call vimade#Disable()
-      au FocusGained * call vimade#InvalidateSigns()
+      au FocusGained * call vimade#FocusGained()
+      au FocusLost * call vimade#FocusLost()
       au BufEnter * call vimade#CheckWindows()
       au OptionSet diff call vimade#CheckWindows()
       au ColorScheme * call vimade#CheckWindows()

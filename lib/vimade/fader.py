@@ -116,10 +116,6 @@ def update(nextState = None):
       continue
 
     state.buftype = buftype
-    if buftype == 'terminal':
-      if not hasActiveBuffer:
-        fade[winid] = state
-
 
     if state.wrap != wrap:
       state.wrap = wrap
