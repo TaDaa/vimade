@@ -145,8 +145,6 @@ command! VimadeRedraw call vimade#Redraw()
 "0.0 and 1.0
 command! -nargs=1 VimadeFadeLevel call vimade#FadeLevel(<q-args>)
 
-if v:vim_did_enter
-  call vimade#Init()
-endif
+call vimade#Init()
 
 call vimade#UpdateEvents()

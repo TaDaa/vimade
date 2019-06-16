@@ -151,7 +151,6 @@ endfunction
 function! vimade#UpdateEvents()
   augroup vimade
       au!
-      au VimEnter * call vimade#Init()
       au VimLeave * call vimade#Disable()
       au FocusGained * call vimade#FocusGained()
       au FocusLost * call vimade#FocusLost()
