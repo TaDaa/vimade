@@ -226,18 +226,19 @@ function! vimade#Tick(num)
   endtry
 endfunction
 
-function! vimade#FadeCurrentBuffer()
+function! vimade#FadeAll()
     "immediately fade current buffer
     if g:vimade_running
-      exec g:vimade_py_cmd join([
-          \ "from vimade import bridge",
-          \ "bridge.update({'activeBuffer': -1, 'activeTab': '".tabpagenr()."', 'activeWindow': '".win_getid(winnr())."'})",
-      \ ], "\n")
+      let g:vimade_fade_all=1
+      call vimade#CheckWindows()
     endif
 endfunction
 
-function! vimade#UnfadeCurrentBuffer()
+function! vimade#UnfadeAll()
+  if g:vimade_running
+    let g:vimade_fade_all=0
     call vimade#CheckWindows()
+  endif
 endfunction
 
 function! vimade#GetHi(id)

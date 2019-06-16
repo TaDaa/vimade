@@ -82,7 +82,7 @@ def update(nextState = None):
     tabnr = str(window.tabpage.number)
     if activeTab != tabnr:
       continue
-    (winid, diff, wrap, buftype, win_disabled, buf_disabled) = vim.eval('[win_getid('+winnr+'), gettabwinvar('+tabnr+','+winnr+',"&diff"), gettabwinvar('+tabnr+','+winnr+',"&wrap"), gettabwinvar('+tabnr+','+winnr+',"&buftype"), gettabwinvar('+tabnr+','+winnr+',"vimade_disabled"), getbufvar('+bufnr+', "vimade_disabled")]')
+    (winid, diff, wrap, buftype, win_disabled, buf_disabled, vimade_fade_all) = vim.eval('[win_getid('+winnr+'), gettabwinvar('+tabnr+','+winnr+',"&diff"), gettabwinvar('+tabnr+','+winnr+',"&wrap"), gettabwinvar('+tabnr+','+winnr+',"&buftype"), gettabwinvar('+tabnr+','+winnr+',"vimade_disabled"), getbufvar('+bufnr+', "vimade_disabled"),  g:vimade_fade_all]')
     floating = vim.eval('nvim_win_get_config('+str(winid)+')') if HAS_NVIM_WIN_GET_CONFIG else False
     if floating and 'relative' in floating:
       floating = floating['relative']
@@ -92,8 +92,9 @@ def update(nextState = None):
 
     diff = int(diff)
     wrap = int(wrap)
-    hasActiveBuffer = bufnr == activeBuffer
-    hasActiveWindow = winid == activeWindow
+    vimade_fade_all = int(vimade_fade_all)
+    hasActiveBuffer = False if vimade_fade_all else bufnr == activeBuffer
+    hasActiveWindow = False if vimade_fade_all else winid == activeWindow
 
     # window was unhandled -- add to FADE
     if not bufnr in FADE.buffers:
