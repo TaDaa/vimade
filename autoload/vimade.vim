@@ -228,17 +228,13 @@ endfunction
 
 function! vimade#FadeAll()
     "immediately fade current buffer
-    if g:vimade_running
-      let g:vimade_fade_all=1
-      call vimade#CheckWindows()
-    endif
+    let g:vimade_fade_all=1
+    call vimade#CheckWindows()
 endfunction
 
 function! vimade#UnfadeAll()
-  if g:vimade_running
     let g:vimade_fade_all=0
     call vimade#CheckWindows()
-  endif
 endfunction
 
 function! vimade#GetHi(id)
