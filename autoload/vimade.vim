@@ -226,14 +226,14 @@ function! vimade#Tick(num)
   endtry
 endfunction
 
-function! vimade#ForceFade()
+function! vimade#FadeActive()
     "immediately fade current buffer
-    let g:vimade_force_fade=1
+    let g:vimade_fade_active=1
     call vimade#CheckWindows()
 endfunction
 
-function! vimade#UnforceFade()
-    let g:vimade_force_fade=0
+function! vimade#UnfadeActive()
+    let g:vimade_fade_active=0
     call vimade#CheckWindows()
 endfunction
 
