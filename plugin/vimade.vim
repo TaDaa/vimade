@@ -11,7 +11,7 @@ let g:vimade_error_count = 0
 
 let g:vimade_is_nvim = has('nvim')
 
-let g:vimade_fade_all = 0
+let g:vimade_force_fade = 0
 
 ""The vimade configuration object
 "@setting vimade
