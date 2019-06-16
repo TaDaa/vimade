@@ -140,6 +140,12 @@ COMMANDS                                                     *vimade-commands*
 :VimadeBufDisable                                          *:VimadeBufDisable*
   Disables the current buffer
 
+:VimadeFadeActive                                          *:VimadeFadeActive*
+  Fades the current buffer
+
+:VimadeUnfadeActive                                      *:VimadeUnfadeActive*
+  Unfades the current buffer
+
 :VimadeWinEnable                                            *:VimadeWinEnable*
   Enables the current window
 

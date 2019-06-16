@@ -127,6 +127,11 @@ command! VimadeWinDisable call vimade#WinDisable()
 ""Disables the current buffer
 command! VimadeBufDisable call vimade#BufDisable()
 
+""Fades the current buffer
+command! VimadeFadeActive call vimade#FadeActive()
+"
+""Unfades the current buffer
+command! VimadeUnfadeActive call vimade#UnfadeActive()
 
 ""Enables the current window
 command! VimadeWinEnable call vimade#WinEnable()
