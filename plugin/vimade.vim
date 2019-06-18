@@ -102,7 +102,8 @@ if !exists('g:vimade_py_cmd')
     elseif has('python')
         let g:vimade_py_cmd = "py"
     else
-        finish
+      echom "Vimade: Python not found, this plugin requires either python3 or python2.7+"
+      finish
     endif
 endif
 
