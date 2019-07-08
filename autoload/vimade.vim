@@ -30,10 +30,13 @@ function! vimade#Disable()
   "disable vimade
   let g:vimade_running = 0
   call vimade#StopTimer()
-  exec g:vimade_py_cmd join([
-      \ "from vimade import bridge",
-      \ "bridge.unfadeAll()",
-  \ ], "\n")
+
+  if exists('g:vimade_py_cmd')
+    exec g:vimade_py_cmd join([
+        \ "from vimade import bridge",
+        \ "bridge.unfadeAll()",
+    \ ], "\n")
+  endif
 endfunction
 
 function! vimade#DetectTermColors()

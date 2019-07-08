@@ -55,6 +55,12 @@ Terminals with background detection:
 ==============================================================================
 CONFIGURATION                                                  *vimade-config*
 
+                                                            *g:vimade_running*
+This flag is used to control whether or not vimade should be running.  This
+can be useful to toggle vimade during startup.  Alternatively, you may as also
+use VimadeDisable, VimadeEnable, call vimade#Disable, call vimade#Enable
+respectively
+
                                                                     *g:vimade*
 The vimade configuration object
 
@@ -114,7 +120,8 @@ can disable it by setting this option to `1`.
 Detect the terminal background and foreground colors.  This will work for Vim8
 + iTerm, Tilix, Kitty, Gnome, Rxvt, and other editors that support the
 following query (```\033]11;?\007``` or ```\033]11;?\033\\```).  Default is 0.
-This feature should be enabled at your own risk
+This feature can cause unwanted side effects during startup and should be
+enabled at your own risk
 
                                                         *g:vimade.enablesigns*
 Enables sign fading.  This feature is disabled by default due to how signs
@@ -195,11 +202,7 @@ FAQ/HELP                                                         *vimade-help*
 I am using GVIM and my mappings are not working
 *Add `let g:vimade.usecursorhold=1` to your vimrc*
 
-Sometimes I hear an annoying bell sound when starting vim/nvim
-*Add `let g:vimade.detecttermcolors=0` to your vimrc -- the color detection
-  may cause this sound on unsupported terminals*
 What about Vim < 8?
-
 *Vim 7 is currently untested/experimental, but may work if you add `let
   g:vimade.usecursorhold=1` to your vimrc*
 My colors look off in terminal mode!

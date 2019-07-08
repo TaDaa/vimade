@@ -1,6 +1,10 @@
 if exists('g:vimade_loaded')
   finish
 endif
+
+""@setting vimade_running
+"This flag is used to control whether or not vimade should be running.  This can be useful to toggle vimade during startup.  Alternatively, you may as also use VimadeDisable, VimadeEnable, call vimade#Disable, call vimade#Enable respectively
+
 if !exists('g:vimade_running')
   let g:vimade_running = 1
 endif
@@ -66,7 +70,7 @@ let g:vimade_defaults.checkinterval = has('gui_running') && !has('nvim') ? 100 :
 let g:vimade_defaults.usecursorhold = has('gui_running') && !has('nvim') && execute('version')=~"GUI version"
 
 ""@setting vimade.detecttermcolors
-"Detect the terminal background and foreground colors.  This will work for Vim8 + iTerm, Tilix, Kitty, Gnome, Rxvt, and other editors that support the following query (```\033]11;?\007``` or ```\033]11;?\033\\```).  Default is 0.  This feature should be enabled at your own risk
+"Detect the terminal background and foreground colors.  This will work for Vim8 + iTerm, Tilix, Kitty, Gnome, Rxvt, and other editors that support the following query (```\033]11;?\007``` or ```\033]11;?\033\\```).  Default is 0.  This feature can cause unwanted side effects during startup and should be enabled at your own risk
 
 let g:vimade_defaults.detecttermcolors = 0
 
