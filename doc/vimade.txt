@@ -113,7 +113,8 @@ can disable it by setting this option to `1`.
                                                    *g:vimade.detecttermcolors*
 Detect the terminal background and foreground colors.  This will work for Vim8
 + iTerm, Tilix, Kitty, Gnome, Rxvt, and other editors that support the
-following query (```\033]11;?\007``` or ```\033]11;?\033\\```).  Default is 1.
+following query (```\033]11;?\007``` or ```\033]11;?\033\\```).  Default is 0.
+This feature should be enabled at your own risk
 
                                                         *g:vimade.enablesigns*
 Enables sign fading.  This feature is disabled by default due to how signs

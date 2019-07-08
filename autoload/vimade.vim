@@ -171,18 +171,17 @@ function! vimade#ExtendState()
       let g:vimade[prop] = g:vimade_defaults[prop]
     endif
   endfor
-  "get the normal id
-  if g:vimade.normalid == "" || g:vimade.normalid == 0
-    let g:vimade.normalid = hlID('Normal')
-  endif
-  if g:vimade_is_nvim && (g:vimade.normalncid == "" || g:vimade.normalncid == 0)
-    let g:vimade.normalncid = hlID('NormalNC')
-  endif
 endfunction
 
 function! vimade#UpdateState()
   if !exists('g:vimade')
     let g:vimade = {}
+  endif
+  if g:vimade.normalid == "" || g:vimade.normalid == 0
+    let g:vimade.normalid = hlID('Normal')
+  endif
+  if g:vimade_is_nvim && (g:vimade.normalncid == "" || g:vimade.normalncid == 0)
+    let g:vimade.normalncid = hlID('NormalNC')
   endif
   if !has_key(g:vimade, '$extended')
     call vimade#ExtendState()

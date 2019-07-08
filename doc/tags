@@ -2,10 +2,12 @@
 :VimadeBufEnable	vimade.txt	/*:VimadeBufEnable*
 :VimadeDisable	vimade.txt	/*:VimadeDisable*
 :VimadeEnable	vimade.txt	/*:VimadeEnable*
+:VimadeFadeActive	vimade.txt	/*:VimadeFadeActive*
 :VimadeFadeLevel	vimade.txt	/*:VimadeFadeLevel*
 :VimadeInfo	vimade.txt	/*:VimadeInfo*
 :VimadeRedraw	vimade.txt	/*:VimadeRedraw*
 :VimadeToggle	vimade.txt	/*:VimadeToggle*
+:VimadeUnfadeActive	vimade.txt	/*:VimadeUnfadeActive*
 :VimadeWinDisable	vimade.txt	/*:VimadeWinDisable*
 :VimadeWinEnable	vimade.txt	/*:VimadeWinEnable*
 g:vimade	vimade.txt	/*g:vimade*

@@ -66,9 +66,9 @@ let g:vimade_defaults.checkinterval = has('gui_running') && !has('nvim') ? 100 :
 let g:vimade_defaults.usecursorhold = has('gui_running') && !has('nvim') && execute('version')=~"GUI version"
 
 ""@setting vimade.detecttermcolors
-"Detect the terminal background and foreground colors.  This will work for Vim8 + iTerm, Tilix, Kitty, Gnome, Rxvt, and other editors that support the following query (```\033]11;?\007``` or ```\033]11;?\033\\```).  Default is 1.
+"Detect the terminal background and foreground colors.  This will work for Vim8 + iTerm, Tilix, Kitty, Gnome, Rxvt, and other editors that support the following query (```\033]11;?\007``` or ```\033]11;?\033\\```).  Default is 0.  This feature should be enabled at your own risk
 
-let g:vimade_defaults.detecttermcolors = 1
+let g:vimade_defaults.detecttermcolors = 0
 
 ""@setting vimade.enablesigns
 "Enables sign fading.  This feature is disabled by default due to how signs affect performance, however this plugin is heavily optimized and alleviates most sign performance issues. Give it a go and open an issue if you see performance drops.  Default is 0.
