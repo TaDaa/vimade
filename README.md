@@ -87,7 +87,7 @@ let g:vimade = {
   \ "rowbufsize": 15,
   \ "checkinterval": 100, "100 is the default for gui vim, 500 is the default for terminals and neovim
   \ "usecursorhold": 0, "0 is default, but will automatically set to 1 for Windows GVIM
-  \ "detecttermcolors": 1,
+  \ "detecttermcolors": 0,
   \ 'enablesigns': 0,
   \ 'signsretentionperiod': 4000,
 }
@@ -101,7 +101,7 @@ let g:vimade = {
 - **vimade.colbufsize** - the number of cols left and right of the determined scroll area that should be precalculated. Default is 15.
 - **vimade.checkinterval** - the amount of time in milliseconds that vimade should check the screen for changes.  This config is mainly used to detect resize and scroll changes that occur on inactive windows. Checkinterval does nothing on gvim, if you want to control the refresh time, see 'h updatetime'. Default is 100.  
 - **vimade.usecursorhold** -  disables the timer running in the background and instead relies `OnCursorHold` and `updatetime` (see h:updatetime).  The default value is `0` except on Windows GVIM, which defaults to `1` due to the timer breaking movements.  If you find that the timer is causing performance problems or other issues you can disable it by setting this option to `1`. 
-- **vimade.detecttermcolors** - detect the terminal background and foreground colors.  This will work for Vim8 + iTerm, Tilix, Kitty, Gnome, Rxvt, and other editors that support the following query (```\033]11;?\007``` or ```\033]11;?\033\\```).  Default is 1.
+- **vimade.detecttermcolors** - detect the terminal background and foreground colors.  This will work for Vim8 + iTerm, Tilix, Kitty, Gnome, Rxvt, and other editors that support the following query (```\033]11;?\007``` or ```\033]11;?\033\\```).  Default is 0.  Enable this at your own risk as it can cause unwanted side effects.
 - **vimade.enablesigns** - Enables sign fading.  This feature is disabled by default due to how signs affect performance, however these are performance impacts are mostly solved in the latest versions of vim. 
 - **vimade.signsretentionperiod** - The amount of time in milliseconds that faded buffers should be tracked for sign changes.  Default value is 4000.
 
@@ -126,9 +126,6 @@ let g:vimade.fadelevel = 0.7
 ##### FAQ/Help
 I am using GVIM and my mappings are not working
 - *Add `let g:vimade.usecursorhold=1` to your vimrc*
-
-Sometimes I hear an annoying bell sound when starting vim/nvim
-- *Add `let g:vimade.detecttermcolors=0` to your vimrc -- the color detection may cause this sound on unsupported terminals*
 
 What about Vim < 8?
 - *Vim 7 is currently untested/experimental, but may work if you add `let g:vimade.usecursorhold=1` to your vimrc*
