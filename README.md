@@ -118,7 +118,7 @@ let g:vimade = {
           endif
           ```
 
-##### Configu Example(s)
+##### Config Example(s)
 *Always remember to first set the global vimade object (`let g:vimade={}`)
 *this example reduces the amount of fading applied to text*
 ```
