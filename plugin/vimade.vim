@@ -83,7 +83,20 @@ let g:vimade_defaults.enablesigns = 0
 "Amount of time in milliseconds that faded buffers should be tracked for sign changes.  Default value is 4000.
 
 let g:vimade_defaults.signsretentionperiod = 4000
+"
+""@setting vimade.enablefocusfading
+"Fades the current active window on focus blur and unfades when focus gained.
+"This can be desirable when switching applications or TMUX splits.
+"* Install 'tmux-plugins/vim-tmux-focus-events' using your preferred plugin manager
+"* Add `set -g focus-events on` to your tmux.conf
+"* Neovim should work at this point, If you are using Vim you may also need the following snippet to the very end of your vimrc
+">
+"  if has('gui_running') == 0 && has('nvim') == 0
+"     call feedkeys(":silent execute '!' | redraw!\<CR>")
+"  endif
+"<
 
+let g:vimade_defaults.enablefocusfading = 0
 
 
 let g:vimade_defaults_keys = keys(g:vimade_defaults)
@@ -156,6 +169,8 @@ command! VimadeRedraw call vimade#Redraw()
 "0.0 and 1.0
 command! -nargs=1 VimadeFadeLevel call vimade#FadeLevel(<q-args>)
 
-call vimade#Init()
+if v:vim_did_enter
+  call vimade#Init()
+endif
 
 call vimade#UpdateEvents()

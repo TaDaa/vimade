@@ -58,8 +58,14 @@ endfunction
 function! vimade#FocusGained()
   let g:vimade_running=1
   call vimade#InvalidateSigns()
+  if g:vimade.enablefocusfading
+    call vimade#UnfadeActive()
+  endif
 endfunction
 function! vimade#FocusLost()
+  if g:vimade.enablefocusfading
+    call vimade#FadeActive()
+  endif
   let g:vimade_running=0
 endfunction
 function! vimade#InvalidateSigns()
@@ -154,6 +160,7 @@ endfunction
 function! vimade#UpdateEvents()
   augroup vimade
       au!
+      au VimEnter * call vimade#Init()
       au VimLeave * call vimade#Disable()
       au FocusGained * call vimade#FocusGained()
       au FocusLost * call vimade#FocusLost()

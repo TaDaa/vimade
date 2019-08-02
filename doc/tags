@@ -16,13 +16,16 @@ g:vimade.basefg	vimade.txt	/*g:vimade.basefg*
 g:vimade.checkinterval	vimade.txt	/*g:vimade.checkinterval*
 g:vimade.colbufsize	vimade.txt	/*g:vimade.colbufsize*
 g:vimade.detecttermcolors	vimade.txt	/*g:vimade.detecttermcolors*
+g:vimade.enablefocusfading	vimade.txt	/*g:vimade.enablefocusfading*
 g:vimade.enablesigns	vimade.txt	/*g:vimade.enablesigns*
 g:vimade.fadelevel	vimade.txt	/*g:vimade.fadelevel*
 g:vimade.normalid	vimade.txt	/*g:vimade.normalid*
 g:vimade.normalncid	vimade.txt	/*g:vimade.normalncid*
+g:vimade.overridefoldhighlight	vimade.txt	/*g:vimade.overridefoldhighlight*
 g:vimade.rowbufsize	vimade.txt	/*g:vimade.rowbufsize*
 g:vimade.signsretentionperiod	vimade.txt	/*g:vimade.signsretentionperiod*
 g:vimade.usecursorhold	vimade.txt	/*g:vimade.usecursorhold*
+g:vimade_running	vimade.txt	/*g:vimade_running*
 vimade	vimade.txt	/*vimade*
 vimade-commands	vimade.txt	/*vimade-commands*
 vimade-config	vimade.txt	/*vimade-config*
