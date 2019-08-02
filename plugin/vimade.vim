@@ -169,6 +169,11 @@ command! VimadeRedraw call vimade#Redraw()
 "0.0 and 1.0
 command! -nargs=1 VimadeFadeLevel call vimade#FadeLevel(<q-args>)
 
+""Overrides the Folded highlight by creating a link to the Vimade base fade.
+"This should produce acceptable results for colorschemes that include Folded
+"highlights that are distracting in faded windows.
+command! VimadeOverrideFolded call vimade#OverrideFolded()
+
 if v:vim_did_enter
   call vimade#Init()
 endif

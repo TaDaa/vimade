@@ -188,6 +188,11 @@ COMMANDS                                                     *vimade-commands*
   Changes vimade_fadelevel to the {value} specified.  {value} can be between
   0.0 and 1.0
 
+:VimadeOverrideFolded                                  *:VimadeOverrideFolded*
+  Overrides the Folded highlight by creating a link to the Vimade base fade.
+  This should produce acceptable results for colorschemes that include Folded
+  highlights that are distracting in faded windows.
+
 ==============================================================================
 CUSTOM-FADES                                             *vimade-custom-fades*
 

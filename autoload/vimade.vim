@@ -55,6 +55,10 @@ function! vimade#Toggle()
   endif
 endfunction
 
+function! vimade#OverrideFolded()
+  hi! link Folded vimade_0
+endfunction
+
 function! vimade#FocusGained()
   let g:vimade_running=1
   call vimade#InvalidateSigns()

@@ -139,6 +139,7 @@ let g:vimade.enablesigns = 1
 - **VimadeBufEnable** - Enables fading for the current buffer
 - **VimadeFadeActive** - Fades the current active window
 - **VimadeUnfadeActive** - Unfades the current active window
+- **VimadeOverrideFolded** - Overrides the Folded highlight by creating a link to the Vimade base fade.  This should produce acceptable results for colorschemes that include Folded highlights that are distracting in faded windows.
 
 ##### FAQ/Help
 I am using GVIM and my mappings are not working
