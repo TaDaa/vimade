@@ -9,6 +9,8 @@ if !exists('g:vimade_running')
   let g:vimade_running = 1
 endif
 
+let g:vimade_paused = 0
+
 let g:vimade_loaded = 1
 
 let g:vimade_error_count = 0
@@ -97,7 +99,6 @@ let g:vimade_defaults.signsretentionperiod = 4000
 "<
 
 let g:vimade_defaults.enablefocusfading = 0
-
 
 let g:vimade_defaults_keys = keys(g:vimade_defaults)
 if !exists('g:vimade')

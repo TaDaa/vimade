@@ -60,7 +60,7 @@ function! vimade#OverrideFolded()
 endfunction
 
 function! vimade#FocusGained()
-  let g:vimade_running=1
+  let g:vimade_paused=0
   call vimade#InvalidateSigns()
   if g:vimade.enablefocusfading
     call vimade#UnfadeActive()
@@ -70,10 +70,10 @@ function! vimade#FocusLost()
   if g:vimade.enablefocusfading
     call vimade#FadeActive()
   endif
-  let g:vimade_running=0
+  let g:vimade_paused=1
 endfunction
 function! vimade#InvalidateSigns()
-  if g:vimade_running
+  if g:vimade_running && g:vimade_paused == 0
     exec g:vimade_py_cmd join([
         \ "from vimade import bridge",
         \ "bridge.softInvalidateSigns()",
@@ -84,7 +84,7 @@ function! vimade#InvalidateSigns()
 endfunction
 
 function! vimade#Recalculate()
-  if g:vimade_running
+  if g:vimade_running && g:vimade_paused == 0
     exec g:vimade_py_cmd join([
         \ "from vimade import bridge",
         \ "bridge.recalculate()",
@@ -93,7 +93,7 @@ function! vimade#Recalculate()
 endfunction
 
 function! vimade#Redraw()
-  if g:vimade_running
+  if g:vimade_running && g:vimade_paused == 0
     exec g:vimade_py_cmd join([
         \ "from vimade import bridge",
         \ "bridge.unfadeAll()",
@@ -128,6 +128,7 @@ function! vimade#GetInfo()
         \ 'has_gui_running': has('gui_running'),
         \ 'vimade_py_cmd': g:vimade_py_cmd,
         \ 'vimade_running': g:vimade_running,
+        \ 'vimade_paused': g:vimade_paused,
         \ 'vimade_error_count': g:vimade_error_count,
         \ 'vimade_timer': exists('g:vimade_timer') ? g:vimade_timer : -1,
         \ 'vimade_loaded': g:vimade_loaded,
@@ -143,7 +144,7 @@ endfunction
 
 function! vimade#CheckWindows()
   call vimade#UpdateState()
-  if g:vimade_running
+  if g:vimade_running && g:vimade_paused == 0
     exec g:vimade_py_cmd join([
         \ "from vimade import bridge",
         \ "bridge.update({'activeBuffer': str(vim.current.buffer.number), 'activeTab': '".tabpagenr()."', 'activeWindow': '".win_getid(winnr())."'})",
@@ -152,6 +153,7 @@ function! vimade#CheckWindows()
 endfunction
 
 function! vimade#softInvalidateBuffer(bufnr)
+  "Don't check paused condition because the application may have not been regained and triggered FocusGained event
   if g:vimade_running
     exec g:vimade_py_cmd join([
         \ "from vimade import bridge",
