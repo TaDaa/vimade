@@ -148,6 +148,12 @@ This can be desirable when switching applications or TMUX splits.
  endif
 <
 
+                                                       *g:vimade.fadepriority*
+Controls the highlighting priority of used by Vimade.  You may need to tweak
+this value to make vimade play nicely with other highlighting plugins.  If you
+want hlsearch to show results on all buffers, you should lower this value to
+0. Default is 10.
+
 ==============================================================================
 COMMANDS                                                     *vimade-commands*
 
@@ -187,6 +193,10 @@ COMMANDS                                                     *vimade-commands*
 :VimadeFadeLevel {value}                                    *:VimadeFadeLevel*
   Changes vimade_fadelevel to the {value} specified.  {value} can be between
   0.0 and 1.0
+
+:VimadeFadePriority {value}                              *:VimadeFadePriority*
+  Changes vimade_fadepriority to the {value} specified.  This can be useful
+  when combining Vimade with other plugins that also highlight using matches
 
 :VimadeOverrideFolded                                  *:VimadeOverrideFolded*
   Overrides the Folded highlight by creating a link to the Vimade base fade.

@@ -292,6 +292,7 @@ def fadeWin(winState):
   startCol = max(startCol, 1)
   maxCol = cursorCol + 1 + width + GLOBALS.col_buf_size
   matches = {}
+  fade_priority = GLOBALS.fade_priority
 
   # attempted working backwards through synID as well, but this precomputation nets in
   # the highest performance gains
@@ -439,7 +440,7 @@ def fadeWin(winState):
       i = 0
       end = len(coords)
       while i < end:
-        winMatches.append(vim.eval('matchaddpos("'+group+'",['+','.join(map(lambda tup:'['+str(tup[0])+','+str(tup[1])+','+str(tup[2])+']' , coords[i:i+8]))+'],10,-1)'))
+        winMatches.append(vim.eval('matchaddpos("'+group+'",['+','.join(map(lambda tup:'['+str(tup[0])+','+str(tup[1])+','+str(tup[2])+']' , coords[i:i+8]))+'],'+fade_priority+',-1)'))
         i += 8
 
   if setWin:

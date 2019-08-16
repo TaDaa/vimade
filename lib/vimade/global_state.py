@@ -18,6 +18,7 @@ background = None
 colorscheme = None
 row_buf_size = None
 col_buf_size = None
+fade_priority = None
 normal_id = None
 normalnc_id = None
 normal_bg = ''
@@ -68,6 +69,7 @@ def update():
   fadelevel = float(nextGlobals['fadelevel'])
   rowbufsize = int(nextGlobals['rowbufsize'])
   colbufsize = int(nextGlobals['colbufsize'])
+  fadepriority = str(nextGlobals['fadepriority'])
   signsretentionperiod = int(nextGlobals['signsretentionperiod'])
   basefg = nextGlobals['basefg']
   basebg = nextGlobals['basebg']
@@ -123,6 +125,10 @@ def update():
       basefg = base_hi[0]
     if not basebg:
       basebg = base_hi[1]
+
+  if GLOBALS.fade_priority != fadepriority:
+    GLOBALS.fade_priority = fadepriority
+    returnState |= FULL_INVALIDATE
 
   if GLOBALS.is_term:
     if not basefg:

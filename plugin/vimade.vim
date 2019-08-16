@@ -100,6 +100,15 @@ let g:vimade_defaults.signsretentionperiod = 4000
 
 let g:vimade_defaults.enablefocusfading = 0
 
+"
+""@setting vimade.fadepriority
+"Controls the highlighting priority of used by Vimade.  You may need to tweak
+"this value to make vimade play nicely with other highlighting plugins.  If
+"you want hlsearch to show results on all buffers, you should lower this value
+"to 0. Default is 10.
+
+let g:vimade_defaults.fadepriority = 10
+
 let g:vimade_defaults_keys = keys(g:vimade_defaults)
 if !exists('g:vimade')
   let g:vimade = {}
@@ -169,6 +178,10 @@ command! VimadeRedraw call vimade#Redraw()
 ""Changes vimade_fadelevel to the {value} specified.  {value} can be between
 "0.0 and 1.0
 command! -nargs=1 VimadeFadeLevel call vimade#FadeLevel(<q-args>)
+
+""Changes vimade_fadepriority to the {value} specified.  This can be useful
+"when combining Vimade with other plugins that also highlight using matches
+command! -nargs=1 VimadeFadePriority call vimade#FadePriority(<q-args>)
 
 ""Overrides the Folded highlight by creating a link to the Vimade base fade.
 "This should produce acceptable results for colorschemes that include Folded

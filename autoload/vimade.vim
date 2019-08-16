@@ -142,6 +142,11 @@ function! vimade#FadeLevel(level)
   call vimade#CheckWindows()
 endfunction
 
+function! vimade#FadePriority(priority)
+  let g:vimade.fadepriority = a:priority
+  call vimade#CheckWindows()
+endfunction
+
 function! vimade#CheckWindows()
   call vimade#UpdateState()
   if g:vimade_running && g:vimade_paused == 0

@@ -106,6 +106,7 @@ let g:vimade = {
 - **vimade.enablesigns** - Enables sign fading.  This feature is disabled by default due to how signs affect performance, however these are performance impacts are mostly solved in the latest versions of vim. 
 - **vimade.signsretentionperiod** - The amount of time in milliseconds that faded buffers should be tracked for sign changes.  Default value is 4000.
 - **vimade.enablefocusfading** - Fades the current active window on focus blur and unfades when focus gained.  This can be desirable when switching applications or TMUX splits.  Default value is 0.   
+- **vimade.fadepriority** - Controls the highlighting priority of used by Vimade.  You may want to tweak this value depending on the other highlighting plugins that you use.  9 By default supports vim-minimap.  If you want hlsearch to show results on all buffers, you should lower this value to 0. Default is 10.
 
   *Requires additional setup for terminal and tmux:*
 
@@ -132,6 +133,7 @@ let g:vimade.enablesigns = 1
 - **VimadeToggle** - Toggles between on/off states
 - **VimadeRedraw** - Forces vimade to redraw fading for every window.
 - **VimadeFadeLevel [0.0-1.0]** - Sets the FadeLevel config and forces an immediate redraw.
+- **VimadeFadePriority [0+]** - Sets the FadePriority config and forces an immediate redraw.
 - **VimadeInfo** - Provides debug information for Vimade.  Please include this info in bug reports
 - **VimadeWinDisable** - Disables fading for the current window
 - **VimadeWinEnable** - Enables fading for the current window
