@@ -102,10 +102,10 @@ let g:vimade_defaults.enablefocusfading = 0
 
 "
 ""@setting vimade.fadepriority
-"Controls the highlighting priority of used by Vimade.  You may need to tweak
-"this value to make vimade play nicely with other highlighting plugins.  If
-"you want hlsearch to show results on all buffers, you should lower this value
-"to 0. Default is 10.
+"Controls the highlighting priority of used by Vimade.
+"You may want to tweak this value to make Vimade play nicely with other highlighting plugins and behaviors.
+"For example, if you want hlsearch to show results on all buffers, you may want to lower this value to 0.
+"Default is 10.
 
 let g:vimade_defaults.fadepriority = 10
 
