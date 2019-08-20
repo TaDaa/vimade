@@ -114,7 +114,7 @@ def fade_bufs(bufs):
   if len(changes):
     place = []
     for sign in changes:
-      PLACES.append('sign place ' + sign['id'] + ' name=vimade_' + sign['name'] + ' buffer=' + sign['bufnr'] )
+      PLACES.append('sign place ' + sign['id'] + ' line='+sign['lnum'] + ' name=vimade_' + sign['name'] + ' buffer=' + sign['bufnr'])
   # print('fade',(time.time() - start) * 1000)
 
 
