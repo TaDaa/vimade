@@ -151,6 +151,17 @@ def update(nextState = None):
     elif not state.faded and not hasActiveBuffer:
       fade[winid] = state
 
+    if 'minimap' in window.buffer.name:
+      state.is_minimap = True
+      if GLOBALS.fade_minimap:
+        fade[winid] = state
+        if winid in unfade:
+          del unfade[winid]
+      else:
+        unfade[winid] = state
+        if winid in fade:
+          del fade[winid]
+
     nextBuffers[bufnr] = nextWindows[winid] = True
 
   if activeDiff and len(diffs) > 1:
@@ -208,8 +219,10 @@ def update(nextState = None):
     for bufnr in nextBuffers:
       if bufnr in buffers:
         buf = buffers[bufnr]
-        if buf.faded and not bufnr in fade_signs  and (signs_retention_period == -1 or (now - buf.faded) * 1000 < signs_retention_period):
+        if buf.faded and buf.faded != True and not bufnr in fade_signs:
             fade_signs.append(bufnr)
+            if signs_retention_period != -1 and (now - buf.faded) * 1000 >= signs_retention_period:
+              buf.faded = True
 
     if len(fade_signs) or len(unfade_signs):
       if len(fade_signs):
@@ -292,7 +305,10 @@ def fadeWin(winState):
   startCol = max(startCol, 1)
   maxCol = cursorCol + 1 + width + GLOBALS.col_buf_size
   matches = {}
-  fade_priority = GLOBALS.fade_priority
+  if winState.is_minimap:
+    fade_priority='9'
+  else:
+    fade_priority = GLOBALS.fade_priority
 
   # attempted working backwards through synID as well, but this precomputation nets in
   # the highest performance gains

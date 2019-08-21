@@ -16,3 +16,4 @@ class WinState:
     self.tab = window.tabpage.number
     self.buftype = None
     self.faded = False
+    self.is_minimap = False

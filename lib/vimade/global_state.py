@@ -19,6 +19,7 @@ colorscheme = None
 row_buf_size = None
 col_buf_size = None
 fade_priority = None
+fade_minimap = None
 normal_id = None
 normalnc_id = None
 normal_bg = ''
@@ -40,6 +41,7 @@ original_background = original_background
 term_response = False
 enable_signs = False
 signs_retention_period = 0
+signs_id = None
 
 READY = 0
 ERROR = 1
@@ -70,15 +72,20 @@ def update():
   rowbufsize = int(nextGlobals['rowbufsize'])
   colbufsize = int(nextGlobals['colbufsize'])
   fadepriority = str(nextGlobals['fadepriority'])
+  fademinimap = int(nextGlobals['fademinimap'])
+  signsid = int(nextGlobals['signsid'])
   signsretentionperiod = int(nextGlobals['signsretentionperiod'])
   basefg = nextGlobals['basefg']
   basebg = nextGlobals['basebg']
   normalid = nextGlobals['normalid']
   normalncid = nextGlobals['normalncid']
   enablesigns = int(nextGlobals['enablesigns'])
+  GLOBALS.fade_minimap = fademinimap
   GLOBALS.row_buf_size = rowbufsize
   GLOBALS.col_buf_size = colbufsize
   GLOBALS.signs_retention_period = signsretentionperiod
+  if GLOBALS.signs_id == None:
+    GLOBALS.signs_id = signsid
 
   if enablesigns != GLOBALS.enable_signs:
     GLOBALS.enable_signs = enablesigns
