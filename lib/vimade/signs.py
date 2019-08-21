@@ -77,11 +77,18 @@ def fade_bufs(bufs):
       name = sign['name']
       sign['bufnr'] = bufnr
       lnum = sign['lnum']
+      #check if sign already exists at lnum for buffer. 
       if lnum in lines:
-        continue
+        #line already exists at lnum
+        if name.startswith('vimade_'):
+          #Remove old non-priority vimade signs
+          SIGN_IDS_UNUSED.append(sign['id'])
+          PLACES.append('sign unplace ' + sign['id'] + ' buffer=' +bufnr)
+        continue #skip
+      #otherwise set lines[lnum] to true (could be vimade or non-vimade sign)
       lines[lnum] = True
       if not name.startswith('vimade_'):
-        #dont bother adding multiple signs on the same line number
+        #create a new vimade sign if the last high priority one for the line is not vimade
         changes.append(sign)
         if not name in SIGN_CACHE:
           SIGN_CACHE[name] = True
