@@ -81,6 +81,14 @@ let g:vimade_defaults.detecttermcolors = 0
 
 let g:vimade_defaults.enablesigns = 0
 
+""@setting vimade.signsid
+"The starting id that Vimade should use when creating new signs. By
+"default Vim requires numeric values to create signs and its possible that
+"collisions may occur between plugins.  If you need to override this value for
+"compatibility, please open an issue as well.  Default is 13100.
+
+let g:vimade_defaults.signsid = 13100
+
 ""@setting vimade.signsretentionperiod
 "Amount of time in milliseconds that faded buffers should be tracked for sign changes.  Default value is 4000.
 

@@ -40,6 +40,7 @@ original_background = original_background
 term_response = False
 enable_signs = False
 signs_retention_period = 0
+signs_id = None
 
 READY = 0
 ERROR = 1
@@ -70,6 +71,7 @@ def update():
   rowbufsize = int(nextGlobals['rowbufsize'])
   colbufsize = int(nextGlobals['colbufsize'])
   fadepriority = str(nextGlobals['fadepriority'])
+  signsid = int(nextGlobals['signsid'])
   signsretentionperiod = int(nextGlobals['signsretentionperiod'])
   basefg = nextGlobals['basefg']
   basebg = nextGlobals['basebg']
@@ -79,6 +81,8 @@ def update():
   GLOBALS.row_buf_size = rowbufsize
   GLOBALS.col_buf_size = colbufsize
   GLOBALS.signs_retention_period = signsretentionperiod
+  if GLOBALS.signs_id == None:
+    GLOBALS.signs_id = signsid
 
   if enablesigns != GLOBALS.enable_signs:
     GLOBALS.enable_signs = enablesigns

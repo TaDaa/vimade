@@ -7,7 +7,6 @@ from vimade import highlighter
 SIGN_CACHE = {}
 PLACES = []
 SIGN_IDS_UNUSED = []
-SIGN_ID_NEXT = 131000
 def parseParts(line):
   parts = re.split('[\s\t]+', line)
   item = {}
@@ -63,7 +62,6 @@ def unfade_bufs(bufs):
   # print('unfade',(time.time() - start) * 1000)
 
 def fade_bufs(bufs):
-  global SIGN_ID_NEXT
   global SIGN_IDS_UNUSED
   start = time.time()
   infos = vim.eval('[' + ','.join(['get(getbufinfo('+x+')[0],"signs",[])' for x in bufs ]) + ']' )
@@ -124,8 +122,8 @@ def fade_bufs(bufs):
       if len(SIGN_IDS_UNUSED):
         next_id = SIGN_IDS_UNUSED.pop(0)
       else:
-        next_id = SIGN_ID_NEXT
-        SIGN_ID_NEXT = SIGN_ID_NEXT + 1
+        next_id = GLOBALS.signs_id
+        GLOBALS.signs_id = GLOBALS.signs_id + 1
       PLACES.append('sign place ' +  str(next_id) + ' line='+sign['lnum'] + ' name=vimade_' + sign['name'] + ' buffer=' + sign['bufnr'])
   # print('fade',(time.time() - start) * 1000)
 

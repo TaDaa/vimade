@@ -208,8 +208,10 @@ def update(nextState = None):
     for bufnr in nextBuffers:
       if bufnr in buffers:
         buf = buffers[bufnr]
-        if buf.faded and not bufnr in fade_signs  and (signs_retention_period == -1 or (now - buf.faded) * 1000 < signs_retention_period):
+        if buf.faded and buf.faded != True and not bufnr in fade_signs:
             fade_signs.append(bufnr)
+            if signs_retention_period != -1 and (now - buf.faded) * 1000 >= signs_retention_period:
+              buf.faded = True
 
     if len(fade_signs) or len(unfade_signs):
       if len(fade_signs):
