@@ -26,6 +26,7 @@ activeBuffer = str(vim.current.buffer.number)
 
 
 
+
 def update(nextState = None):
   start = time.time()
   if FADE.prevent:
@@ -420,13 +421,13 @@ def fadeWin(winState):
         gaps.append(column - 1)
       column = column + 1
 
-    ids = vim.eval('[' + ','.join(ids) + ']')
-
-    highlights = highlighter.fade_ids(ids)
-    i = 0
-    for hi in highlights:
-      colors[gaps[i]] = {'id': ids[i], 'hi': hi}
-      i += 1
+    if len(ids):
+      ids = vim.eval('[' + ','.join(ids) + ']')
+      highlights = highlighter.fade_ids(ids)
+      i = 0
+      for hi in highlights:
+        colors[gaps[i]] = {'id': ids[i], 'hi': hi}
+        i += 1
 
     column = sCol
     while column <= endCol:
@@ -444,20 +445,22 @@ def fadeWin(winState):
             match.append((row, column, 1))
       column += 1
     row = row + 1
-  items = matches.items()
 
+  items = matches.items()
   if len(items):
     # this is required, the matchaddpos window ID config does not seem to work in nvim
     if not setWin:
       setWin = True
       if lastWin != winid:
         vim.command('noautocmd call win_gotoid('+winid+')')
+    matchadds = []
     for (group, coords) in matches.items():
       i = 0
       end = len(coords)
       while i < end:
-        winMatches.append(vim.eval('matchaddpos("'+group+'",['+','.join(map(lambda tup:'['+str(tup[0])+','+str(tup[1])+','+str(tup[2])+']' , coords[i:i+8]))+'],'+fade_priority+',-1)'))
+        matchadds.append('matchaddpos("'+group+'",['+','.join(map(lambda tup:'['+str(tup[0])+','+str(tup[1])+','+str(tup[2])+']' , coords[i:i+8]))+'],'+fade_priority+',-1)')
         i += 8
+    winMatches += vim.eval('[' + ','.join(matchadds) + ']')
 
   if setWin:
     if lastWin != winid:
