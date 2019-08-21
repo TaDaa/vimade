@@ -72,10 +72,16 @@ def fade_bufs(bufs):
   for signs in infos:
     bufnr = bufs[i]
     i += 1
+    lines = {}
     for sign in signs:
       name = sign['name']
       sign['bufnr'] = bufnr
+      lnum = sign['lnum']
+      if lnum in lines:
+        continue
+      lines[lnum] = True
       if not name.startswith('vimade_'):
+        #dont bother adding multiple signs on the same line number
         changes.append(sign)
         if not name in SIGN_CACHE:
           SIGN_CACHE[name] = True
