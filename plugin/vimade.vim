@@ -79,7 +79,7 @@ let g:vimade_defaults.detecttermcolors = 0
 ""@setting vimade.enablescroll
 "Enables fading while scrolling inactive windows.  This is only useful in gui vim and does have a performance cost.  By default this setting is enabled in gui vim and disabled for terminals.
 
-let g:vimade_defaults.enablescroll = has('gui_running') && !(execute('version')=~"GUI version")
+let g:vimade_defaults.enablescroll = (has('gui_running') || has('gui_vimr')) && !(execute('version')=~"GUI version")
 
 ""@setting vimade.enablesigns
 "Enables sign fading.  This feature is disabled by default due to how signs affect performance, however this plugin is heavily optimized and alleviates most sign performance issues. Give it a go and open an issue if you see performance drops.  Default is 0.
