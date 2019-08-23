@@ -311,6 +311,12 @@ def fadeWin(winState):
   else:
     fade_priority = GLOBALS.fade_priority
 
+
+  if GLOBALS.enable_scroll == 0 and winid == lastWin and not wrap:
+    (startRow, endRow) = vim.eval("[line('w0'),line('w$')]")
+    startRow = int(startRow)
+    endRow = int(endRow)
+
   # attempted working backwards through synID as well, but this precomputation nets in
   # the highest performance gains
   if wrap:
@@ -365,6 +371,7 @@ def fadeWin(winState):
   winMatches = winState.matches
 
   row = startRow
+  redo = False
   while row <= endRow:
     column = startCol
     index = row - 1
@@ -417,10 +424,19 @@ def fadeWin(winState):
           setWin = True
           if lastWin != winid:
             vim.command('noautocmd call win_gotoid('+winid+')')
+            if GLOBALS.enable_scroll == 0 and not wrap:
+              (startRow, endRow) = vim.eval("[line('w0'),line('w$')]")
+              redo = True
+              startRow = int(startRow)
+              endRow = int(endRow)
+              break
         ids.append('synID('+str_row+','+str(column)+',0)')
         gaps.append(column - 1)
       column = column + 1
 
+    if redo:
+      redo = False
+      continue
     if len(ids):
       ids = vim.eval('[' + ','.join(ids) + ']')
       highlights = highlighter.fade_ids(ids)

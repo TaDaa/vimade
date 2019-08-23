@@ -52,14 +52,14 @@ let g:vimade_defaults.basebg = ''
 let g:vimade_defaults.fadelevel = 0.4
 
 ""@setting vimade.colbufsize
-"The number of cols left and right of the determined scroll area that should be precalculated. Default is 15.
+"The number of cols left and right of the determined scroll area that should be precalculated. Reduce this value to improve performance. Default is 15 for gui vim and 0 for terminals/gvim.
 
-let g:vimade_defaults.colbufsize = 15
+let g:vimade_defaults.colbufsize = has('gui_running') && !(execute('version')=~"GUI version") ? 15 : 0
 
 ""@setting vimade.rowbufsize
-"The number of rows above and below of the determined scroll area that should be precalculated. Default is 15.
+"The number of rows above and below of the determined scroll area that should be precalculated. Reduce this value to improve performance Default is 15 for gui vim and 0 for terminals/gvim.
 
-let g:vimade_defaults.rowbufsize = 15
+let g:vimade_defaults.rowbufsize = has('gui_running') && !(execute('version')=~"GUI version") ? 15 : 0
 
 ""@setting vimade.checkinterval
 "The amount of time in milliseconds that vimade should check the screen for changes.  This config is mainly used to detect resize and scroll changes that occur on inactive windows. Checkinterval does nothing on gvim, if you want to control the refresh time, see 'h updatetime'. Default is 100 for gui vim and 500 for neovim/terminal.  
@@ -75,6 +75,11 @@ let g:vimade_defaults.usecursorhold = has('gui_running') && !has('nvim') && exec
 "Detect the terminal background and foreground colors.  This will work for Vim8 + iTerm, Tilix, Kitty, Gnome, Rxvt, and other editors that support the following query (```\033]11;?\007``` or ```\033]11;?\033\\```).  Default is 0.  This feature can cause unwanted side effects during startup and should be enabled at your own risk
 
 let g:vimade_defaults.detecttermcolors = 0
+
+""@setting vimade.enablescroll
+"Enables fading while scrolling inactive windows.  This is only useful in gui vim and does have a performance cost.  By default this setting is enabled in gui vim and disabled for terminals.
+
+let g:vimade_defaults.enablescroll = has('gui_running') && !(execute('version')=~"GUI version")
 
 ""@setting vimade.enablesigns
 "Enables sign fading.  This feature is disabled by default due to how signs affect performance, however this plugin is heavily optimized and alleviates most sign performance issues. Give it a go and open an issue if you see performance drops.  Default is 0.
@@ -119,8 +124,8 @@ let g:vimade_defaults.fadepriority = 10
 
 "
 ""@setting vimade.fademinimap
-"Enables fading for `severin-lemaignan/vim-minimap`.  Setting vimade.fademinimap to
-"0 disables minimap fading.  Default is 1.
+"Enables a special fade effect for `severin-lemaignan/vim-minimap`.  Setting vimade.fademinimap to
+"0 disables the special fade.  Default is 1.
 
 let g:vimade_defaults.fademinimap = 1
 

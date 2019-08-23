@@ -39,6 +39,7 @@ is_term = is_term
 is_tmux = is_tmux
 original_background = original_background
 term_response = False
+enable_scroll = False
 enable_signs = False
 signs_retention_period = 0
 signs_id = None
@@ -80,10 +81,12 @@ def update():
   normalid = nextGlobals['normalid']
   normalncid = nextGlobals['normalncid']
   enablesigns = int(nextGlobals['enablesigns'])
+  enablescroll = int(nextGlobals['enablescroll'])
   GLOBALS.fade_minimap = fademinimap
   GLOBALS.row_buf_size = rowbufsize
   GLOBALS.col_buf_size = colbufsize
   GLOBALS.signs_retention_period = signsretentionperiod
+  GLOBALS.enable_scroll = enablescroll
   if GLOBALS.signs_id == None:
     GLOBALS.signs_id = signsid
 

@@ -96,11 +96,13 @@ better results.
 
                                                          *g:vimade.colbufsize*
 The number of cols left and right of the determined scroll area that should be
-precalculated. Default is 15.
+precalculated. Reduce this value to improve performance. Default is 15 for gui
+vim and 0 for terminals/gvim.
 
                                                          *g:vimade.rowbufsize*
 The number of rows above and below of the determined scroll area that should
-be precalculated. Default is 15.
+be precalculated. Reduce this value to improve performance Default is 15 for
+gui vim and 0 for terminals/gvim.
 
                                                       *g:vimade.checkinterval*
 The amount of time in milliseconds that vimade should check the screen for
@@ -122,6 +124,11 @@ Detect the terminal background and foreground colors.  This will work for Vim8
 following query (```\033]11;?\007``` or ```\033]11;?\033\\```).  Default is 0.
 This feature can cause unwanted side effects during startup and should be
 enabled at your own risk
+
+                                                       *g:vimade.enablescroll*
+Enables fading while scrolling inactive windows.  This is only useful in gui
+vim and does have a performance cost.  By default this setting is enabled in
+gui vim and disabled for terminals.
 
                                                         *g:vimade.enablesigns*
 Enables sign fading.  This feature is disabled by default due to how signs
@@ -161,8 +168,8 @@ behaviors. For example, if you want hlsearch to show results on all buffers,
 you may want to lower this value to 0. Default is 10.
 
                                                         *g:vimade.fademinimap*
-Enables fading for `severin-lemaignan/vim-minimap`.  Setting
-vimade.fademinimap to 0 disables minimap fading.  Default is 1.
+Enables a special fade effect for `severin-lemaignan/vim-minimap`.  Setting
+vimade.fademinimap to 0 disables the special fade.  Default is 1.
 
 ==============================================================================
 COMMANDS                                                     *vimade-commands*
