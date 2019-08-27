@@ -326,18 +326,11 @@ def fadeWin(winState):
     fade_priority = GLOBALS.fade_priority
 
 
-  if winid == lastWin:
-    (screenStartRow, screenEndRow) = vim.eval("[line('w0'),line('w$')]")
-    screenStartRow = int(screenStartRow)
-    screenEndRow = int(screenEndRow)
-    if screenStartRow < startRow or screenEndRow > endRow:
-      if screenStartRow < startRow:
-        startRow = screenStartRow
-      if screenEndRow > endRow:
-        endRow = screenEndRow
-    elif GLOBALS.enable_scroll == 0 and not wrap:
-      startRow = screenStartRow
-      endRow = screenEndRow
+  if GLOBALS.enable_scroll == 0 and winid == lastWin and not wrap:
+    (startRow, endRow) = vim.eval("[line('w0'),line('w$')]")
+    startRow = int(startRow)
+    endRow = int(endRow)
+
 
   # attempted working backwards through synID as well, but this precomputation nets in
   # the highest performance gains
@@ -446,20 +439,11 @@ def fadeWin(winState):
           setWin = True
           if lastWin != winid:
             vim.command('noautocmd call win_gotoid('+winid+')')
-            (screenStartRow, screenEndRow) = vim.eval("[line('w0'),line('w$')]")
-            screenStartRow = int(screenStartRow)
-            screenEndRow = int(screenEndRow)
-            if screenStartRow < startRow or screenEndRow > endRow:
-              if screenStartRow < startRow:
-                startRow = screenStartRow
-              if screenEndRow > endRow:
-                endRow = screenEndRow
+            if GLOBALS.enable_scroll == 0 and not wrap:
+              (startRow, endRow) = vim.eval("[line('w0'),line('w$')]")
               redo = True
-              break
-            elif GLOBALS.enable_scroll == 0 and not wrap:
-              startRow = screenStartRow
-              endRow = screenEndRow
-              redo = True
+              startRow = int(startRow)
+              endRow = int(endRow)
               break
         ids.append('synID('+str_row+','+str(column)+',0)')
         gaps.append(column - 1)

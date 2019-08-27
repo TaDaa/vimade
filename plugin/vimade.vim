@@ -52,9 +52,9 @@ let g:vimade_defaults.basebg = ''
 let g:vimade_defaults.fadelevel = 0.4
 
 ""@setting vimade.colbufsize
-"The number of cols left and right of the determined scroll area that should be precalculated. Reduce this value to improve performance. Default is 15 for gui vim and 1 for terminals/gvim.
+"The number of cols left and right of the determined scroll area that should be precalculated. Reduce this value to improve performance. Default is 15 for gui vim and 5 for terminals/gvim.
 
-let g:vimade_defaults.colbufsize = has('gui_running') && !(execute('version')=~"GUI version") ? 15 : 1
+let g:vimade_defaults.colbufsize = has('gui_running') && !(execute('version')=~"GUI version") ? 15 : 5
 
 ""@setting vimade.rowbufsize
 "The number of rows above and below of the determined scroll area that should be precalculated. Reduce this value to improve performance Default is 15 for gui vim and 0 for terminals/gvim.
