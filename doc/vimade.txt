@@ -97,7 +97,7 @@ better results.
                                                          *g:vimade.colbufsize*
 The number of cols left and right of the determined scroll area that should be
 precalculated. Reduce this value to improve performance. Default is 15 for gui
-vim and 1 for terminals/gvim.
+vim and 5 for terminals/gvim.
 
                                                          *g:vimade.rowbufsize*
 The number of rows above and below of the determined scroll area that should

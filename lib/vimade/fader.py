@@ -311,11 +311,17 @@ def fadeWin(winState):
   cursor = winState.cursor
   wrap = winState.wrap
   lastWin = vim.eval('win_getid('+str(vim.current.window.number)+')')
-  setWin = False
+  if lastWin != winid:
+    vim.command('noautocmd call win_gotoid('+winid+')')
+  (startRow, endRow) = vim.eval("[line('w0'),line('w$')]")
+  startRow = int(startRow)
+  endRow = int(endRow)
+  height = endRow - startRow
   buf = win.buffer
   cursorCol = cursor[1]
-  startRow = cursor[0] - height - GLOBALS.row_buf_size
-  endRow = cursor[0] +  height + GLOBALS.row_buf_size
+  if GLOBALS.enable_scroll == 1 or wrap:
+    startRow = cursor[0] - height - GLOBALS.row_buf_size
+    endRow = cursor[0] +  height + GLOBALS.row_buf_size
   startCol = cursorCol - width + 1 - GLOBALS.col_buf_size
   startCol = max(startCol, 1)
   maxCol = cursorCol + 1 + width + GLOBALS.col_buf_size
@@ -324,20 +330,6 @@ def fadeWin(winState):
     fade_priority='9'
   else:
     fade_priority = GLOBALS.fade_priority
-
-
-  if winid == lastWin:
-    (screenStartRow, screenEndRow) = vim.eval("[line('w0'),line('w$')]")
-    screenStartRow = int(screenStartRow)
-    screenEndRow = int(screenEndRow)
-    if screenStartRow < startRow or screenEndRow > endRow:
-      if screenStartRow < startRow:
-        startRow = screenStartRow
-      if screenEndRow > endRow:
-        endRow = screenEndRow
-    elif GLOBALS.enable_scroll == 0 and not wrap:
-      startRow = screenStartRow
-      endRow = screenEndRow
 
   # attempted working backwards through synID as well, but this precomputation nets in
   # the highest performance gains
@@ -442,25 +434,6 @@ def fadeWin(winState):
       #get syntax id and cache
       current = colors[column - 1]
       if current == None:
-        if setWin == False:
-          setWin = True
-          if lastWin != winid:
-            vim.command('noautocmd call win_gotoid('+winid+')')
-            (screenStartRow, screenEndRow) = vim.eval("[line('w0'),line('w$')]")
-            screenStartRow = int(screenStartRow)
-            screenEndRow = int(screenEndRow)
-            if screenStartRow < startRow or screenEndRow > endRow:
-              if screenStartRow < startRow:
-                startRow = screenStartRow
-              if screenEndRow > endRow:
-                endRow = screenEndRow
-              redo = True
-              break
-            elif GLOBALS.enable_scroll == 0 and not wrap:
-              startRow = screenStartRow
-              endRow = screenEndRow
-              redo = True
-              break
         ids.append('synID('+str_row+','+str(column)+',0)')
         gaps.append(column - 1)
       column = column + 1
@@ -496,10 +469,6 @@ def fadeWin(winState):
   items = matches.items()
   if len(items):
     # this is required, the matchaddpos window ID config does not seem to work in nvim
-    if not setWin:
-      setWin = True
-      if lastWin != winid:
-        vim.command('noautocmd call win_gotoid('+winid+')')
     matchadds = []
     for (group, coords) in matches.items():
       i = 0
@@ -509,8 +478,7 @@ def fadeWin(winState):
         i += 8
     winMatches += vim.eval('[' + ','.join(matchadds) + ']')
 
-  if setWin:
-    if lastWin != winid:
-      vim.command('noautocmd call win_gotoid('+lastWin+')')
+  if lastWin != winid:
+    vim.command('noautocmd call win_gotoid('+lastWin+')')
   FADE.prevent = False
   # print((time.time() - startTime) * 1000)

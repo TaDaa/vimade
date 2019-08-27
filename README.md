@@ -83,7 +83,7 @@ let g:vimade = {
   \ "basefg": '',
   \ "basebg": '',
   \ "fadelevel": 0.4,
-  \ "colbufsize": 15, "15 is the default for gui vim, 1 is the default for terminals and gvim
+  \ "colbufsize": 15, "15 is the default for gui vim, 5 is the default for terminals and gvim
   \ "rowbufsize": 15, "15 is the default for gui vim, 0 is the default for terminals and gvim
   \ "checkinterval": 100, "100 is the default for gui vim, 500 is the default for terminals and neovim
   \ "usecursorhold": 0, "0 is default, but will automatically set to 1 for Windows GVIM
