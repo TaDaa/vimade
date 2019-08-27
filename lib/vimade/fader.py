@@ -69,11 +69,13 @@ def update(nextState = None):
   activeWindow = nextState['activeWindow']
   activeTab = nextState['activeTab']
   activeDiff = False
+  activeScrollbind = False
   nextWindows = {}
   nextBuffers = {}
   fade_signs = []
   unfade_signs = []
   diffs = []
+  scrollbinds = []
 
   FADE.activeBuffer = activeBuffer
 
@@ -83,7 +85,7 @@ def update(nextState = None):
     tabnr = str(window.tabpage.number)
     if activeTab != tabnr:
       continue
-    (winid, diff, wrap, buftype, win_disabled, buf_disabled, vimade_fade_active) = vim.eval('[win_getid('+winnr+'), gettabwinvar('+tabnr+','+winnr+',"&diff"), gettabwinvar('+tabnr+','+winnr+',"&wrap"), gettabwinvar('+tabnr+','+winnr+',"&buftype"), gettabwinvar('+tabnr+','+winnr+',"vimade_disabled"), getbufvar('+bufnr+', "vimade_disabled"),  g:vimade_fade_active]')
+    (winid, diff, wrap, buftype, win_disabled, buf_disabled, vimade_fade_active, scrollbind) = vim.eval('[win_getid('+winnr+'), gettabwinvar('+tabnr+','+winnr+',"&diff"), gettabwinvar('+tabnr+','+winnr+',"&wrap"), gettabwinvar('+tabnr+','+winnr+',"&buftype"), gettabwinvar('+tabnr+','+winnr+',"vimade_disabled"), getbufvar('+bufnr+', "vimade_disabled"),  g:vimade_fade_active, gettabwinvar('+tabnr+','+winnr+',"&scrollbind")]')
     floating = vim.eval('nvim_win_get_config('+str(winid)+')') if HAS_NVIM_WIN_GET_CONFIG else False
     if floating and 'relative' in floating:
       floating = floating['relative']
@@ -93,6 +95,7 @@ def update(nextState = None):
 
     diff = int(diff)
     wrap = int(wrap)
+    scrollbind = int(scrollbind)
     vimade_fade_active = int(vimade_fade_active)
     hasActiveBuffer = False if vimade_fade_active else bufnr == activeBuffer
     hasActiveWindow = False if vimade_fade_active else winid == activeWindow
@@ -124,10 +127,15 @@ def update(nextState = None):
       if not hasActiveWindow:
         fade[winid] = state
 
-    if diff:
+    if diff and GLOBALS.group_diff:
       diffs.append(state)
       if hasActiveBuffer:
         activeDiff = True
+
+    if scrollbind and GLOBALS.group_scrollbind:
+      scrollbinds.append(state)
+      if hasActiveBuffer:
+        activeScrollbind = True
 
     # window state changed
     if (window.height != state.height or window.width != state.width or window.cursor[0] != state.cursor[0] or window.cursor[1] != state.cursor[1]):
@@ -167,6 +175,12 @@ def update(nextState = None):
 
   if activeDiff and len(diffs) > 1:
     for state in diffs:
+      if state.id in fade:
+        del fade[state.id]
+      unfade[state.id] = state
+
+  if activeScrollbind and len(scrollbinds) > 1:
+    for state in scrollbinds:
       if state.id in fade:
         del fade[state.id]
       unfade[state.id] = state
@@ -312,10 +326,18 @@ def fadeWin(winState):
     fade_priority = GLOBALS.fade_priority
 
 
-  if GLOBALS.enable_scroll == 0 and winid == lastWin and not wrap:
-    (startRow, endRow) = vim.eval("[line('w0'),line('w$')]")
-    startRow = int(startRow)
-    endRow = int(endRow)
+  if winid == lastWin:
+    (screenStartRow, screenEndRow) = vim.eval("[line('w0'),line('w$')]")
+    screenStartRow = int(screenStartRow)
+    screenEndRow = int(screenEndRow)
+    if screenStartRow < startRow or screenEndRow > endRow:
+      if screenStartRow < startRow:
+        startRow = screenStartRow
+      if screenEndRow > endRow:
+        endRow = screenEndRow
+    elif GLOBALS.enable_scroll == 0 and not wrap:
+      startRow = screenStartRow
+      endRow = screenEndRow
 
   # attempted working backwards through synID as well, but this precomputation nets in
   # the highest performance gains
@@ -424,11 +446,20 @@ def fadeWin(winState):
           setWin = True
           if lastWin != winid:
             vim.command('noautocmd call win_gotoid('+winid+')')
-            if GLOBALS.enable_scroll == 0 and not wrap:
-              (startRow, endRow) = vim.eval("[line('w0'),line('w$')]")
+            (screenStartRow, screenEndRow) = vim.eval("[line('w0'),line('w$')]")
+            screenStartRow = int(screenStartRow)
+            screenEndRow = int(screenEndRow)
+            if screenStartRow < startRow or screenEndRow > endRow:
+              if screenStartRow < startRow:
+                startRow = screenStartRow
+              if screenEndRow > endRow:
+                endRow = screenEndRow
               redo = True
-              startRow = int(startRow)
-              endRow = int(endRow)
+              break
+            elif GLOBALS.enable_scroll == 0 and not wrap:
+              startRow = screenStartRow
+              endRow = screenEndRow
+              redo = True
               break
         ids.append('synID('+str_row+','+str(column)+',0)')
         gaps.append(column - 1)

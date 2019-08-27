@@ -98,6 +98,38 @@ let g:vimade_defaults.signsid = 13100
 "Amount of time in milliseconds that faded buffers should be tracked for sign changes.  Default value is 4000.
 
 let g:vimade_defaults.signsretentionperiod = 4000
+
+"
+""@setting vimade.fademinimap
+"Enables a special fade effect for `severin-lemaignan/vim-minimap`.  Setting vimade.fademinimap to
+"0 disables the special fade.  Default is 1.
+
+let g:vimade_defaults.fademinimap = 1
+
+"
+""@setting vimade.fadepriority
+"Controls the highlighting priority of used by Vimade.
+"You may want to tweak this value to make Vimade play nicely with other highlighting plugins and behaviors.
+"For example, if you want hlsearch to show results on all buffers, you may want to lower this value to 0.
+"Default is 10.
+
+let g:vimade_defaults.fadepriority = 10
+
+"
+""@setting vimade.groupdiff
+"Controls whether or not diffs will fade/unfade together.  If you want diffs
+"to be treated separately, set this value to 0. Default is 1
+
+let g:vimade_defaults.groupdiff = 1
+
+"
+""@setting vimade.groupscrollbind
+"Controls whether or not scrollbound windows will fade/unfade together.  If
+"you want scrollbound windows to unfade together, set this to 1.  Default is
+"0.
+
+let g:vimade_defaults.groupscrollbind = 0
+
 "
 ""@setting vimade.enablefocusfading
 "Fades the current active window on focus blur and unfades when focus gained.
@@ -112,23 +144,6 @@ let g:vimade_defaults.signsretentionperiod = 4000
 "<
 
 let g:vimade_defaults.enablefocusfading = 0
-
-"
-""@setting vimade.fadepriority
-"Controls the highlighting priority of used by Vimade.
-"You may want to tweak this value to make Vimade play nicely with other highlighting plugins and behaviors.
-"For example, if you want hlsearch to show results on all buffers, you may want to lower this value to 0.
-"Default is 10.
-
-let g:vimade_defaults.fadepriority = 10
-
-"
-""@setting vimade.fademinimap
-"Enables a special fade effect for `severin-lemaignan/vim-minimap`.  Setting vimade.fademinimap to
-"0 disables the special fade.  Default is 1.
-
-let g:vimade_defaults.fademinimap = 1
-
 let g:vimade_defaults_keys = keys(g:vimade_defaults)
 if !exists('g:vimade')
   let g:vimade = {}

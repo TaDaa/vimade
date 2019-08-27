@@ -92,9 +92,11 @@ let g:vimade = {
   \ 'enablesigns': 0,
   \ 'signsid': 13100,
   \ 'signsretentionperiod': 4000,
-  \ 'enablefocusfading': 0,
+  \ 'fademinimap': 1,
   \ 'fadepriority': 10,
-  \ 'fademinimap': 1
+  \ 'groupdiff': 1,
+  \ 'groupscrollbind': 0,
+  \ 'enablefocusfading': 0,
 }
 ```
 - **vimade.normalid** - if not specified, the normalid is determined when vimade is first loaded.  normalid provides the id of the "Normal" highlight which is used to calculate fading.  You can override this config with another highlight group.
@@ -113,6 +115,8 @@ let g:vimade = {
 - **vimade.signsretentionperiod** - The amount of time in milliseconds that faded buffers should be tracked for sign changes.  Default value is 4000.
 - **vimade.fademinimap** - Enables a special fade effect for `severin-lemaignan/vim-minimap`.  Setting vimade.fademinimap to 0 disables the special fade.  Default is 1.
 - **vimade.fadepriority** - Controls the highlighting priority of used by Vimade.  You may want to tweak this value to make Vimade play nicely with other highlighting plugins and behaviors.  For example, if you want hlsearch to show results on all buffers, you may want to lower this value to 0.  Default is 10.
+- **vimade.groupdiff** - Controls whether or not diffs will fade/unfade together.  If you want diffs to be treated separately, set this value to 0. Default is 1.
+- **vimade.groupscrollbind** - Controls whether or not scrollbound windows will fade/unfade together.  If you want scrollbound windows to unfade together, set this to 1.  Default is 0.
 - **vimade.enablefocusfading** - Fades the current active window on focus blur and unfades when focus gained.  This can be desirable when switching applications or TMUX splits.  Default value is 0.   
 
   *Requires additional setup for terminal and tmux:*
