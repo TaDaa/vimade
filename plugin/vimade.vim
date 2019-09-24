@@ -9,13 +9,19 @@ if !exists('g:vimade_running')
   let g:vimade_running = 1
 endif
 
+let g:vimade_is_gui_running = has('gui_running')
+
+let g:vimade_is_nvim = has('nvim')
+
+let g:vimade_is_vimr = has('gui_vimr')
+
+let g:vimade_is_gui_version = !has('nvim') && (execute('version')=~"GUI version")
+
 let g:vimade_paused = 0
 
 let g:vimade_loaded = 1
 
 let g:vimade_error_count = 0
-
-let g:vimade_is_nvim = has('nvim')
 
 let g:vimade_fade_active = 0
 
@@ -54,22 +60,22 @@ let g:vimade_defaults.fadelevel = 0.4
 ""@setting vimade.colbufsize
 "The number of cols left and right of the determined scroll area that should be precalculated. Reduce this value to improve performance. Default is 15 for gui vim and 5 for terminals/gvim.
 
-let g:vimade_defaults.colbufsize = has('gui_running') && !(execute('version')=~"GUI version") ? 15 : 5
+let g:vimade_defaults.colbufsize = g:vimade_is_gui_running && !(g:vimade_is_gui_version) ? 15 : 5
 
 ""@setting vimade.rowbufsize
 "The number of rows above and below of the determined scroll area that should be precalculated. Reduce this value to improve performance Default is 15 for gui vim and 0 for terminals/gvim.
 
-let g:vimade_defaults.rowbufsize = has('gui_running') && !(execute('version')=~"GUI version") ? 15 : 0
+let g:vimade_defaults.rowbufsize = g:vimade_is_gui_running && !(g:vimade_is_gui_version) ? 15 : 0
 
 ""@setting vimade.checkinterval
 "The amount of time in milliseconds that vimade should check the screen for changes.  This config is mainly used to detect resize and scroll changes that occur on inactive windows. Checkinterval does nothing on gvim, if you want to control the refresh time, see 'h updatetime'. Default is 100 for gui vim and 500 for neovim/terminal.  
 
-let g:vimade_defaults.checkinterval = has('gui_running') && !has('nvim') ? 100 : 500
+let g:vimade_defaults.checkinterval = g:vimade_is_gui_running && !(g:vimade_is_nvim) ? 100 : 500
 
 ""@setting vimade.usecursorhold
 "Disables the timer running in the background and instead relies `OnCursorHold` and `updatetime` (see h:updatetime).  The default value is `0` except on Windows GVIM, which defaults to `1` due to the timer breaking movements.  If you find that the timer is causing performance problems or other issues you can disable it by setting this option to `1`. 
 
-let g:vimade_defaults.usecursorhold = has('gui_running') && !has('nvim') && execute('version')=~"GUI version"
+let g:vimade_defaults.usecursorhold = g:vimade_is_gui_running && !g:vimade_is_nvim && g:vimade_is_gui_version
 
 ""@setting vimade.detecttermcolors
 "Detect the terminal background and foreground colors.  This will work for Vim8 + iTerm, Tilix, Kitty, Gnome, Rxvt, and other editors that support the following query (```\033]11;?\007``` or ```\033]11;?\033\\```).  Default is 0.  This feature can cause unwanted side effects during startup and should be enabled at your own risk
@@ -79,7 +85,7 @@ let g:vimade_defaults.detecttermcolors = 0
 ""@setting vimade.enablescroll
 "Enables fading while scrolling inactive windows.  This is only useful in gui vim and does have a performance cost.  By default this setting is enabled in gui vim and disabled for terminals.
 
-let g:vimade_defaults.enablescroll = (has('gui_running') || has('gui_vimr')) && !(execute('version')=~"GUI version")
+let g:vimade_defaults.enablescroll = (g:vimade_is_gui_running || g:vimade_is_vimr) && !(g:vimade_is_gui_version)
 
 ""@setting vimade.enablesigns
 "Enables sign fading.  This feature is disabled by default due to how signs affect performance, however this plugin is heavily optimized and alleviates most sign performance issues. Give it a go and open an issue if you see performance drops.  Default is 0.
