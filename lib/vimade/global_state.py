@@ -32,6 +32,7 @@ base_fg_last = '';
 fade = None
 hi_fg = ''
 hi_bg = ''
+hi_sp = ''
 term_fg = term_fg
 term_bg = term_bg
 is_nvim = is_nvim
@@ -180,6 +181,7 @@ def update():
     if not GLOBALS.is_term or termguicolors:
       GLOBALS.hi_fg = ' guifg='
       GLOBALS.hi_bg = ' guibg='
+      GLOBALS.hi_sp = ' guisp='
       GLOBALS.fade = colors.interpolate24b
     else:
       GLOBALS.hi_fg = ' ctermfg='

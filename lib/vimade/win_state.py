@@ -17,3 +17,5 @@ class WinState:
     self.buftype = None
     self.faded = False
     self.is_minimap = False
+    self.syntax =  None
+    self.clear_syntax = False
