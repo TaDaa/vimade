@@ -19,8 +19,6 @@ HAS_NVIM_WIN_GET_CONFIG = True if int(vim.eval('exists("*nvim_win_get_config")')
 windows = {}
 background = ''
 prevent = False
-currentWin = False
-startWin = False
 buffers = {}
 activeWindow = str(vim.current.window.number)
 activeBuffer = str(vim.current.buffer.number)
@@ -67,7 +65,6 @@ def update(nextState = None):
   fade = {}
   unfade = {}
 
-  FADE.startWin = FADE.currentWin = vim.eval('win_getid('+str(vim.current.window.number)+')')
   activeBuffer = nextState["activeBuffer"]
   activeWindow = nextState['activeWindow']
   activeTab = nextState['activeTab']
@@ -88,8 +85,7 @@ def update(nextState = None):
     tabnr = str(window.tabpage.number)
     if activeTab != tabnr:
       continue
-    (winid, diff, wrap, buftype, win_disabled, buf_disabled, vimade_fade_active, scrollbind, win_syntax, buf_syntax) = vim.eval('[win_getid('+winnr+'), gettabwinvar('+tabnr+','+winnr+',"&diff"), gettabwinvar('+tabnr+','+winnr+',"&wrap"), gettabwinvar('+tabnr+','+winnr+',"&buftype"), gettabwinvar('+tabnr+','+winnr+',"vimade_disabled"), getbufvar('+bufnr+', "vimade_disabled"),  g:vimade_fade_active, gettabwinvar('+tabnr+','+winnr+',"&scrollbind"), gettabwinvar('+tabnr+','+winnr+',"current_syntax"), gettabwinvar('+tabnr+','+winnr+',"&syntax")]')
-    syntax = win_syntax if win_syntax else buf_syntax
+    (winid, diff, wrap, buftype, win_disabled, buf_disabled, vimade_fade_active, scrollbind) = vim.eval('[win_getid('+winnr+'), gettabwinvar('+tabnr+','+winnr+',"&diff"), gettabwinvar('+tabnr+','+winnr+',"&wrap"), gettabwinvar('+tabnr+','+winnr+',"&buftype"), gettabwinvar('+tabnr+','+winnr+',"vimade_disabled"), getbufvar('+bufnr+', "vimade_disabled"),  g:vimade_fade_active, gettabwinvar('+tabnr+','+winnr+',"&scrollbind")]')
     floating = vim.eval('nvim_win_get_config('+str(winid)+')') if HAS_NVIM_WIN_GET_CONFIG else False
     if floating and 'relative' in floating:
       floating = floating['relative']
@@ -106,29 +102,19 @@ def update(nextState = None):
 
     # window was unhandled -- add to FADE
     if not bufnr in FADE.buffers:
-      FADE.buffers[bufnr] = {}
       bufState = FADE.buffers[bufnr] = BufState(bufnr)
     else:
       bufState = FADE.buffers[bufnr]
-      
-    
     if not winid in FADE.windows:
       state = FADE.windows[winid] = WinState(winid, window, hasActiveBuffer, hasActiveWindow)
-      state.syntax = syntax
     else:
       state = FADE.windows[winid]
 
     state.win = window
     state.number = winnr
     state.tab = tabnr
+
     state.diff = diff
-
-    if syntax != state.syntax:
-      state.clear_syntax = state.syntax
-      state.syntax = syntax
-      if not hasActiveBuffer:
-        fade[winid] = state
-
 
     if floating or win_disabled or buf_disabled:
       unfade[winid] = state
@@ -257,14 +243,7 @@ def update(nextState = None):
       if len(fade_signs):
         signs.fade_bufs(fade_signs)
       signs.unfade_bufs(unfade_signs)
-  returnToWin()
   # print('update',(time.time() - start) * 1000)
-
-def returnToWin():
-  if FADE.currentWin != FADE.startWin:
-    vim.command('noautocmd call win_gotoid('+FADE.startWin+')')
-    FADE.returnWin = False
-    FADE.startWin = False
 
 def unfadeAllSigns():
   currentBuffers = buffers
@@ -277,14 +256,12 @@ def unfadeAllSigns():
     signs.unfade_bufs(bufs)
 
 def unfadeAll():
-  FADE.startWin = FADE.currentWin = vim.eval('win_getid('+str(vim.current.window.number)+')')
   currentWindows = windows
   for winState in currentWindows.values():
       if winState.faded:
         winState.faded = False
         unfadeWin(winState)
   unfadeAllSigns()
-  returnToWin()
 
 def softInvalidateSigns():
   for buf in FADE.buffers.values():
@@ -297,32 +274,30 @@ def softInvalidateBuffer(bufnr):
     if winState.buffer == bufnr and winState.faded == True:
       winState.faded = False
 
-def unfadeWin(winState, clear_syntax = False):
+def unfadeWin(winState):
   FADE.prevent = True
+  lastWin = vim.eval('win_getid('+str(vim.current.window.number)+')')
   matches = winState.matches
   winid = str(winState.id)
-  if FADE.currentWin != winid:
-    FADE.currentWin = winid
+  if lastWin != winid:
     vim.command('noautocmd call win_gotoid('+winid+')')
-  syntax = clear_syntax if clear_syntax else winState.syntax
-  if syntax in FADE.buffers[winState.buffer].coords:
-    coords = FADE.buffers[winState.buffer].coords[syntax]
-    errs = 0
-    if coords:
-      for items in coords:
-        if items:
-          for item in items:
-            if item and winid in item:
-              del item[winid]
+  coords = FADE.buffers[winState.buffer].coords
+  errs = 0
+  if coords:
+    for items in coords:
+      if items:
+        for item in items:
+          if item and winid in item:
+            del item[winid]
   if matches:
     for match in matches:
         try:
-          # vim.command('call win_execute('+winid+', "call matchdelete('+match+')",1)')
           vim.command('call matchdelete('+match+')')
         except:
           continue
-  winState.clear_syntax = False
   winState.matches = []
+  if lastWin != winid:
+    vim.command('noautocmd call win_gotoid('+lastWin+')')
   FADE.prevent = False
 
 def fadeWin(winState):
@@ -330,17 +305,20 @@ def fadeWin(winState):
   startTime = time.time()
   win = winState.win
   winid = winState.id
-  tabnr = winState.tab
   winnr = winState.number
   width = winState.width
   height = winState.height
   cursor = winState.cursor
   wrap = winState.wrap
+  lastWin = vim.eval('win_getid('+str(vim.current.window.number)+')')
   setWin = False
   buf = win.buffer
   cursorCol = cursor[1]
   startRow = cursor[0] - height - GLOBALS.row_buf_size
   endRow = cursor[0] +  height + GLOBALS.row_buf_size
+  startCol = cursorCol - width + 1 - GLOBALS.col_buf_size
+  startCol = max(startCol, 1)
+  maxCol = cursorCol + 1 + width + GLOBALS.col_buf_size
   matches = {}
   if winState.is_minimap:
     fade_priority='9'
@@ -348,113 +326,75 @@ def fadeWin(winState):
     fade_priority = GLOBALS.fade_priority
 
 
-  to_eval = []
-  if FADE.currentWin != winid:
-    FADE.currentWin = winid
-    vim.command('noautocmd call win_gotoid('+winid+')')
-  if not GLOBALS.enable_scroll and not wrap:
-    (startRow, endRow) = vim.eval('[line("w0"), line("w$")]')
-    startRow = int(startRow) - 1
-    endRow = int(endRow) + 1
-    startCol = cursorCol - width + 1
-    startCol = max(startCol, 1)
-    maxCol = cursorCol + 2 + width
-  else:
-    startCol = cursorCol - width + 1 - GLOBALS.col_buf_size
-    startCol = max(startCol, 1)
-    maxCol = cursorCol + 1 + width + GLOBALS.col_buf_size
+  if GLOBALS.enable_scroll == 0 and winid == lastWin and not wrap:
+    (startRow, endRow) = vim.eval("[line('w0'),line('w$')]")
+    startRow = int(startRow)
+    endRow = int(endRow)
+
+
+  # attempted working backwards through synID as well, but this precomputation nets in
+  # the highest performance gains
   if wrap:
+    #set startCol to 1
+    #maxCol gets set to text_ln a bit lower
     startCol = 1
-    maxCol = width
 
-  row = cursor[0]
-  rowsBelowCursor = row - startRow
-  rowsAboveCursor = endRow - row
-  if wrap:
-    rowsAboveCursor = height
-    rowsBelowCursor = height
-    width += 5
-  foldstart = -1
-  foldend = -1
-  while rowsBelowCursor >= 0 and (row - 1) >= 0:
-    foldstart = int(vim.eval('foldclosed('+str(row)+')'))
-    if foldstart > -1:
-      row = foldstart
-    else:
-      if wrap:
-        sRow = startRow
-        text = bytes(buf[row - 1], 'utf-8') if IS_V3 else buf[row-1]
-        start_text_ln = len(text)
-        if row == cursor[0]:
-          start_text_ln = cursor[1]
-        virtual_rows = math.ceil(start_text_ln / width)
-        # wrap_start_row = row
-        rowsBelowCursor -= virtual_rows
-        s1 = 0
-        if rowsBelowCursor >= 0:
-          s1 = 0
-        else:
-          s1 = start_text_ln - (rowsBelowCursor + virtual_rows) * width 
-        to_eval.append((row, s1, start_text_ln))
-      else:
-        to_eval.append((row, startCol, maxCol))
-    row -= 1
-    rowsBelowCursor -= 1
-  row = cursor[0]
-  while rowsAboveCursor >= 0 and (row - 1) < len(buf):
-    foldend = int(vim.eval('foldclosedend('+str(row)+')'))
-    if foldend > -1:
-      row = foldend
-    else:
-      if wrap:
-        text = bytes(buf[row - 1], 'utf-8') if IS_V3 else buf[row-1]
-        end_text_ln = len(text)
-        if row == cursor[0]:
-          end_text_ln = end_text_ln - cursor[1]
-        virtual_rows = math.ceil(end_text_ln / width)
-        rowsAboveCursor -= virtual_rows
-        s2 = 0
-        s1 = 0
-        if row == cursor[0]:
-          s1 = cursor[1]
-        if rowsAboveCursor >= 0:
-          s2 = len(text)
-        else:
-          s2 = s1 + (rowsAboveCursor + virtual_rows) * width
-        to_eval.append((row, s1, s2))
-      elif row != cursor[0]:
-        to_eval.append((row, startCol, maxCol))
-    row += 1
-    rowsAboveCursor -= 1
+    #first calculate virtual rows above the cursor
+    row = cursor[0] - 1
+    sRow = startRow
+    real_row = row
+    text_ln = 0
+    while row >= sRow and real_row > 0:
+      text = bytes(buf[real_row - 1], 'utf-8') if IS_V3 else buf[real_row-1]
+      text_ln = len(text)
+      virtual_rows = math.floor(text_ln / width)
+      row -= virtual_rows + 1
+      real_row -= 1
+    d = sRow - row
+    wrap_first_row_colStart = int(max(text_ln - d * width if d > 0 else 1,1))
+    startRow = real_row
 
+    #next calculate virtual rows equal to and below the cursor
+    row = cursor[0]
+    real_row = row
+    text_ln = 0
+    while row <= endRow and real_row <= len(buf):
+      text = bytes(buf[real_row - 1], 'utf-8') if IS_V3 else buf[real_row-1]
+      text_ln = len(text)
+      virtual_rows = math.floor(text_ln / width)
+      row += virtual_rows + 1
+      if row <= endRow:
+        real_row += 1
+    d = row - min(endRow, len(buf))
+    wrap_last_row_colEnd =  int(min(d * width if d > 0 else width , text_ln))
+    endRow = real_row
+
+  #clamp values
+  startRow = max(startRow, 1)
+  endRow = min(endRow, len(buf))
 
   bufState = FADE.buffers[winState.buffer]
-  if not winState.syntax in bufState.coords:
-    bufState.coords[winState.syntax] = None
-  coords = bufState.coords[winState.syntax]
-
+  coords = bufState.coords
   currentBuf = '\n'.join(buf)
   if bufState.last != currentBuf:
-    unfadeWin(winState)
     #todo remove all highlights? - negative impact on perf but better sync highlights
-  elif winState.clear_syntax:
-    unfadeWin(winState, winState.clear_syntax)
+    unfadeWin(winState)
     coords = None
   bufState.last = currentBuf 
   if coords == None:
-    coords = bufState.coords[winState.syntax] = [None] * len(buf)
+    coords = bufState.coords = [None] * len(buf)
   winMatches = winState.matches
 
   row = startRow
   redo = False
-  for z in range(0, len(to_eval)):
-    (row, startCol, mCol) = to_eval[z]
+  while row <= endRow:
     column = startCol
     index = row - 1
     if IS_V3:
       rawText = buf[index]
       text = bytes(rawText, 'utf-8', 'surrogateescape')
       text_ln = len(text)
+      mCol = text_ln if wrap else maxCol
       adjustStart = rawText[0:cursorCol]
       adjustStart = len(bytes(adjustStart, 'utf-8', 'surrogateescape')) - len(adjustStart)
       adjustEnd = rawText[cursorCol:mCol]
@@ -462,15 +402,26 @@ def fadeWin(winState):
     else:
       text = buf[index]
       text_ln = len(text)
+      mCol = text_ln if wrap else maxCol
       rawText = text.decode('utf-8')
       adjustStart = rawText[0:cursorCol]
       adjustStart = len(adjustStart.encode('utf-8')) - len(adjustStart)
       adjustEnd = rawText[cursorCol:mCol]
       adjustEnd = len(adjustEnd.encode('utf-8')) - len(adjustEnd)
 
-    column -= adjustStart
-    column = max(column, 1)
-    endCol = min(mCol + adjustEnd, text_ln)
+    if wrap:
+      if row == startRow:
+        column = wrap_first_row_colStart
+      else:
+        column = 1
+      if row == endRow:
+        endCol = wrap_last_row_colEnd
+      else:
+        endCol = text_ln
+    else:
+      column -= adjustStart
+      column = max(column, 1)
+      endCol = min(mCol + adjustEnd, text_ln)
     colors = coords[index]
     if colors == None:
       colors = coords[index] = [None] * text_ln
@@ -484,10 +435,23 @@ def fadeWin(winState):
       #get syntax id and cache
       current = colors[column - 1]
       if current == None:
+        if setWin == False:
+          setWin = True
+          if lastWin != winid:
+            vim.command('noautocmd call win_gotoid('+winid+')')
+            if GLOBALS.enable_scroll == 0 and not wrap:
+              (startRow, endRow) = vim.eval("[line('w0'),line('w$')]")
+              redo = True
+              startRow = int(startRow)
+              endRow = int(endRow)
+              break
         ids.append('synID('+str_row+','+str(column)+',0)')
         gaps.append(column - 1)
       column = column + 1
 
+    if redo:
+      redo = False
+      continue
     if len(ids):
       ids = vim.eval('[' + ','.join(ids) + ']')
       highlights = highlighter.fade_ids(ids)
@@ -511,18 +475,26 @@ def fadeWin(winState):
           else:
             match.append((row, column, 1))
       column += 1
-    # row = row + 1
+    row = row + 1
 
   items = matches.items()
   if len(items):
+    # this is required, the matchaddpos window ID config does not seem to work in nvim
+    if not setWin:
+      setWin = True
+      if lastWin != winid:
+        vim.command('noautocmd call win_gotoid('+winid+')')
     matchadds = []
     for (group, coords) in matches.items():
       i = 0
       end = len(coords)
       while i < end:
-        matchadds.append('matchaddpos("'+group+'",['+','.join(map(lambda tup:'['+str(tup[0])+','+str(tup[1])+','+str(tup[2])+']' , coords[i:i+8]))+'],'+fade_priority+')')
+        matchadds.append('matchaddpos("'+group+'",['+','.join(map(lambda tup:'['+str(tup[0])+','+str(tup[1])+','+str(tup[2])+']' , coords[i:i+8]))+'],'+fade_priority+',-1)')
         i += 8
-    winState.matches += vim.eval('[' + ','.join(matchadds) + ']')
+    winMatches += vim.eval('[' + ','.join(matchadds) + ']')
 
+  if setWin:
+    if lastWin != winid:
+      vim.command('noautocmd call win_gotoid('+lastWin+')')
   FADE.prevent = False
   # print((time.time() - startTime) * 1000)

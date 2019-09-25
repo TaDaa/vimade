@@ -23,15 +23,12 @@ def fade_ids(ids, force = False):
   exprs = []
   i = 0
   for id in ids:
-      id = str(id)
       if not id in HI_CACHE or force:
           result[i] = HI_CACHE[id] = hi = __fade_id(id)
           group = hi[0]
           expr = 'hi ' + group + GLOBALS.hi_fg + hi[1]
           if hi[2] != None:
             expr += GLOBALS.hi_bg + hi[2]
-          if hi[3] != None:
-            expr += GLOBALS.hi_sp + hi[3]
           exprs.append(expr)
       else:
           result[i] = HI_CACHE[id]
@@ -45,7 +42,6 @@ def __fade_id(id):
   hi = vim.eval('vimade#GetHi('+id+')')
   guifg = hi[0]
   guibg = hi[1]
-  guisp = hi[2]
 
   if guibg:
     if guibg == GLOBALS.base_bg_exp or guibg == GLOBALS.normal_bg:
@@ -60,9 +56,5 @@ def __fade_id(id):
   else:
     guifg = GLOBALS.fade(guifg, GLOBALS.base_bg, GLOBALS.fade_level)
 
-  if guisp:
-    guisp = GLOBALS.fade(guisp, GLOBALS.base_bg, GLOBALS.fade_level)
-  else:
-    guisp = None
 
-  return ('vimade_' + id, guifg, guibg, guisp)
+  return ('vimade_' + id, guifg, guibg)
