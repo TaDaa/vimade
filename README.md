@@ -39,6 +39,7 @@
 - [X] Automatically adjust to colorscheme changes
 - [X] Automatically adjust to basebg changes
 - [X] Automatically adjust to fadelevel changes
+- [X] Automatically adjust to &syntax changes
 - [X] React to window resize + scroll changes
 - [X] Apply custom tints (not necessarily your background color to text)
 - [X] Vim8+
@@ -50,6 +51,8 @@
 - [X] Toggle vimade on/off (VimadeEnable, VimadeDisable, VimadeToggle)
 - [X] Supports terminal backgrounds for Vim8(not nvim yet) and iTerm, Tilix, Kitty, Gnome, rxvt
 - [X] Wrapped Text
+- [X] Folded Text (detects folded rows and fades above/below -- see VimadeOverrideFolded for highlight recommendations on hi Folded)
+- [X] :ownsyntax support
 - [X] Sign column support (disabled by default)
 - [X] Vim Documentation/Help
 - [ ] Secondary buffer window highlighting
