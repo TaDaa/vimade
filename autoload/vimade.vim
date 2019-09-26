@@ -260,7 +260,7 @@ endfunction
 function! vimade#GetHi(id)
   "resolve root linkedTo id
   let tid = synIDtrans(a:id)
-  return [synIDattr(tid, 'fg#'), synIDattr(tid, 'bg#')]
+  return [synIDattr(tid, 'fg#'), synIDattr(tid, 'bg#'), synIDattr(tid, 'sp#')]
 endfunction
 
 function! vimade#StartTimer()
