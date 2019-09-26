@@ -536,4 +536,4 @@ def fadeWin(winState):
     winState.matches += vim.eval('[' + ','.join(matchadds) + ']')
 
   FADE.prevent = False
-  print((time.time() - startTime) * 1000)
+  # print((time.time() - startTime) * 1000)
