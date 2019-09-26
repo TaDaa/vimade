@@ -3,9 +3,11 @@ IS_V3 = False
 if (sys.version_info > (3, 0)):
     IS_V3 = True
 
+import copy
 import vim
 import math
 import time
+import re
 from vimade import highlighter
 from vimade import signs
 from vimade import colors
@@ -176,10 +178,15 @@ def update(nextState = None):
 
     if 'minimap' in window.buffer.name:
       state.is_minimap = True
+
+      currentBuf = '\n'.join(state.win.buffer)
+      #TODO can we add additional buf comparisons and move bufState check out of fadeWin?
       if GLOBALS.fade_minimap:
-        fade[winid] = state
-        if winid in unfade:
-          del unfade[winid]
+        currentBuf =  '\n'.join(state.win.buffer)
+        if not bufState.faded or currentBuf != bufState.last:
+          fade[winid] = state
+          if winid in unfade:
+            del unfade[winid]
       else:
         unfade[winid] = state
         if winid in fade:
@@ -481,6 +488,7 @@ def fadeWin(winState):
       colors = coords[index] = [None] * text_ln
     str_row = str(row)
 
+
     ids = []
     gaps = []
 
@@ -488,6 +496,7 @@ def fadeWin(winState):
     while column <= endCol:
       #get syntax id and cache
       current = colors[column - 1]
+
       if current == None:
         ids.append('synID('+str_row+','+str(column)+',0)')
         gaps.append(column - 1)
@@ -500,7 +509,6 @@ def fadeWin(winState):
       for hi in highlights:
         colors[gaps[i]] = {'id': ids[i], 'hi': hi}
         i += 1
-
     column = sCol
     while column <= endCol:
       current = colors[column - 1]
@@ -530,4 +538,4 @@ def fadeWin(winState):
     winState.matches += vim.eval('[' + ','.join(matchadds) + ']')
 
   FADE.prevent = False
-  # print((time.time() - startTime) * 1000)
+  print((time.time() - startTime) * 1000)
