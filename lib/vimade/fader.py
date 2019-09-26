@@ -3,11 +3,9 @@ IS_V3 = False
 if (sys.version_info > (3, 0)):
     IS_V3 = True
 
-import copy
 import vim
 import math
 import time
-import re
 from vimade import highlighter
 from vimade import signs
 from vimade import colors
