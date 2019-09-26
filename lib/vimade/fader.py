@@ -263,7 +263,7 @@ def update(nextState = None):
 def returnToWin():
   if FADE.currentWin != FADE.startWin:
     vim.command('noautocmd call win_gotoid('+FADE.startWin+')')
-    FADE.returnWin = False
+    FADE.currentWin = False
     FADE.startWin = False
 
 def unfadeAllSigns():
@@ -373,59 +373,61 @@ def fadeWin(winState):
   if wrap:
     rowsAboveCursor = height
     rowsBelowCursor = height
-    width += 5
+    width += 0
   foldstart = -1
   foldend = -1
   while rowsBelowCursor >= 0 and (row - 1) >= 0:
     foldstart = int(vim.eval('foldclosed('+str(row)+')'))
     if foldstart > -1:
       row = foldstart
+      rowsBelowCursor -= 1
     else:
       if wrap:
-        sRow = startRow
         text = bytes(buf[row - 1], 'utf-8') if IS_V3 else buf[row-1]
         start_text_ln = len(text)
         if row == cursor[0]:
           start_text_ln = cursor[1]
-        virtual_rows = math.ceil(start_text_ln / width)
+        virtual_rows = math.floor(start_text_ln / width)
         # wrap_start_row = row
         rowsBelowCursor -= virtual_rows
-        s1 = 0
+        s1 = 1
         if rowsBelowCursor >= 0:
-          s1 = 0
+          s1 = 1
         else:
           s1 = start_text_ln - (rowsBelowCursor + virtual_rows) * width 
+        s1 = max(1, s1)
         to_eval.append((row, s1, start_text_ln))
       else:
         to_eval.append((row, startCol, maxCol))
+        rowsBelowCursor -= 1
     row -= 1
-    rowsBelowCursor -= 1
   row = cursor[0]
   while rowsAboveCursor >= 0 and (row - 1) < len(buf):
     foldend = int(vim.eval('foldclosedend('+str(row)+')'))
     if foldend > -1:
       row = foldend
+      rowsAboveCursor -= 1
     else:
       if wrap:
         text = bytes(buf[row - 1], 'utf-8') if IS_V3 else buf[row-1]
         end_text_ln = len(text)
         if row == cursor[0]:
           end_text_ln = end_text_ln - cursor[1]
-        virtual_rows = math.ceil(end_text_ln / width)
+        virtual_rows = math.floor(end_text_ln / width)
         rowsAboveCursor -= virtual_rows
-        s2 = 0
-        s1 = 0
+        s1 = 1
         if row == cursor[0]:
           s1 = cursor[1]
         if rowsAboveCursor >= 0:
           s2 = len(text)
         else:
           s2 = s1 + (rowsAboveCursor + virtual_rows) * width
+        s2 = min(len(text), s2)
         to_eval.append((row, s1, s2))
       elif row != cursor[0]:
         to_eval.append((row, startCol, maxCol))
+        rowsAboveCursor -= 1
     row += 1
-    rowsAboveCursor -= 1
 
 
   bufState = FADE.buffers[winState.buffer]
@@ -436,6 +438,7 @@ def fadeWin(winState):
   currentBuf = '\n'.join(buf)
   if bufState.last != currentBuf:
     unfadeWin(winState)
+    coords = None
     #todo remove all highlights? - negative impact on perf but better sync highlights
   elif winState.clear_syntax:
     unfadeWin(winState, winState.clear_syntax)
@@ -451,9 +454,11 @@ def fadeWin(winState):
     (row, startCol, mCol) = to_eval[z]
     column = startCol
     index = row - 1
+    if index >= len(coords) or index < 0:
+      continue
     if IS_V3:
       rawText = buf[index]
-      text = bytes(rawText, 'utf-8', 'surrogateescape')
+      text = bytes(rawText, 'utf-8')
       text_ln = len(text)
       adjustStart = rawText[0:cursorCol]
       adjustStart = len(bytes(adjustStart, 'utf-8', 'surrogateescape')) - len(adjustStart)
