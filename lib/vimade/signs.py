@@ -137,7 +137,7 @@ def fade_bufs(bufs):
       else:
         next_id = GLOBALS.signs_id
         GLOBALS.signs_id = GLOBALS.signs_id + 1
-      PLACES.append('sign place ' +  str(next_id) + ' line='+sign['lnum'] + ' name=vimade_' + sign['name'] + ' buffer=' + sign['bufnr'])
+      PLACES.append('sign place ' +  str(next_id) + ' line='+sign['lnum'] + ' name=vimade_' + sign['name'] + ' priority=31 buffer=' + sign['bufnr'])
   # print('fade',(time.time() - start) * 1000)
 
 
