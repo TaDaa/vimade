@@ -59,6 +59,7 @@
 
 ###### Whats coming?
 - [ ] Helpers to fade Vim global highlights (e.g VertSplit, Folded, NonText, etc -- will alleviate issues with high contrast in some colorschemes)
+- [ ] Configurable FadeLevel per buffer
 - [ ] Conditional interface to determine which windows/buffers get faded/unfaded.
 - [ ] Performance Improvements
 - [ ] Limelight with syntax highlighting
