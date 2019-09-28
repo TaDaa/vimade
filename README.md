@@ -75,7 +75,7 @@
 ##### Install
 *Add `TaDaa/vimade` to your vimrc -- you can use any plugin manager e.g:*
 ```
-Plugin 'TaDaa/vimade'
+Plug 'TaDaa/vimade'
 ```
 
 ##### Config
