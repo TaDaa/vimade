@@ -57,12 +57,12 @@
 - [X] Vim Documentation/Help
 - [ ] Secondary buffer window highlighting
 
-###### Todo
-- [ ] Support other terminals palletes? -- Open an issue if you need support for a different terminal or palette
+###### Whats coming?
+- [ ] Helpers to fade Vim global highlights (e.g VertSplit, Folded, NonText, etc -- will alleviate issues with high contrast in some colorschemes)
+- [ ] Conditional interface to determine which windows/buffers get faded/unfaded.
+- [ ] Performance Improvements
+- [ ] Limelight with syntax highlighting
 - [ ] Improve terminal color rounding for grays
-- [ ] Experiment with threading to improve performance, this may be necessary to implement limelight.  This will also be beneficial to the SignColumn logic
-- [ ] Experiment with highlighted text within current window (limelight behavior)
-- [ ] Cleanup this Readme!
 - [ ] Code cleanup
 - [ ] Tests
 
