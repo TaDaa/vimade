@@ -39,6 +39,7 @@
 - [X] Automatically adjust to colorscheme changes
 - [X] Automatically adjust to basebg changes
 - [X] Automatically adjust to fadelevel changes
+- [X] Automatically adjust to &syntax changes
 - [X] React to window resize + scroll changes
 - [X] Apply custom tints (not necessarily your background color to text)
 - [X] Vim8+
@@ -50,16 +51,19 @@
 - [X] Toggle vimade on/off (VimadeEnable, VimadeDisable, VimadeToggle)
 - [X] Supports terminal backgrounds for Vim8(not nvim yet) and iTerm, Tilix, Kitty, Gnome, rxvt
 - [X] Wrapped Text
+- [X] Folded Text (detects folded rows and fades above/below -- see VimadeOverrideFolded for highlight recommendations on hi Folded)
+- [X] :ownsyntax support
 - [X] Sign column support (disabled by default)
 - [X] Vim Documentation/Help
 - [ ] Secondary buffer window highlighting
 
-###### Todo
-- [ ] Support other terminals palletes? -- Open an issue if you need support for a different terminal or palette
+###### Whats coming?
+- [ ] Helpers to fade Vim global highlights (e.g VertSplit, Folded, NonText, etc -- will alleviate issues with high contrast in some colorschemes)
+- [ ] Configurable FadeLevel per buffer
+- [ ] Conditional interface to determine which windows/buffers get faded/unfaded.
+- [ ] Performance Improvements
+- [ ] Limelight with syntax highlighting
 - [ ] Improve terminal color rounding for grays
-- [ ] Experiment with threading to improve performance, this may be necessary to implement limelight.  This will also be beneficial to the SignColumn logic
-- [ ] Experiment with highlighted text within current window (limelight behavior)
-- [ ] Cleanup this Readme!
 - [ ] Code cleanup
 - [ ] Tests
 
@@ -71,7 +75,7 @@
 ##### Install
 *Add `TaDaa/vimade` to your vimrc -- you can use any plugin manager e.g:*
 ```
-Plugin 'TaDaa/vimade'
+Plug 'TaDaa/vimade'
 ```
 
 ##### Config

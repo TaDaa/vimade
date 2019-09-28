@@ -3,11 +3,9 @@ IS_V3 = False
 if (sys.version_info > (3, 0)):
     IS_V3 = True
 
-import copy
 import vim
 import math
 import time
-import re
 from vimade import highlighter
 from vimade import signs
 from vimade import colors
@@ -178,10 +176,15 @@ def update(nextState = None):
 
     if 'minimap' in window.buffer.name:
       state.is_minimap = True
+
+      currentBuf = '\n'.join(state.win.buffer)
+      #TODO can we add additional buf comparisons and move bufState check out of fadeWin?
       if GLOBALS.fade_minimap:
-        fade[winid] = state
-        if winid in unfade:
-          del unfade[winid]
+        currentBuf =  '\n'.join(state.win.buffer)
+        if not bufState.faded or currentBuf != bufState.last:
+          fade[winid] = state
+          if winid in unfade:
+            del unfade[winid]
       else:
         unfade[winid] = state
         if winid in fade:
@@ -483,35 +486,19 @@ def fadeWin(winState):
       colors = coords[index] = [None] * text_ln
     str_row = str(row)
 
-    split_text = [z for z in re.split(r"([\s\t]*|\W)", str(text, 'utf-8')) if z]
-    # print(split_text)
-    if len(split_text):
-      split_item = split_text[0]
-      split_i = 0
-      split_j = 0
 
     ids = []
     gaps = []
-    carry = []
 
     sCol = column
     while column <= endCol:
       #get syntax id and cache
       current = colors[column - 1]
-      if split_j >= len(split_item):
-        split_i += 1
-        split_j = 0
-        if split_i < len(split_text):
-          split_item = split_text[split_i]
 
       if current == None:
-        if split_j == 0:
-          ids.append('synID('+str_row+','+str(column)+',0)')
-          gaps.append(column - 1)
-        else:
-          carry.append(column - 1)
+        ids.append('synID('+str_row+','+str(column)+',0)')
+        gaps.append(column - 1)
       column = column + 1
-      split_j += 1
 
     if len(ids):
       ids = vim.eval('[' + ','.join(ids) + ']')
@@ -520,14 +507,6 @@ def fadeWin(winState):
       for hi in highlights:
         colors[gaps[i]] = {'id': ids[i], 'hi': hi}
         i += 1
-    if len(carry):
-      i = 0
-      while i < len(carry):
-        carry_col = carry[i]
-        colors[carry_col] =  copy.copy(colors[carry_col - 1])
-        i += 1
-      # print(colors)
-
     column = sCol
     while column <= endCol:
       current = colors[column - 1]
@@ -557,4 +536,4 @@ def fadeWin(winState):
     winState.matches += vim.eval('[' + ','.join(matchadds) + ']')
 
   FADE.prevent = False
-  print((time.time() - startTime) * 1000)
+  # print((time.time() - startTime) * 1000)
