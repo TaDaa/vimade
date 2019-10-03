@@ -55,8 +55,33 @@ function! vimade#Toggle()
   endif
 endfunction
 
+"TODO these should just interpolate and expose intensity 
 function! vimade#OverrideFolded()
   hi! link Folded vimade_0
+endfunction
+
+function! vimade#OverrideSignColumn()
+  hi! link SignColumn vimade_0
+endfunction
+
+function! vimade#OverrideLineNr()
+  hi! link LineNr vimade_0
+endfunction
+
+function! vimade#OverrideVertSplit()
+  hi! link VertSplit vimade_0
+endfunction
+
+function! vimade#OverrideNonText()
+  hi! link NonText vimade_0
+endfunction
+
+function! vimade#OverrideAll()
+  call vimade#OverrideFolded()
+  call vimade#OverrideSignColumn()
+  call vimade#OverrideLineNr()
+  call vimade#OverrideVertSplit()
+  call vimade#OverrideNonText()
 endfunction
 
 function! vimade#FocusGained()
@@ -198,14 +223,14 @@ function! vimade#UpdateState()
   if !exists('g:vimade')
     let g:vimade = {}
   endif
+  if !has_key(g:vimade, '$extended')
+    call vimade#ExtendState()
+  endif
   if g:vimade.normalid == "" || g:vimade.normalid == 0
     let g:vimade.normalid = hlID('Normal')
   endif
   if g:vimade_is_nvim && (g:vimade.normalncid == "" || g:vimade.normalncid == 0)
     let g:vimade.normalncid = hlID('NormalNC')
-  endif
-  if !has_key(g:vimade, '$extended')
-    call vimade#ExtendState()
   endif
   if g:vimade.usecursorhold != g:vimade_last.usecursorhold
     let g:vimade_last.usecursorhold = g:vimade.usecursorhold
