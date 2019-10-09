@@ -60,7 +60,7 @@
 "- *Add `let g:vimade.usecursorhold=1` to your vimrc*
 "
 "What about Vim < 8?
-"- *Vim 7 is currently untested/experimental, but may work if you add `let g:vimade.usecursorhold=1` to your vimrc*
+"- *Vim 7.4 is currently untested/experimental, but may work if you add `let g:vimade.usecursorhold=1` to your vimrc*
 "My colors look off in terminal mode!
 "- *Make sure that you either use a supported terminal or colorscheme or manually define the fg and bg for 'Normal'.  You can also manually define the tint in your vimade config (g:vimade.basebg and g:vimade.basefg)*
 "
