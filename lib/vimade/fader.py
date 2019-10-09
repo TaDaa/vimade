@@ -54,7 +54,7 @@ def update(nextState = None):
         unfadeWin(winState)
         winState.faded = False
     for bufferState in currentBuffers.values():
-      bufferState.coords = None
+      bufferState.coords = {}
 
     #TODO remove this code when possible
     #Ideally this return would not be necessary, but oni current requires a hard refresh here
@@ -204,7 +204,6 @@ def update(nextState = None):
         del fade[state.id]
       unfade[state.id] = state
 
-
   for win in fade.values():
     fadeWin(win)
     if not FADE.buffers[win.buffer].faded:
@@ -263,6 +262,7 @@ def update(nextState = None):
         signs.fade_bufs(fade_signs)
       signs.unfade_bufs(unfade_signs)
   returnToWin()
+  FADE.prevent = False
   # print('update',(time.time() - start) * 1000)
 
 def returnToWin():
@@ -303,7 +303,6 @@ def softInvalidateBuffer(bufnr):
       winState.faded = False
 
 def unfadeWin(winState, clear_syntax = False):
-  FADE.prevent = True
   matches = winState.matches
   winid = str(winState.id)
   if FADE.currentWin != winid:
@@ -328,10 +327,8 @@ def unfadeWin(winState, clear_syntax = False):
           continue
   winState.clear_syntax = False
   winState.matches = []
-  FADE.prevent = False
 
 def fadeWin(winState):
-  FADE.prevent = True
   startTime = time.time()
   win = winState.win
   winid = winState.id
@@ -368,6 +365,7 @@ def fadeWin(winState):
     startCol = cursorCol - width + 1 - GLOBALS.col_buf_size
     startCol = max(startCol, 1)
     maxCol = cursorCol + 1 + width + GLOBALS.col_buf_size
+    # print(str(cursorCol) + ' :' + str(startCol) + ' ' + str(maxCol))
   if wrap:
     startCol = 1
     maxCol = width
@@ -491,6 +489,15 @@ def fadeWin(winState):
     gaps = []
 
     sCol = column
+    # columns = []
+    # while len(columns) < endCol - column and 
+    # concealed = []
+    # while column <= endCol:
+      # concealed.append('synconcealed('+str_row+','+str(column)+')')
+      # column = column + 1
+    # concealed = vim.eval('[' + ','.join(concealed) + ']')
+
+    column = sCol
     while column <= endCol:
       #get syntax id and cache
       current = colors[column - 1]
@@ -535,5 +542,4 @@ def fadeWin(winState):
         i += 8
     winState.matches += vim.eval('[' + ','.join(matchadds) + ']')
 
-  FADE.prevent = False
   # print((time.time() - startTime) * 1000)

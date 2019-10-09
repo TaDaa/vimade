@@ -49,7 +49,7 @@ def unfade_bufs(bufs):
     place = []
     for sign in changes:
       SIGN_IDS_UNUSED.append(sign['id'])
-      PLACES.append('sign unplace ' + sign['id'] + ' buffer='+sign['bufnr'])
+      PLACES.append('sign unplace ' + sign['id'] + GLOBALS.signs_group_text + ' buffer='+sign['bufnr'])
 
   if len(PLACES):
     cmdheight = int(vim.eval('&cmdheight'))
@@ -137,7 +137,7 @@ def fade_bufs(bufs):
       else:
         next_id = GLOBALS.signs_id
         GLOBALS.signs_id = GLOBALS.signs_id + 1
-      PLACES.append('sign place ' +  str(next_id) + ' line='+sign['lnum'] + ' name=vimade_' + sign['name'] + ' priority=31 buffer=' + sign['bufnr'])
+      PLACES.append('sign place ' +  str(next_id) + GLOBALS.signs_group_text + ' line='+sign['lnum'] + ' name=vimade_' + sign['name'] + GLOBALS.signs_priority_text + 'buffer=' + sign['bufnr'])
   # print('fade',(time.time() - start) * 1000)
 
 

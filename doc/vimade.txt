@@ -151,10 +151,16 @@ Enables a special fade effect for `severin-lemaignan/vim-minimap`.  Setting
 vimade.fademinimap to 0 disables the special fade.  Default is 1.
 
                                                        *g:vimade.fadepriority*
-Controls the highlighting priority of used by Vimade. You may want to tweak
-this value to make Vimade play nicely with other highlighting plugins and
-behaviors. For example, if you want hlsearch to show results on all buffers,
-you may want to lower this value to 0. Default is 10.
+Controls the highlighting priority. You may want to tweak this value to make
+Vimade play nicely with other highlighting plugins and behaviors. For example,
+if you want hlsearch to show results on all buffers, you may want to lower
+this value to 0. Default is 10.
+
+                                                      *g:vimade.signspriority*
+Controls the signs fade priority. You may need to change this value if you
+find that not all signs are fading properly. Please also open a defect if you
+need to tweak this value as Vimade strives to minimize manual configuration
+where possible. Default is 31.
 
                                                           *g:vimade.groupdiff*
 Controls whether or not diffs will fade/unfade together.  If you want diffs to
@@ -227,6 +233,31 @@ COMMANDS                                                     *vimade-commands*
   Overrides the Folded highlight by creating a link to the Vimade base fade.
   This should produce acceptable results for colorschemes that include Folded
   highlights that are distracting in faded windows.
+
+:VimadeOverrideSignColumn                          *:VimadeOverrideSignColumn*
+  EXPERIMENTAL -- Overrides the SignColumn highlight by creating a link to the
+  Vimade base fade. This should produce acceptable results for colorschemes
+  that include Folded highlights that are distracting in faded windows.
+
+:VimadeOverrideLineNr                                  *:VimadeOverrideLineNr*
+  EXPERIMENTAL -- Overrides the LineNr highlight by creating a link to the
+  Vimade base fade. This should produce acceptable results for colorschemes
+  that include Folded highlights that are distracting in faded windows.
+
+:VimadeOverrideSplits                                  *:VimadeOverrideSplits*
+  EXPERIMENTAL -- Overrides the VertSplit highlight by creating a link to the
+  Vimade base fade. This should produce acceptable results for colorschemes
+  that include Folded highlights that are distracting in faded windows.
+
+:VimadeOverrideNonText                                *:VimadeOverrideNonText*
+  EXPERIMENTAL -- Overrides the NonText highlight by creating a link to the
+  Vimade base fade. This should produce acceptable results for colorschemes
+  that include Folded highlights that are distracting in faded windows.
+
+:VimadeOverrideAll                                        *:VimadeOverrideAll*
+  EXPERIMENTAL -- Overrides static highlights by creating a link to the Vimade
+  base fade. This should produce acceptable results for colorschemes that
+  include Folded highlights that are distracting in faded windows.
 
 ==============================================================================
 CUSTOM-FADES                                             *vimade-custom-fades*

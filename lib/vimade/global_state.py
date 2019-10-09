@@ -7,6 +7,7 @@ GLOBALS = sys.modules[__name__]
 
 (is_nvim, is_term, is_tmux, original_background) = vim.eval('[has("nvim"), has("gui_running"), $TMUX, &background]')
 (term_fg, term_bg) = ('#FFFFFF','#000000') if 'dark' in original_background else ('#000000', '#FFFFFF')
+features = vim.eval('g:vimade_features')
 is_nvim = int(is_nvim) == 1
 is_term = int(is_term) == 0
 is_tmux = is_tmux != ''
@@ -44,8 +45,12 @@ enable_scroll = False
 enable_signs = False
 signs_retention_period = 0
 signs_id = None
+signs_priority = None
 group_diff = None
 group_scrollbind = None
+signs_group_text = ' group=vimade ' if int(features['has_sign_group']) else ' '
+signs_priority_text = ' '
+
 
 READY = 0
 ERROR = 1
@@ -78,6 +83,7 @@ def update():
   fadepriority = str(nextGlobals['fadepriority'])
   fademinimap = int(nextGlobals['fademinimap'])
   signsid = int(nextGlobals['signsid'])
+  signspriority = nextGlobals['signspriority']
   signsretentionperiod = int(nextGlobals['signsretentionperiod'])
   basefg = nextGlobals['basefg']
   basebg = nextGlobals['basebg']
@@ -87,6 +93,7 @@ def update():
   enablescroll = int(nextGlobals['enablescroll'])
   groupscrollbind = int(nextGlobals['groupscrollbind'])
   groupdiff = int(nextGlobals['groupdiff'])
+
   GLOBALS.fade_minimap = fademinimap
   GLOBALS.row_buf_size = rowbufsize
   GLOBALS.col_buf_size = colbufsize
@@ -94,8 +101,13 @@ def update():
   GLOBALS.enable_scroll = enablescroll
   GLOBALS.group_scrollbind = groupscrollbind
   GLOBALS.group_diff = groupdiff
+
   if GLOBALS.signs_id == None:
     GLOBALS.signs_id = signsid
+  if GLOBALS.signs_priority != signspriority:
+    GLOBALS.signs_priority = signspriority
+    if int(GLOBALS.features['has_sign_priority']):
+      GLOBALS.signs_priority_text = ' priority=' + signspriority + ' '
 
   if enablesigns != GLOBALS.enable_signs:
     GLOBALS.enable_signs = enablesigns
