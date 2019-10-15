@@ -172,4 +172,5 @@ My colors look off in terminal mode!
 Tmux is not working!
 - *Vimade only works in a 256 or higher color mode and by default TMUX may set t_Co to 8.   it is recommended that you set `export TERM=xterm-256color` before starting vim.  You can also set `set termguicolors` inside vim if your term supports it for an even more accurate level of fading.*
 
-
+Vim becomes slow when completions ar visible/changing (typically noticeable when a large number of buffers are open and autocomplete is running).  Neovim does not seem to suffer from the same performance degradation.
+- *This issue seems to be due to redraws that occur as the pum content changes.  The best way to lessen the effect is to add `au! CompleteChanged * redraw` to your vimrc.  The user redraw can force Vim to be more responsive in this scenario*
