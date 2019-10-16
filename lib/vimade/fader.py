@@ -386,7 +386,7 @@ def fadeWin(winState):
       rowsBelowCursor -= 1
     else:
       if wrap:
-        text = bytes(buf[row - 1], 'utf-8') if IS_V3 else buf[row-1]
+        text = bytes(buf[row - 1], 'utf-8', 'replace') if IS_V3 else buf[row-1]
         start_text_ln = len(text)
         if row == cursor[0]:
           start_text_ln = cursor[1]
@@ -412,7 +412,7 @@ def fadeWin(winState):
       rowsAboveCursor -= 1
     else:
       if wrap:
-        text = bytes(buf[row - 1], 'utf-8') if IS_V3 else buf[row-1]
+        text = bytes(buf[row - 1], 'utf-8', 'replace') if IS_V3 else buf[row-1]
         end_text_ln = len(text)
         if row == cursor[0]:
           end_text_ln = end_text_ln - cursor[1]
@@ -461,7 +461,7 @@ def fadeWin(winState):
       continue
     if IS_V3:
       rawText = buf[index]
-      text = bytes(rawText, 'utf-8')
+      text = bytes(rawText, 'utf-8', 'replace')
       text_ln = len(text)
       adjustStart = rawText[0:cursorCol]
       adjustStart = len(bytes(adjustStart, 'utf-8', 'surrogateescape')) - len(adjustStart)
