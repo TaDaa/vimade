@@ -123,16 +123,16 @@ def update(nextState = None):
     state.tab = tabnr
     state.diff = diff
 
+    if floating or win_disabled or buf_disabled:
+      unfade[winid] = state
+      continue
+
     if syntax != state.syntax:
       state.clear_syntax = state.syntax
       state.syntax = syntax
       if not hasActiveBuffer:
         fade[winid] = state
 
-
-    if floating or win_disabled or buf_disabled:
-      unfade[winid] = state
-      continue
 
     state.buftype = buftype
 
