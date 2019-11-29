@@ -150,6 +150,9 @@ def update():
     else:
       base_hi = vim.eval('vimade#GetHi('+GLOBALS.normal_id+')')
     GLOBALS.normal_bg = base_hi[1]
+    #recovery condition for some nvim gui's that don't set gui_running
+    if base_hi[0] and base_hi[0][0] == '#' or base_hi[1] and base_hi[1][0] == '#':
+      GLOBALS.is_term = 0
     if not basefg:
       basefg = base_hi[0]
     if not basebg:
