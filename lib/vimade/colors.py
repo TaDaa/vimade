@@ -1,5 +1,6 @@
 import math
 from vimade.term_256 import RGB_256, LOOKUP_256_RGB
+from vimade import global_state as GLOBALS
 
 def fromHexStringToRGB(source):
   return [int(source[1:3], 16), int(source[3:5], 16), int(source[5:7], 16)]
@@ -37,6 +38,9 @@ def interpolate24b(source, to, fade_level):
 #TODO we need to handle grays better
 thresholds = [-1,0, 95, 135, 175, 215, 255, 256]
 def interpolate256(source, to, fade_level):
+  if source[0] == '#' or to[0] == '#':
+    GLOBALS.setTermMode(False)
+    return interpolate24b(source, to, fade_level)
   if not isinstance(source, list):
     source = RGB_256[int(source)]
   if not isinstance(to, list):

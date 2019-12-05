@@ -194,27 +194,32 @@ def update():
     GLOBALS.base_hi[0] = GLOBALS.base_fg
     GLOBALS.base_hi[1] = GLOBALS.base_bg
     if not GLOBALS.is_term or termguicolors:
-      GLOBALS.hi_fg = ' guifg='
-      GLOBALS.hi_bg = ' guibg='
-      GLOBALS.hi_sp = ' guisp='
-      GLOBALS.fade = colors.interpolate24b
+      setTermMode(False)
     else:
-      GLOBALS.hi_fg = ' ctermfg='
-      GLOBALS.hi_bg = ' ctermbg='
-      GLOBALS.fade = colors.interpolate256
-    GLOBALS.base_fade = GLOBALS.fade(GLOBALS.base_fg, GLOBALS.base_bg, GLOBALS.fade_level)
-    try:
-      GLOBALS.base_fg_exp = GLOBALS.fade(GLOBALS.base_fg, GLOBALS.base_fg, GLOBALS.fade_level).upper()
-    except:
-      #consider logging here, nothing bad should happen -- vimade should still work
-      pass
-    try:
-      GLOBALS.base_bg_exp = GLOBALS.fade(GLOBALS.base_bg, GLOBALS.base_bg, GLOBALS.fade_level).upper()
-    except:
-      #consider logging here, nothing bad should happen -- vimade should still work
-      pass
+      setTermMode(True)
 
   if GLOBALS.base_fg == None or GLOBALS.base_bg == None or GLOBALS.base_fade == None:
     returnState |= ERROR
 
   return returnState
+
+def setTermMode(mode):
+  if mode:
+    GLOBALS.hi_fg = ' ctermfg='
+    GLOBALS.hi_bg = ' ctermfg='
+    GLOBALS.fade = colors.interpolate256
+  else:
+    GLOBALS.hi_fg = ' guifg='
+    GLOBALS.hi_bg = ' guifg='
+    GLOBALS.fade = colors.interpolate24b
+  GLOBALS.base_fade = GLOBALS.fade(GLOBALS.base_fg, GLOBALS.base_bg, GLOBALS.fade_level)
+  try:
+    GLOBALS.base_fg_exp = GLOBALS.fade(GLOBALS.base_fg, GLOBALS.base_fg, GLOBALS.fade_level).upper()
+  except:
+    #consider logging here, nothing bad should happen -- vimade should still work
+    pass
+  try:
+    GLOBALS.base_bg_exp = GLOBALS.fade(GLOBALS.base_bg, GLOBALS.base_bg, GLOBALS.fade_level).upper()
+  except:
+    #consider logging here, nothing bad should happen -- vimade should still work
+    pass
