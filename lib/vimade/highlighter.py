@@ -1,5 +1,6 @@
 import vim
 from vimade import global_state as GLOBALS
+from vimade import colors
 
 HI_CACHE = {}
 
@@ -7,8 +8,9 @@ def pre_check():
   values = list(HI_CACHE.values())
   if len(values):
     sample = values[0]
-    result = vim.eval('vimade#GetHi(hlID("'+sample[0]+'"))')
-    if not result[0] and not result[1]:
+
+    result = int(vim.eval('hlexists("'+sample[0]+'")'))
+    if not result:
       recalculate()
 
 def recalculate():
@@ -25,13 +27,17 @@ def fade_ids(ids, force = False):
   for id in ids:
       id = str(id)
       if not id in HI_CACHE or force:
-          result[i] = HI_CACHE[id] = hi = __fade_id(id)
+          hi = colors.getHi(id)
+          hi = __fade_id(id, hi[0], hi[1], hi[2], hi[3], hi[4])
+          result[i] = HI_CACHE[id] = hi
+          
           group = hi[0]
-          expr = 'hi ' + group + GLOBALS.hi_fg + hi[1]
-          if hi[2] != None:
-            expr += GLOBALS.hi_bg + hi[2]
-          if hi[3] != None:
-            expr += GLOBALS.hi_sp + hi[3]
+          expr = 'hi ' + group
+          expr += hi[1] if hi[1] else ' ctermfg=NONE'
+          expr += hi[2] if hi[2] else ' ctermbg=NONE'
+          expr += hi[3] if hi[3] else ' guifg=NONE'
+          expr += hi[4] if hi[4] else ' guibg=NONE'
+          expr += hi[5] if hi[5] else ' guisp=NONE'
           exprs.append(expr)
       else:
           result[i] = HI_CACHE[id]
@@ -41,28 +47,37 @@ def fade_ids(ids, force = False):
   return result
 
 #internal
-def __fade_id(id):
-  hi = vim.eval('vimade#GetHi('+id+')')
-  guifg = hi[0]
-  guibg = hi[1]
-  guisp = hi[2]
+def __fade_id(id, ctermfg, ctermbg, guifg, guibg, guisp):
+
+  if ctermbg:
+    if ctermbg == GLOBALS.base_bg_exp256 or ctermbg == GLOBALS.normal_bg256:
+      ctermbg = ''
+    else:
+      ctermbg = ' ctermbg='+colors.interpolate256(ctermbg, GLOBALS.base_bg256, GLOBALS.fade_level)
+  else:
+    ctermbg = ''
+
+  if not ctermfg:
+    ctermfg = ' ctermfg='+GLOBALS.base_fade256
+  else:
+    ctermfg = ' ctermfg='+colors.interpolate256(ctermfg, GLOBALS.base_bg256, GLOBALS.fade_level)
 
   if guibg:
-    if guibg == GLOBALS.base_bg_exp or guibg == GLOBALS.normal_bg:
-      guibg = None
+    if guibg == GLOBALS.base_bg_exp24b or guibg == GLOBALS.normal_bg24b:
+      guibg = ''
     else:
-      guibg = GLOBALS.fade(guibg, GLOBALS.base_bg, GLOBALS.fade_level)
+      guibg = ' guibg='+colors.interpolate24b(guibg, GLOBALS.base_bg24b, GLOBALS.fade_level)
   else:
-    guibg = None
+    guibg = ''
 
   if not guifg:
-    guifg = GLOBALS.base_fade
+    guifg = ' guifg='+GLOBALS.base_fade24b
   else:
-    guifg = GLOBALS.fade(guifg, GLOBALS.base_bg, GLOBALS.fade_level)
+    guifg = ' guifg='+colors.interpolate24b(guifg, GLOBALS.base_bg24b, GLOBALS.fade_level)
 
   if guisp:
-    guisp = GLOBALS.fade(guisp, GLOBALS.base_bg, GLOBALS.fade_level)
+    guisp = ' guisp='+colors.interpolate24b(guisp, GLOBALS.base_bg24b, GLOBALS.fade_level)
   else:
-    guisp = None
+    guisp = ''
 
-  return ('vimade_' + id, guifg, guibg, guisp)
+  return ('vimade_' + id, ctermfg, ctermbg, guifg, guibg, guisp)

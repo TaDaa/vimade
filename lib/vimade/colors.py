@@ -1,5 +1,9 @@
 import math
+import vim
 from vimade.term_256 import RGB_256, LOOKUP_256_RGB
+(is_nvim, normal_id) = vim.eval('[has("nvim"), hlID("Normal")]')
+is_nvim = int(is_nvim)
+
 
 def fromHexStringToRGB(source):
   return [int(source[1:3], 16), int(source[3:5], 16), int(source[5:7], 16)]
@@ -9,6 +13,33 @@ def from256ToRGB(source):
   return RGB_256[source]
 def from256RGBToHexString(source):
   return fromRGBToHexString(from256ToRGB(source))
+def fromAnyToRGB(source):
+    if isinstance(source, list):
+      source = [int(x) for x in source]
+    elif (isinstance(source, int) or source.isdigit()) and int(source) < len(RGB_256):
+      source = from256ToRGB(int(source))
+    elif len(source) == 7:
+      source = fromHexStringToRGB(source)
+    return source
+
+def getHi(id):
+  if is_nvim:
+    if id == '0':
+      id = normal_id
+    hi = list(map(lambda x: '' if x == '-1' else int(x), vim.eval('vimade#GetNvimHi('+id+')')))
+    if hi[2] != '':
+      hi[2] = '#' +hex(hi[2])[2:].zfill(6)
+    if hi[3] != '':
+      hi[3] = '#' +hex(hi[3])[2:].zfill(6)
+    if hi[4] != '':
+      hi[4] = '#' +hex(hi[4])[2:].zfill(6)
+  else:
+    hi = vim.eval('vimade#GetHi('+id+')')
+    if hi[0] and hi[0][0] == '#' or hi[1] and hi[1][0] == '#':
+      hi = ['', ''] + hi
+    else:
+      hi = hi + ['', '', '']
+  return hi
 
 def interpolate24b(source, to, fade_level):
     if not isinstance(source, list):

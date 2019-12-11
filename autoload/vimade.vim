@@ -257,22 +257,27 @@ endfunction
 
 "TODO these should just interpolate and expose intensity 
 function! vimade#OverrideFolded()
+  hi! clear Folded
   hi! link Folded vimade_0
 endfunction
 
 function! vimade#OverrideSignColumn()
+  hi! clear SignColumn
   hi! link SignColumn vimade_0
 endfunction
 
 function! vimade#OverrideLineNr()
+  hi! clear LineNr
   hi! link LineNr vimade_0
 endfunction
 
 function! vimade#OverrideVertSplit()
+  hi! clear VertSplit
   hi! link VertSplit vimade_0
 endfunction
 
 function! vimade#OverrideNonText()
+  hi! clear NonText
   hi! link NonText vimade_0
 endfunction
 
@@ -475,6 +480,14 @@ endfunction
 function! vimade#UnfadeActive()
     let g:vimade_fade_active=0
     call vimade#CheckWindows()
+endfunction
+
+
+function! vimade#GetNvimHi(id)
+  let tid = synIDtrans(a:id)
+  let norgb = nvim_get_hl_by_id(tid, 0)
+  let rgb = nvim_get_hl_by_id(tid, 1)
+  return [get(norgb, 'foreground', -1), get(norgb, 'background', -1), get(rgb, 'foreground', -1), get(rgb, 'background', -1), get(rgb, 'special', -1)]
 endfunction
 
 function! vimade#GetHi(id)
