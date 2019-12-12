@@ -159,7 +159,11 @@ def update():
     basefg256 = GLOBALS.term_fg
   if not basebg256:
     basebg256 = GLOBALS.term_bg
-
+  if not basefg24b:
+    basefg24b = GLOBALS.term_fg
+  if not basebg24b:
+    basebg24b = GLOBALS.term_bg
+  
   if basefg256 and GLOBALS.base_fg256_last != basefg256:
     GLOBALS.base_fg256_last = basefg256
     basefg256 = colors.fromAnyToRGB(basefg256)
