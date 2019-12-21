@@ -390,7 +390,7 @@ def fadeWin(winState):
         start_text_ln = len(text)
         if row == cursor[0]:
           start_text_ln = cursor[1]
-        virtual_rows = math.floor(start_text_ln / width)
+        virtual_rows = int(math.floor(start_text_ln / width))
         # wrap_start_row = row
         rowsBelowCursor -= virtual_rows
         s1 = 1
@@ -416,7 +416,7 @@ def fadeWin(winState):
         end_text_ln = len(text)
         if row == cursor[0]:
           end_text_ln = end_text_ln - cursor[1]
-        virtual_rows = math.floor(end_text_ln / width)
+        virtual_rows = int(math.floor(end_text_ln / width))
         rowsAboveCursor -= virtual_rows
         s1 = 1
         if row == cursor[0]:
