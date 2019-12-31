@@ -390,7 +390,7 @@ def fadeWin(winState):
         start_text_ln = len(text)
         if row == cursor[0]:
           start_text_ln = cursor[1]
-        virtual_rows = int(math.floor(start_text_ln / width))
+        virtual_rows = max(int(math.floor(start_text_ln / width)),1)
         # wrap_start_row = row
         rowsBelowCursor -= virtual_rows
         s1 = 1
@@ -416,7 +416,7 @@ def fadeWin(winState):
         end_text_ln = len(text)
         if row == cursor[0]:
           end_text_ln = end_text_ln - cursor[1]
-        virtual_rows = int(math.floor(end_text_ln / width))
+        virtual_rows = max(int(math.floor(end_text_ln / width)), 1)
         rowsAboveCursor -= virtual_rows
         s1 = 1
         if row == cursor[0]:
@@ -431,6 +431,7 @@ def fadeWin(winState):
         to_eval.append((row, startCol, maxCol))
         rowsAboveCursor -= 1
     row += 1
+  #print(len(to_eval))
 
 
   bufState = FADE.buffers[winState.buffer]
@@ -542,4 +543,4 @@ def fadeWin(winState):
         i += 8
     winState.matches += vim.eval('[' + ','.join(matchadds) + ']')
 
-  # print((time.time() - startTime) * 1000)
+  #print(str(len(to_eval))+ ' ' + str((time.time() - startTime) * 1000))
