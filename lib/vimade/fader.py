@@ -180,7 +180,6 @@ def update(nextState = None):
       currentBuf = '\n'.join(state.win.buffer)
       #TODO can we add additional buf comparisons and move bufState check out of fadeWin?
       if GLOBALS.fade_minimap:
-        currentBuf =  '\n'.join(state.win.buffer)
         if not bufState.faded or currentBuf != bufState.last:
           fade[winid] = state
           if winid in unfade:
@@ -263,7 +262,8 @@ def update(nextState = None):
       signs.unfade_bufs(unfade_signs)
   returnToWin()
   FADE.prevent = False
-  # print('update',(time.time() - start) * 1000)
+  # if (time.time() - start) * 1000 > 10:
+    # print('update',(time.time() - start) * 1000)
 
 def returnToWin():
   if FADE.currentWin != FADE.startWin:
@@ -319,12 +319,13 @@ def unfadeWin(winState, clear_syntax = False):
             if item and winid in item:
               del item[winid]
   if matches:
+    to_delete = [] 
     for match in matches:
-        try:
-          # vim.command('call win_execute('+winid+', "call matchdelete('+match+')",1)')
-          vim.command('call matchdelete('+match+')')
-        except:
-          continue
+        to_delete.append('silent! call matchdelete('+match+')')
+    try:
+      vim.command('|'.join(to_delete))
+    except:
+      pass
   winState.clear_syntax = False
   winState.matches = []
 
@@ -341,6 +342,7 @@ def fadeWin(winState):
   setWin = False
   buf = win.buffer
   cursorCol = cursor[1]
+  cursorRow = cursor[0]
   startRow = cursor[0] - height - GLOBALS.row_buf_size
   endRow = cursor[0] +  height + GLOBALS.row_buf_size
   matches = {}
@@ -349,89 +351,58 @@ def fadeWin(winState):
   else:
     fade_priority = GLOBALS.fade_priority
 
-
   to_eval = []
+
   if FADE.currentWin != winid:
     FADE.currentWin = winid
     vim.command('noautocmd call win_gotoid('+winid+')')
-  if not GLOBALS.enable_scroll and not wrap:
-    (startRow, endRow) = vim.eval('[line("w0"), line("w$")]')
-    startRow = int(startRow) - 1
-    endRow = int(endRow) + 1
-    startCol = cursorCol - width + 1
-    startCol = max(startCol, 1)
-    maxCol = cursorCol + 2 + width
-  else:
-    startCol = cursorCol - width + 1 - GLOBALS.col_buf_size
-    startCol = max(startCol, 1)
-    maxCol = cursorCol + 1 + width + GLOBALS.col_buf_size
-    # print(str(cursorCol) + ' :' + str(startCol) + ' ' + str(maxCol))
-  if wrap:
-    startCol = 1
-    maxCol = width
+  lookup = vim.eval('winsaveview()')
+  startRow = int(lookup['topline'])
+  endRow = startRow + height
+  startCol = int(lookup['leftcol']) + int(lookup['skipcol']) + 1
+  maxCol = startCol + width
+  if GLOBALS.enable_scroll and not wrap:
+    startRow -= GLOBALS.row_buf_size
+    endRow += GLOBALS.row_buf_size
+    if startRow < 1:
+      startRow = 1
+    startCol -= GLOBALS.col_buf_size
+    maxCol += GLOBALS.col_buf_size
+    if startCol < 1:
+      startCol = 1
 
-  row = cursor[0]
-  rowsBelowCursor = row - startRow
-  rowsAboveCursor = endRow - row
-  if wrap:
-    rowsAboveCursor = height
-    rowsBelowCursor = height
-    width += 0
-  foldstart = -1
-  foldend = -1
-  while rowsBelowCursor >= 0 and (row - 1) >= 0:
-    foldstart = int(vim.eval('foldclosed('+str(row)+')'))
-    if foldstart > -1:
-      row = foldstart
-      rowsBelowCursor -= 1
+  row = startRow
+  buf_ln = len(buf)
+  rows_so_far = 0
+  while rows_so_far < height and row <= buf_ln:
+    fold = int(vim.eval('foldclosedend('+str(row)+')'))
+    if fold > -1:
+      row = fold
+      rows_so_far += 1
     else:
+      text = bytes(buf[row-1], 'utf-8', 'replace') if IS_V3 else buf[row-1]
+      text_ln = len(text)
       if wrap:
-        text = bytes(buf[row - 1], 'utf-8', 'replace') if IS_V3 else buf[row-1]
-        start_text_ln = len(text)
-        if row == cursor[0]:
-          start_text_ln = cursor[1]
-        virtual_rows = max(int(math.floor(start_text_ln / width)),1)
-        # wrap_start_row = row
-        rowsBelowCursor -= virtual_rows
-        s1 = 1
-        if rowsBelowCursor >= 0:
-          s1 = 1
+        if text_ln > width * height and row < cursorRow:
+          pass
         else:
-          s1 = start_text_ln - (rowsBelowCursor + virtual_rows) * width 
-        s1 = max(1, s1)
-        to_eval.append((row, s1, start_text_ln))
+          chars_left = (height - rows_so_far) * width
+          if row == cursorRow:
+            value = startCol + chars_left
+            value = value if value < text_ln else text_ln
+            to_eval.append((row, startCol, value))
+            rows_so_far += math.ceil((value - startCol) / width)
+          else:
+            value = text_ln if text_ln < chars_left else chars_left 
+            to_eval.append((row, 1, chars_left))
+            rows_so_far += math.ceil(value / width)
+      elif text_ln > 0:
+        to_eval.append((row, startCol, maxCol if maxCol < text_ln else text_ln))
+        rows_so_far += 1
       else:
-        to_eval.append((row, startCol, maxCol))
-        rowsBelowCursor -= 1
-    row -= 1
-  row = cursor[0]
-  while rowsAboveCursor >= 0 and (row - 1) < len(buf):
-    foldend = int(vim.eval('foldclosedend('+str(row)+')'))
-    if foldend > -1:
-      row = foldend
-      rowsAboveCursor -= 1
-    else:
-      if wrap:
-        text = bytes(buf[row - 1], 'utf-8', 'replace') if IS_V3 else buf[row-1]
-        end_text_ln = len(text)
-        if row == cursor[0]:
-          end_text_ln = end_text_ln - cursor[1]
-        virtual_rows = max(int(math.floor(end_text_ln / width)), 1)
-        rowsAboveCursor -= virtual_rows
-        s1 = 1
-        if row == cursor[0]:
-          s1 = cursor[1]
-        if rowsAboveCursor >= 0:
-          s2 = len(text)
-        else:
-          s2 = s1 + (rowsAboveCursor + virtual_rows) * width
-        s2 = min(len(text), s2)
-        to_eval.append((row, s1, s2))
-      elif row != cursor[0]:
-        to_eval.append((row, startCol, maxCol))
-        rowsAboveCursor -= 1
+        rows_so_far += 1
     row += 1
-  #print(len(to_eval))
+
 
 
   bufState = FADE.buffers[winState.buffer]
@@ -543,4 +514,4 @@ def fadeWin(winState):
         i += 8
     winState.matches += vim.eval('[' + ','.join(matchadds) + ']')
 
-  #print(str(len(to_eval))+ ' ' + str((time.time() - startTime) * 1000))
+  # print(str(len(to_eval))+ ' ' + str((time.time() - startTime) * 1000))
