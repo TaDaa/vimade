@@ -343,8 +343,8 @@ def fadeWin(winState):
   buf = win.buffer
   cursorCol = cursor[1]
   cursorRow = cursor[0]
-  startRow = cursor[0] - height - GLOBALS.row_buf_size
-  endRow = cursor[0] +  height + GLOBALS.row_buf_size
+  # startRow = cursor[0] - height - GLOBALS.row_buf_size
+  # endRow = cursor[0] +  height + GLOBALS.row_buf_size
   matches = {}
   if winState.is_minimap:
     fade_priority='9'
@@ -362,8 +362,9 @@ def fadeWin(winState):
   startCol = int(lookup['leftcol']) + int(lookup['skipcol']) + 1
   maxCol = startCol + width
   if GLOBALS.enable_scroll and not wrap:
-    startRow -= GLOBALS.row_buf_size
-    endRow += GLOBALS.row_buf_size
+    startRow = min(startRow, cursorRow - height - GLOBALS.row_buf_size)
+    endRow = max(endRow, cursorRow + height + GLOBALS.row_buf_size)
+
     if startRow < 1:
       startRow = 1
     startCol -= GLOBALS.col_buf_size
@@ -420,6 +421,7 @@ def fadeWin(winState):
     coords = bufState.coords[winState.syntax] = [None] * len(buf)
   winMatches = winState.matches
 
+  # print(to_eval)
   row = startRow
   redo = False
   for z in range(0, len(to_eval)):
