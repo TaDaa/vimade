@@ -374,11 +374,11 @@ def fadeWin(winState):
   row = startRow
   buf_ln = len(buf)
   rows_so_far = 0
-  while rows_so_far < height and row <= buf_ln:
+  target_rows = endRow - startRow
+  while rows_so_far < target_rows and row <= buf_ln:
     fold = int(vim.eval('foldclosedend('+str(row)+')'))
     if fold > -1:
       row = fold
-      rows_so_far += 1
     else:
       text = bytes(buf[row-1], 'utf-8', 'replace') if IS_V3 else buf[row-1]
       text_ln = len(text)
@@ -391,18 +391,15 @@ def fadeWin(winState):
             value = startCol + chars_left
             value = value if value < text_ln else text_ln
             to_eval.append((row, startCol, value))
-            rows_so_far += math.ceil((value - startCol) / width)
+            rows_so_far += math.ceil((value - startCol) / width) - 1
           else:
             value = text_ln if text_ln < chars_left else chars_left 
             to_eval.append((row, 1, chars_left))
-            rows_so_far += math.ceil(value / width)
+            rows_so_far += math.ceil(value / width) - 1
       elif text_ln > 0:
         to_eval.append((row, startCol, maxCol if maxCol < text_ln else text_ln))
-        rows_so_far += 1
-      else:
-        rows_so_far += 1
+    rows_so_far += 1
     row += 1
-
 
 
   bufState = FADE.buffers[winState.buffer]
