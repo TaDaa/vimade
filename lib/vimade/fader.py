@@ -363,7 +363,7 @@ def fadeWin(winState):
   endRow = startRow + height
   startCol = int(lookup['leftcol']) + int(lookup['skipcol']) + 1
   maxCol = startCol + width
-  if GLOBALS.enable_scroll and not wrap:
+  if GLOBALS.enable_scroll:
     startRow = min(startRow, cursorRow - height - GLOBALS.row_buf_size)
     endRow = max(endRow, cursorRow + height + GLOBALS.row_buf_size)
 
@@ -377,7 +377,6 @@ def fadeWin(winState):
   row = startRow
   buf_ln = len(buf)
   rows_so_far = 0
-  target_rows = endRow - startRow
   if endRow > buf_ln:
     endRow = buf_ln
   vim.command('let g:vimade_visrows=vimade#GetVisibleRows('+str(startRow)+','+str(endRow)+')')
