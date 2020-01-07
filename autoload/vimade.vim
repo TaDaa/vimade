@@ -496,6 +496,24 @@ function! vimade#GetHi(id)
   return [synIDattr(tid, 'fg#'), synIDattr(tid, 'bg#'), synIDattr(tid, 'sp#')]
 endfunction
 
+function! vimade#GetVisibleRows(startRow, endRow)
+  let l:row = a:startRow
+  let l:result = []
+  let l:rows = 0
+  let l:target_rows = a:endRow - a:startRow
+  while l:rows <= l:target_rows
+    let l:fold = foldclosedend(l:row)
+    call add(l:result, [l:row, l:fold])
+    if l:fold == -1
+      let l:row += 1
+    else
+      let l:row = l:fold + 1
+    endif
+    let l:rows += 1
+  endwhile
+  return l:result
+endfunction
+
 function! vimade#StartTimer()
   "timer is disabled when usecursorhold=1
   if !g:vimade.usecursorhold && !exists('g:vimade_timer') && g:vimade_running
