@@ -466,6 +466,8 @@ def fadeWin(winState):
     coords = bufState.coords[winState.syntax] = [None] * buf_ln
   winMatches = winState.matches
 
+  ids = []
+  gaps = []
   for z in range(0, len(to_eval)):
     (row, startCol, endCol, text, text_ln) = to_eval[z]
     column = startCol
@@ -479,8 +481,8 @@ def fadeWin(winState):
     str_row = str(row)
 
 
-    ids = []
-    gaps = []
+    # ids = []
+    # gaps = []
 
     sCol = column
 
@@ -491,28 +493,35 @@ def fadeWin(winState):
 
       if current == None:
         ids.append('synID('+str_row+','+str(column)+',0)')
-
-        gaps.append(column - 1)
+        gaps.append((index, column - 1, text[column - 1]))
       column = column + 1
 
-    if len(ids):
-      vim.command('let g:vimade_synids=['+','.join(ids)+']')
-      ids = vim.vars['vimade_synids']
-      highlights = highlighter.fade_ids(ids)
-      i = 0
-      for hi in highlights:
-        colors[gaps[i]] = {'id': ids[i], 'hi': hi, 'text': text[gaps[i]]}
-        i += 1
+  if len(ids):
+    vim.command('let g:vimade_synids=['+','.join(ids)+']')
+    ids = vim.vars['vimade_synids']
+    highlights = highlighter.fade_ids(ids)
+    i = 0
+    last_row = -1
+    for hi in highlights:
+      (row, column, text) = gaps[i]
+      if row != last_row:
+        colors = coords[row]
+      colors[column] = {'id': ids[i], 'hi': hi, 'text': text}
+      i += 1
+
+  for z in range(0, len(to_eval)):
+    (row, startCol, endCol, text, text_ln) = to_eval[z]
+    colors = coords[row - 1]
     column = sCol
     while column <= endCol:
       current = colors[column - 1]
       if current and not winid in current:
-        hi = current['hi']
+        hi_id = current['hi'][0]
         current[winid] = True
-        if not hi[0] in matches:
-           matches[hi[0]] = [(row, column , 1)]
+        if not hi_id in matches:
+           matches[hi_id] = [(row, column , 1)]
         else:
-          match = matches[hi[0]]
+          match = matches[hi_id]
           if match[-1][0] == row and match[-1][1] + match[-1][2] == column:
             match[-1] = (row, match[-1][1], match[-1][2] + 1)
           else:
