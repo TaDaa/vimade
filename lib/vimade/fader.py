@@ -426,7 +426,7 @@ def fadeWin(winState):
               mCol = text_ln if text_ln < chars_left else chars_left 
               sCol = 1
             if row >= topline:
-                print((mCol - startCol), width, endRow, startRow, target_height)
+                # print((mCol - startCol), width, endRow, startRow, target_height)
                 rows_so_far += math.floor((mCol - startCol) / width)
         else:
           mCol = maxCol if maxCol < text_ln else text_ln
