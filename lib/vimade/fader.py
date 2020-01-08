@@ -153,10 +153,13 @@ def update(nextState = None):
         activeScrollbind = True
 
     # window state changed
-    if (window.height != state.height or window.width != state.width or window.cursor[0] != state.cursor[0] or window.cursor[1] != state.cursor[1]):
-      state.height = window.height
-      state.width = window.width
-      state.cursor = (window.cursor[0], window.cursor[1])
+    cursor = window.cursor
+    width = window.width
+    height = window.height
+    if (height != state.height or width != state.width or cursor[0] != state.cursor[0] or cursor[1] != state.cursor[1]):
+      state.height = height
+      state.width = width
+      state.cursor = (cursor[0], cursor[1])
       if not hasActiveBuffer:
         fade[winid] = state
     if state.buffer != bufnr:
@@ -315,7 +318,6 @@ def unfadeWin(winState, clear_syntax = False):
   syntax = clear_syntax if clear_syntax else winState.syntax
   if syntax in FADE.buffers[winState.buffer].coords:
     coords = FADE.buffers[winState.buffer].coords[syntax]
-    errs = 0
     if coords:
       for items in coords:
         if items:
@@ -353,19 +355,21 @@ def fadeWin(winState):
     fade_priority = GLOBALS.fade_priority
 
   to_eval = []
+  texts = []
 
   if FADE.currentWin != winid:
     FADE.currentWin = winid
     vim.command('noautocmd call win_gotoid('+winid+')')
 
   lookup = vim.eval('winsaveview()')
-  startRow = int(lookup['topline'])
+  startRow = topline = int(lookup['topline'])
   endRow = startRow + height
   startCol = int(lookup['leftcol']) + int(lookup['skipcol']) + 1
   maxCol = startCol + width
   if GLOBALS.enable_scroll:
     startRow = min(startRow, cursorRow - height - GLOBALS.row_buf_size)
     endRow = max(endRow, cursorRow + height + GLOBALS.row_buf_size)
+    target_height = 2 * height + 2 * GLOBALS.row_buf_size
 
     if startRow < 1:
       startRow = 1
@@ -373,28 +377,44 @@ def fadeWin(winState):
     maxCol += GLOBALS.col_buf_size
     if startCol < 1:
       startCol = 1
+  else:
+    target_height = height
 
   row = startRow
   buf_ln = len(buf)
   rows_so_far = 0
   if endRow > buf_ln:
     endRow = buf_ln
+
   vim.command('let g:vimade_visrows=vimade#GetVisibleRows('+str(startRow)+','+str(endRow)+')')
   visible_rows = vim.vars['vimade_visrows']
-  # visible_rows = vim.eval('vimade#GetVisibleRows('+str(startRow)+',' + str(endRow)+ ')')
-  for [row, fold] in visible_rows:
+  buf = buf[visible_rows[0][0]-1:visible_rows[len(visible_rows)-1][0]]
+  texts = []
+
+  # target_height = endRow - startRow
+  j = -1
+  # n = 0
+  for (row, fold) in visible_rows:
+    j += 1
+    if rows_so_far > target_height:
+      break
     row = int(row)
     fold = int(fold)
     if fold == -1:
-      rawText = buf[row-1]
+      rawText = buf[j]
       text = bytes(rawText, 'utf-8', 'replace') if IS_V3 else rawText.decode('utf-8')
       text_ln = len(text)
       if text_ln > 0:
         if is_explorer:
-          to_eval.append((row, 1, text_ln, text, text_ln))
+          to_eval.append((row, 1, text_ln))
+          # buf[n] = text
+          # n += 1
+          texts.append(text)
+          rows_so_far += 1
           continue
         elif wrap:
           if text_ln > width * height and row < cursorRow:
+            buf[j] = ''
             continue
           else:
             chars_left = (height - rows_so_far) * width
@@ -405,9 +425,13 @@ def fadeWin(winState):
             else:
               mCol = text_ln if text_ln < chars_left else chars_left 
               sCol = 1
+            if row >= topline:
+                print((mCol - startCol), width, endRow, startRow, target_height)
+                rows_so_far += math.floor((mCol - startCol) / width)
         else:
           mCol = maxCol if maxCol < text_ln else text_ln
           sCol = startCol
+          rows_so_far += 1
         if IS_V3:
           adjustStart = rawText[0:cursorCol]
           adjustStart = len(bytes(adjustStart, 'utf-8', 'surrogateescape')) - len(adjustStart)
@@ -421,7 +445,10 @@ def fadeWin(winState):
         sCol -= adjustStart
         sCol = max(sCol, 1)
         mCol = min(mCol + adjustEnd, text_ln)
-        to_eval.append((row, sCol, mCol, text, text_ln))
+        to_eval.append((row, sCol, mCol))
+        # buf[n] = text
+        # n += 1
+        texts.append(text)
 
   bufState = FADE.buffers[winState.buffer]
   if not winState.syntax in bufState.coords:
@@ -432,27 +459,31 @@ def fadeWin(winState):
   #check if the visible contents of the buffer have changed
   contents_changed = False
 
+  j=0
   if coords != None:
-    for z in range(0, len(to_eval)):
-      (row, startCol, endCol, text, text_ln) = to_eval[z]
+    for (row, startCol, endCol) in to_eval:
+      text = texts[j]
+      j += 1
+      # text_ln = len(text)
       column = startCol
       index = row - 1
       if index >= len(coords):
         contents_changed = True
         break
       colors = coords[index]
-      if colors == None:
-        colors = coords[index] = [None] * text_ln
-      while column <= endCol:
-        #get syntax id and cache
-        if column - 1 >= len(colors):
-          contents_changed = True
-          break
-        current = colors[column - 1]
-        if current and current['text'] != text[column-1]:
-          contents_changed = True
-          break
-        column += 1
+      # if colors == None:
+        # colors = coords[index] = [None] * text_ln
+      if colors:
+          while column <= endCol:
+            #get syntax id and cache
+            if column - 1 >= len(colors):
+              contents_changed = True
+              break
+            current = colors[column - 1]
+            if current and current['ch'] != text[column-1]:
+              contents_changed = True
+              break
+            column += 1
 
   if (coords != None and len(coords) != buf_ln) or contents_changed:
     unfadeWin(winState)
@@ -463,55 +494,46 @@ def fadeWin(winState):
 
   if coords == None:
     coords = bufState.coords[winState.syntax] = [None] * buf_ln
-  winMatches = winState.matches
 
   ids = []
+  # t_ids = ''
   gaps = []
-  for z in range(0, len(to_eval)):
-    (row, startCol, endCol, text, text_ln) = to_eval[z]
-    column = startCol
+  # gaps = [None] * len(to_eval) * width * 100
+  # gap_i = 0
+  j = 0
+  for (row, column, endCol) in to_eval:
+    text = texts[j]
+    j += 1
+    text_ln = len(text)
+
     index = row - 1
-    # text_ln = len(text)
     if index >= len(coords) or index < 0:
       continue
     colors = coords[index]
     if colors == None:
       colors = coords[index] = [None] * text_ln
-    str_row = str(row)
+    # str_row = str(row)
 
-
-    # ids = []
-    # gaps = []
-
-    sCol = column
-
-    column = sCol
     while column <= endCol:
       #get syntax id and cache
       current = colors[column - 1]
-
       if current == None:
-        ids.append('synID('+str_row+','+str(column)+',0)')
+        ids.append('synID(%s,%s,0)' % (row,column))
         gaps.append((index, column - 1, text[column - 1]))
       column = column + 1
 
   if len(ids):
     vim.command('let g:vimade_synids=['+','.join(ids)+']')
     ids = vim.vars['vimade_synids']
-    highlights = highlighter.fade_ids(ids)
-    i = 0
-    last_row = -1
-    for hi in highlights:
-      (row, column, text) = gaps[i]
-      if row != last_row:
-        colors = coords[row]
-      colors[column] = {'id': ids[i], 'hi': hi, 'text': text}
-      i += 1
 
-  for z in range(0, len(to_eval)):
-    (row, startCol, endCol, text, text_ln) = to_eval[z]
+    highlights = highlighter.fade_ids(ids)
+
+    for i in range(0, len(highlights)):
+      (row, column, text) = gaps[i]
+      coords[row][column] = {'id': ids[i], 'hi': highlights[i], 'ch': text}
+
+  for (row, column, endCol) in to_eval:
     colors = coords[row - 1]
-    column = sCol
     while column <= endCol:
       current = colors[column - 1]
       if current and not winid in current:
