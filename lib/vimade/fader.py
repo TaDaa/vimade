@@ -15,7 +15,7 @@ from vimade import global_state as GLOBALS
 
 FADE = sys.modules[__name__]
 HAS_NVIM_WIN_GET_CONFIG = True if int(vim.eval('exists("*nvim_win_get_config")')) else False
-# HAS_NVIM_COMMAND_OUTPUT = True if hasattr(vim, 'funcs') and hasattr(vim.funcs, 'nvim_command_output') else False
+HAS_NVIM_COMMAND_OUTPUT = True if hasattr(vim, 'funcs') and hasattr(vim.funcs, 'nvim_command_output') else False
 
 windows = {}
 background = ''
@@ -526,8 +526,12 @@ def fadeWin(winState):
       column = column + 1
 
   if len(ids):
-    vim.command('let g:vimade_synids=['+','.join(ids)+']')
-    ids = vim.vars['vimade_synids']
+    if HAS_NVIM_COMMAND_OUTPUT:
+        vim.funcs.nvim_command('function! VimadeSynIDs() \n return ['+','.join(ids)+'] \n endfunction')
+        ids = vim.funcs.nvim_command_output('echo VimadeSynIDs()')[1:-1].split(', ')
+    else:
+        vim.command('let g:vimade_synids=['+','.join(ids)+']')
+        ids = vim.vars['vimade_synids']
 
     highlights = highlighter.fade_ids(ids)
 
