@@ -15,6 +15,7 @@ from vimade import global_state as GLOBALS
 
 FADE = sys.modules[__name__]
 HAS_NVIM_WIN_GET_CONFIG = True if int(vim.eval('exists("*nvim_win_get_config")')) else False
+HAS_NVIM_COMMAND_OUTPUT = True if hasattr(vim, 'funcs') and hasattr(vim.funcs, 'nvim_command_output') else False
 
 windows = {}
 background = ''
@@ -369,7 +370,7 @@ def fadeWin(winState):
   if GLOBALS.enable_scroll:
     startRow = min(startRow, cursorRow - height - GLOBALS.row_buf_size)
     endRow = max(endRow, cursorRow + height + GLOBALS.row_buf_size)
-    target_height = 2 * height + 2 * GLOBALS.row_buf_size
+    target_height = height * 2 + 2 * GLOBALS.row_buf_size
 
     if startRow < 1:
       startRow = 1
@@ -480,10 +481,12 @@ def fadeWin(winState):
               contents_changed = True
               break
             current = colors[column - 1]
-            if current and current['ch'] != text[column-1]:
+            if current and current['c'] != text[column-1]:
               contents_changed = True
               break
             column += 1
+          if contents_changed:
+            break
 
   if (coords != None and len(coords) != buf_ln) or contents_changed:
     unfadeWin(winState)
@@ -523,21 +526,24 @@ def fadeWin(winState):
       column = column + 1
 
   if len(ids):
-    vim.command('let g:vimade_synids=['+','.join(ids)+']')
-    ids = vim.vars['vimade_synids']
+    if HAS_NVIM_COMMAND_OUTPUT:
+        ids = vim.funcs.nvim_command_output('echo [' + ','.join(ids) + ']')[1:-1].split(', ')
+    else:
+        vim.command('let g:vimade_synids=['+','.join(ids)+']')
+        ids = vim.vars['vimade_synids']
 
     highlights = highlighter.fade_ids(ids)
 
     for i in range(0, len(highlights)):
       (row, column, text) = gaps[i]
-      coords[row][column] = {'id': ids[i], 'hi': highlights[i], 'ch': text}
+      coords[row][column] = {'h': highlights[i], 'c': text}
 
   for (row, column, endCol) in to_eval:
     colors = coords[row - 1]
     while column <= endCol:
       current = colors[column - 1]
       if current and not winid in current:
-        hi_id = current['hi'][0]
+        hi_id = current['h'][0]
         current[winid] = True
         if not hi_id in matches:
            matches[hi_id] = [(row, column , 1)]
@@ -561,5 +567,6 @@ def fadeWin(winState):
 
     vim.command('let g:vimade_matches=['+','.join(matchadds)+']')
     winState.matches += vim.vars['vimade_matches']
+
 
   # print(str(len(to_eval))+ ' ' + str((time.time() - startTime) * 1000))
