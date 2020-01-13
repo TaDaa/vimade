@@ -24,7 +24,7 @@ def fromAnyToRGB(source):
 
 def getHi(id):
   if is_nvim:
-    if id == '0':
+    if id == '0' or id == 0 or not id:
       id = normal_id
     hi = list(map(lambda x: '' if x == '-1' else int(x), vim.eval('vimade#GetNvimHi('+id+')')))
     if hi[2] != '':
