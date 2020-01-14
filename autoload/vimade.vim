@@ -375,7 +375,7 @@ endfunction
 
 function! vimade#CheckWindows()
   call vimade#UpdateState()
-  if g:vimade_running && g:vimade_paused == 0
+  if g:vimade_running && g:vimade_paused == 0 && getcmdwintype() == ''
     exec g:vimade_py_cmd join([
         \ "from vimade import bridge",
         \ "bridge.update({'activeBuffer': str(vim.current.buffer.number), 'activeTab': '".tabpagenr()."', 'activeWindow': '".win_getid(winnr())."'})",
