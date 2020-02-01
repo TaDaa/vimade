@@ -125,7 +125,7 @@ def update(nextState = None):
     state.tab = tabnr
     state.diff = diff
 
-    if floating or win_disabled or buf_disabled:
+    if (floating and not vimade_fade_active) or win_disabled or buf_disabled:
       unfade[winid] = state
       continue
 
