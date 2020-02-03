@@ -20,16 +20,19 @@ def reset():
   HI_CACHE = {}
 
 #external - use cache / highlight ids
-def fade_ids(ids, force = False):
+def fade_ids(ids, force = False, clearable = False):
   result = ids[:]
   exprs = []
   i = 0
   for id in ids:
       id = str(id)
-      if not id in HI_CACHE or force:
+      if id[0] == 'c':
+        id = id.replace('c', '')
+      key_id = id if not clearable else ('c'+str(id))
+      if not key_id in HI_CACHE or force:
           hi = colors.getHi(id)
-          hi = __fade_id(id, hi[0], hi[1], hi[2], hi[3], hi[4])
-          result[i] = HI_CACHE[id] = hi
+          hi = __fade_id(id, hi[0], hi[1], hi[2], hi[3], hi[4], clearable)
+          result[i] = HI_CACHE[key_id] = hi
           
           group = hi[0]
           expr = 'hi ' + group
@@ -40,14 +43,14 @@ def fade_ids(ids, force = False):
           expr += hi[5] if hi[5] else ' guisp=NONE'
           exprs.append(expr)
       else:
-          result[i] = HI_CACHE[id]
+          result[i] = HI_CACHE[key_id]
       i += 1
   if len(exprs):
       vim.command('|'.join(exprs))
   return result
 
 #internal
-def __fade_id(id, ctermfg, ctermbg, guifg, guibg, guisp):
+def __fade_id(id, ctermfg, ctermbg, guifg, guibg, guisp, clearable = False):
 
   if ctermbg:
     if ctermbg == GLOBALS.base_bg_exp256 or ctermbg == GLOBALS.normal_bg256:
@@ -58,7 +61,10 @@ def __fade_id(id, ctermfg, ctermbg, guifg, guibg, guisp):
     ctermbg = ''
 
   if not ctermfg:
-    ctermfg = ' ctermfg='+GLOBALS.base_fade256
+    if clearable:
+      ctermfg = ''
+    else:
+      ctermfg = ' ctermfg='+GLOBALS.base_fade256
   else:
     ctermfg = ' ctermfg='+colors.interpolate256(ctermfg, GLOBALS.base_bg256, GLOBALS.fade_level)
 
@@ -71,7 +77,10 @@ def __fade_id(id, ctermfg, ctermbg, guifg, guibg, guisp):
     guibg = ''
 
   if not guifg:
-    guifg = ' guifg='+GLOBALS.base_fade24b
+    if clearable:
+      guifg = ''
+    else:
+      guifg = ' guifg='+GLOBALS.base_fade24b
   else:
     guifg = ' guifg='+colors.interpolate24b(guifg, GLOBALS.base_bg24b, GLOBALS.fade_level)
 

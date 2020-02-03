@@ -25,6 +25,8 @@ normal_id = None
 normalnc_id = None
 normal_bg256 = ''
 normal_bg24b = ''
+normal_fg256 = ''
+normal_fg24b = ''
 base_bg256 = ''
 base_bg24b = ''
 base_fg256 = ''
@@ -100,7 +102,7 @@ def update():
   if GLOBALS.signs_id == None:
     GLOBALS.signs_id = signsid
   if GLOBALS.signs_priority != signspriority:
-    GLOBALS.signs_priority = signspriority
+    GLOBALS.signs_priority = int(signspriority)
     if int(GLOBALS.features['has_sign_priority']):
       GLOBALS.signs_priority_text = ' priority=' + signspriority + ' '
 
@@ -140,7 +142,9 @@ def update():
       base_hi = [base_fill[i] if not x else x for i,x in enumerate(base_hi)]
     else:
       base_hi = base_fill
+    GLOBALS.normal_fg256 = base_hi[0]
     GLOBALS.normal_bg256 = base_hi[1]
+    GLOBALS.normal_fg24b = base_hi[2]
     GLOBALS.normal_bg24b = base_hi[3]
     if not basefg256:
       basefg256 = base_hi[0]
