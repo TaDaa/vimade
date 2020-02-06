@@ -131,10 +131,9 @@ vim and does have a performance cost.  By default this setting is enabled in
 gui vim and disabled for terminals.
 
                                                         *g:vimade.enablesigns*
-Enables sign fading.  This feature is disabled by default due to how signs
-affect performance, however this plugin is heavily optimized and alleviates
-most sign performance issues. Give it a go and open an issue if you see
-performance drops.  Default is 0.
+Enabled by default and causes signs to be faded when switching buffers. Only
+visible signs are faded. Use signsretentionperiod to control the duration that
+vimade checks for sign updates after switching buffers.
 
                                                             *g:vimade.signsid*
 The starting id that Vimade should use when creating new signs. By default Vim
@@ -184,6 +183,15 @@ This can be desirable when switching applications or TMUX splits.
     call feedkeys(":silent execute '!' | redraw!\<CR>")
  endif
 <
+
+                                                         *g:vimade.basegroups*
+Neovim only setting that specifies the basegroups/built-in highlight groups
+that will be faded using winhl when switching windows
+
+                                                   *g:vimade.enablebasegroups*
+Neovim only setting.  Enabled by default and allows basegroups/built-in
+highlight fading using winhl.  This allows fading of built-in highlights such
+as Folded, Search, etc.
 
 ==============================================================================
 COMMANDS                                                     *vimade-commands*

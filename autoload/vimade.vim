@@ -118,7 +118,9 @@ function! vimade#GetDefaults()
     let g:vimade_defaults.enablescroll = (g:vimade_features.has_gui_running || g:vimade_features.has_vimr) && !(g:vimade_features.has_gui_version)
 
     ""@setting vimade.enablesigns
-    "Enables sign fading.  This feature is disabled by default due to how signs affect performance, however this plugin is heavily optimized and alleviates most sign performance issues. Give it a go and open an issue if you see performance drops.  Default is 0.
+    "Enabled by default and causes signs to be faded when switching buffers.
+    "Only visible signs are faded.
+    "Use signsretentionperiod to control the duration that vimade checks for sign updates after switching buffers.
 
     let g:vimade_defaults.enablesigns = 0
 
@@ -183,6 +185,17 @@ function! vimade#GetDefaults()
     "<
 
     let g:vimade_defaults.enablefocusfading = 0
+
+
+    ""@setting vimade.basegroups
+    "Neovim only setting that specifies the basegroups/built-in highlight groups that will be faded using winhl when switching windows
+
+    let g:vimade_defaults.basegroups = ['Folded', 'Search', 'SignColumn', 'LineNr', 'CursorLine', 'CursorLineNr', 'DiffAdd', 'DiffChange', 'DiffDelete', 'DiffText', 'FoldColumn', 'Whitespace']
+
+    ""@setting vimade.enablebasegroups
+    "Neovim only setting.  Enabled by default and allows basegroups/built-in highlight fading using winhl.  This allows fading of built-in highlights such as Folded, Search, etc.
+
+    let g:vimade_defaults.enablebasegroups = 1
 
     let g:vimade_defaults_keys = keys(g:vimade_defaults)
     if exists('g:vimade_detect_term_colors')
@@ -331,6 +344,28 @@ function! vimade#Redraw()
     \ ], "\n")
     call vimade#CheckWindows()
   endif
+endfunction
+
+
+function! vimade#GetSigns (bufnr, rows)
+  let signs = get(getbufinfo(a:bufnr)[0],'signs',[])
+  let result = []
+  let g:rows = a:rows
+  for sign in signs
+    if has_key(a:rows, sign['lnum'])
+      call add(result, sign)
+    endif
+  endfor
+  return result
+
+  "let result = []
+  "let signs = get(getbufinfo(a:bufnr)[0],'signs',[])
+  "for sign in signs
+    "if sign['lnum'] >= a:startRow and sign['lnum'] <= a:endRow
+      "add(result, sign)
+    "endif
+  "endfor
+  "return result
 endfunction
 
 

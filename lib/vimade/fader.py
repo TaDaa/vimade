@@ -17,6 +17,7 @@ FADE = sys.modules[__name__]
 HAS_NVIM_WIN_GET_CONFIG = True if int(vim.eval('exists("*nvim_win_get_config")')) else False
 HAS_NVIM_COMMAND_OUTPUT = True if hasattr(vim, 'funcs') and hasattr(vim.funcs, 'nvim_command_output') else False
 
+
 windows = {}
 background = ''
 prevent = False
@@ -40,6 +41,10 @@ def update(nextState = None):
 
   #Check our globals/settings for changes
   status = GLOBALS.update()
+
+  if status & GLOBALS.BASEGROUPS:
+    if GLOBALS.enable_basegroups:
+      GLOBALS.basegroups_faded = highlighter.fade_names(GLOBALS.basegroups)
 
   if status & GLOBALS.DISABLE_SIGNS:
     unfadeAllSigns()
@@ -89,7 +94,7 @@ def update(nextState = None):
     tabnr = str(window.tabpage.number)
     if activeTab != tabnr:
       continue
-    (winid, diff, wrap, buftype, win_disabled, buf_disabled, vimade_fade_active, scrollbind, win_syntax, buf_syntax) = vim.eval('[win_getid('+winnr+'), gettabwinvar('+tabnr+','+winnr+',"&diff"), gettabwinvar('+tabnr+','+winnr+',"&wrap"), gettabwinvar('+tabnr+','+winnr+',"&buftype"), gettabwinvar('+tabnr+','+winnr+',"vimade_disabled"), getbufvar('+bufnr+', "vimade_disabled"),  g:vimade_fade_active, gettabwinvar('+tabnr+','+winnr+',"&scrollbind"), gettabwinvar('+tabnr+','+winnr+',"current_syntax"), gettabwinvar('+tabnr+','+winnr+',"&syntax")]')
+    (winid, diff, wrap, buftype, win_disabled, buf_disabled, vimade_fade_active, scrollbind, win_syntax, buf_syntax, tabstop) = vim.eval('[win_getid('+winnr+'), gettabwinvar('+tabnr+','+winnr+',"&diff"), gettabwinvar('+tabnr+','+winnr+',"&wrap"), gettabwinvar('+tabnr+','+winnr+',"&buftype"), gettabwinvar('+tabnr+','+winnr+',"vimade_disabled"), getbufvar('+bufnr+', "vimade_disabled"),  g:vimade_fade_active, gettabwinvar('+tabnr+','+winnr+',"&scrollbind"), gettabwinvar('+tabnr+','+winnr+',"current_syntax"), gettabwinvar('+tabnr+','+winnr+',"&syntax"), gettabwinvar('+tabnr+','+winnr+',"&tabstop")]')
     syntax = win_syntax if win_syntax else buf_syntax
     floating = vim.eval('nvim_win_get_config('+str(winid)+')') if HAS_NVIM_WIN_GET_CONFIG else False
     if floating and 'relative' in floating:
@@ -124,6 +129,9 @@ def update(nextState = None):
     state.number = winnr
     state.tab = tabnr
     state.diff = diff
+
+    if state.tabstop != tabstop:
+      state.tabstop = int(tabstop)
 
     if (floating and not vimade_fade_active) or win_disabled or buf_disabled:
       unfade[winid] = state
@@ -163,6 +171,9 @@ def update(nextState = None):
       state.cursor = (cursor[0], cursor[1])
       if not hasActiveBuffer:
         fade[winid] = state
+      state.size_changed = True
+    else:
+      state.size_changed = False
     if state.buffer != bufnr:
       state.buffer = bufnr
     if state.hasActiveBuffer != hasActiveBuffer:
@@ -197,7 +208,8 @@ def update(nextState = None):
         if winid in fade:
           del fade[winid]
 
-    nextBuffers[bufnr] = nextWindows[winid] = True
+    nextWindows[winid] = state
+    nextBuffers[bufnr] = True
 
   if activeDiff and len(diffs) > 1:
     for state in diffs:
@@ -213,17 +225,21 @@ def update(nextState = None):
 
   for win in fade.values():
     fadeWin(win)
+    if GLOBALS.enable_basegroups:
+      fadeBase(win)
     if not FADE.buffers[win.buffer].faded:
-      fade_signs.append(win.buffer)
+      fade_signs.append(win)
       FADE.buffers[win.buffer].faded = time.time()
     win.faded = True
   for win in unfade.values():
     if win.faded:
       unfadeWin(win)
       win.faded = False
+      if GLOBALS.enable_basegroups:
+        unfadeBase(win)
       if not win.buffer in unfade_signs:
         FADE.buffers[win.buffer].faded = 0
-        unfade_signs.append(win.buffer)
+        unfade_signs.append(FADE.buffers[win.buffer])
 
   expr = []
   ids = []
@@ -256,17 +272,21 @@ def update(nextState = None):
   if GLOBALS.enable_signs:
     now = time.time()
     signs_retention_period = GLOBALS.signs_retention_period
-    for bufnr in nextBuffers:
-      if bufnr in buffers:
+
+    sign_buffers = {}
+    for win in nextWindows.values():
+      bufnr = win.buffer
+      if bufnr in buffers and win.faded:
         buf = buffers[bufnr]
-        if buf.faded and buf.faded != True and not bufnr in fade_signs:
-            fade_signs.append(bufnr)
+        if ((buf.faded and buf.faded != True) or (bufnr in sign_buffers) or win.size_changed) and win not in fade_signs:
+            sign_buffers[bufnr] = True
+            fade_signs.append(win)
             if signs_retention_period != -1 and (now - buf.faded) * 1000 >= signs_retention_period:
               buf.faded = True
 
     if len(fade_signs) or len(unfade_signs):
       if len(fade_signs):
-        signs.fade_bufs(fade_signs)
+        signs.fade_wins(fade_signs, FADE.buffers)
       signs.unfade_bufs(unfade_signs)
   returnToWin()
   FADE.prevent = False
@@ -281,13 +301,8 @@ def returnToWin():
 
 def unfadeAllSigns():
   currentBuffers = buffers
-  bufs = []
-  for bufState in currentBuffers.values():
-    if bufState.faded:
-      bufState.faded = 0
-      bufs.append(bufState.bufnr)
-  if len(bufs):
-    signs.unfade_bufs(bufs)
+  if len(currentBuffers):
+    signs.unfade_bufs(currentBuffers.values())
 
 def unfadeAll():
   FADE.startWin = FADE.currentWin = vim.eval('win_getid('+str(vim.current.window.number)+')')
@@ -340,7 +355,6 @@ def fadeWin(winState):
   startTime = time.time()
   win = winState.win
   winid = winState.id
-  # winnr = winState.number
   width = winState.width
   height = winState.height
   is_explorer = winState.is_explorer
@@ -391,25 +405,26 @@ def fadeWin(winState):
   visible_rows = vim.vars['vimade_visrows']
   buf = buf[visible_rows[0][0]-1:visible_rows[len(visible_rows)-1][0]]
   texts = []
+  winState.visible_rows = {} 
 
-  # target_height = endRow - startRow
   j = -1
-  # n = 0
   for (row, fold) in visible_rows:
     j += 1
-    if rows_so_far > target_height:
+    if rows_so_far > target_height or j >= len(buf):
       break
     row = int(row)
     fold = int(fold)
-    if fold == -1:
+    if fold > -1:
+      j += fold - row
+      rows_so_far += 1
+    elif fold == -1:
+      winState.visible_rows[row] = 1
       rawText = buf[j]
-      text = bytes(rawText, 'utf-8', 'replace') if IS_V3 else rawText.decode('utf-8')
+      text = bytes(rawText, 'utf-8', 'replace') if IS_V3 else rawText
       text_ln = len(text)
       if text_ln > 0:
         if is_explorer:
           to_eval.append((row, 1, text_ln))
-          # buf[n] = text
-          # n += 1
           texts.append(text)
           rows_so_far += 1
           continue
@@ -427,28 +442,30 @@ def fadeWin(winState):
               mCol = text_ln if text_ln < chars_left else chars_left 
               sCol = 1
             if row >= topline:
-                # print((mCol - startCol), width, endRow, startRow, target_height)
                 rows_so_far += math.floor((mCol - startCol) / width)
         else:
           mCol = maxCol if maxCol < text_ln else text_ln
           sCol = startCol
           rows_so_far += 1
         if IS_V3:
-          adjustStart = rawText[0:cursorCol]
-          adjustStart = len(bytes(adjustStart, 'utf-8', 'surrogateescape')) - len(adjustStart)
-          adjustEnd = rawText[cursorCol:mCol]
-          adjustEnd = len(bytes(adjustEnd, 'utf-8', 'surrogateescape')) - len(adjustEnd)
+          t1 = text[0:sCol]
+          t2 = t1.replace(bytes('\t', 'utf-8'),bytes(' ', 'utf-8') * winState.tabstop)
+
+          adjustStart = len(t2) - len(t1)
+          #TODO can adjustEnd be accurately calculated? Tab rules seem to cause breakage -- safer to leave at 0
+          adjustEnd = 0
         else:
-          adjustStart = text[0:cursorCol]
-          adjustStart = len(adjustStart.encode('utf-8')) - len(adjustStart)
-          adjustEnd = text[cursorCol:mCol]
-          adjustEnd = len(adjustEnd.encode('utf-8')) - len(adjustEnd)
+          t1 = rawText[0:sCol]
+          t2 = t1.replace('\t',' ' * winState.tabstop)
+
+          adjustStart = len(t2) - len(t1)
+          #TODO can adjustEnd be accurately calculated? Tab rules seem to cause breakage -- safer to leave at 0
+          adjustEnd = 0
+
         sCol -= adjustStart
         sCol = max(sCol, 1)
         mCol = min(mCol + adjustEnd, text_ln)
         to_eval.append((row, sCol, mCol))
-        # buf[n] = text
-        # n += 1
         texts.append(text)
 
   bufState = FADE.buffers[winState.buffer]
@@ -465,15 +482,12 @@ def fadeWin(winState):
     for (row, startCol, endCol) in to_eval:
       text = texts[j]
       j += 1
-      # text_ln = len(text)
       column = startCol
       index = row - 1
       if index >= len(coords):
         contents_changed = True
         break
       colors = coords[index]
-      # if colors == None:
-        # colors = coords[index] = [None] * text_ln
       if colors:
           while column <= endCol:
             #get syntax id and cache
@@ -499,10 +513,7 @@ def fadeWin(winState):
     coords = bufState.coords[winState.syntax] = [None] * buf_ln
 
   ids = []
-  # t_ids = ''
   gaps = []
-  # gaps = [None] * len(to_eval) * width * 100
-  # gap_i = 0
   j = 0
   for (row, column, endCol) in to_eval:
     text = texts[j]
@@ -515,7 +526,6 @@ def fadeWin(winState):
     colors = coords[index]
     if colors == None:
       colors = coords[index] = [None] * text_ln
-    # str_row = str(row)
 
     while column <= endCol:
       #get syntax id and cache
@@ -569,5 +579,31 @@ def fadeWin(winState):
     vim.command('let g:vimade_matches=['+','.join(matchadds)+']')
     winState.matches += vim.vars['vimade_matches']
 
+def fadeBase(winState):
+  winid = winState.id
+  if FADE.currentWin != winid:
+    FADE.currentWin = winid
+    vim.command('noautocmd call win_gotoid('+winid+')')
+  i = 0
+  hl = ''
+  for base in GLOBALS.basegroups:
+    if i > 0:
+      hl += ','
+    hl += base + ':' + GLOBALS.basegroups_faded[i][0]
+    i += 1
+
+  last_winhl = vim.eval('gettabwinvar('+winState.tab+','+winState.number+',"&winhl")')
+  if last_winhl.find('vimade_') == -1:
+    winState.last_winhl = last_winhl
+  vim.command('setlocal winhl='+hl)
+
+
+
+def unfadeBase(winState):
+  winid = winState.id
+  if FADE.currentWin != winid:
+    FADE.currentWin = winid
+    vim.command('noautocmd call win_gotoid('+winid+')')
+  vim.command('setlocal winhl=' + winState.last_winhl)
 
   # print(str(len(to_eval))+ ' ' + str((time.time() - startTime) * 1000))

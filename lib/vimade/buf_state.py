@@ -4,3 +4,4 @@ class BufState:
     self.last = ''
     self.faded = 0
     self.bufnr = bufnr
+    self.signs = []

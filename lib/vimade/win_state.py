@@ -13,6 +13,7 @@ class WinState:
     self.invalid = False
     self.cursor = (-1, -1)
     self.buffer = None
+    self.tabstop = None
     self.tab = None
     self.buftype = None
     self.faded = False
@@ -21,3 +22,6 @@ class WinState:
     self.syntax =  None
     self.clear_syntax = False
     self.name = ''
+    self.size_changed = False
+    visible_rows = []
+    self.last_winhl = ''

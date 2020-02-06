@@ -40,6 +40,9 @@ base_fg24b_last = '';
 term_response = False
 enable_scroll = False
 enable_signs = False
+basegroups = []
+basegroups_faded = []
+enable_basegroups = False
 signs_retention_period = 0
 signs_id = None
 signs_priority = None
@@ -55,6 +58,7 @@ FULL_INVALIDATE = 2
 RECALCULATE = 4
 ENABLE_SIGNS = 8
 DISABLE_SIGNS = 16
+BASEGROUPS = 32
 
 def getInfo():
   global_vars = vars(GLOBALS)
@@ -74,6 +78,8 @@ def update():
   background = allGlobals[1]
   colorscheme = allGlobals[2]
   termguicolors = int(allGlobals[3]) == 1
+  basegroups = nextGlobals['basegroups']
+  enablebasegroups = int(nextGlobals['enablebasegroups'])
   fadelevel = float(nextGlobals['fadelevel'])
   rowbufsize = int(nextGlobals['rowbufsize'])
   colbufsize = int(nextGlobals['colbufsize'])
@@ -133,6 +139,13 @@ def update():
   if GLOBALS.termguicolors != termguicolors:
     GLOBALS.termguicolors = termguicolors
     returnState |= RECALCULATE
+
+  if is_nvim and GLOBALS.enable_basegroups != enablebasegroups:
+    GLOBALS.enable_basegroups = enablebasegroups
+    returnState |= BASEGROUPS
+  if is_nvim and ','.join(GLOBALS.basegroups) != ','.join(basegroups):
+    GLOBALS.basegroups = basegroups
+    returnState |= BASEGROUPS
 
   if normalid or normalncid:
     base_hi = None

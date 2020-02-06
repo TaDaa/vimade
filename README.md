@@ -93,7 +93,7 @@ let g:vimade = {
   \ "usecursorhold": 0, "0 is default, but will automatically set to 1 for Windows GVIM
   \ "detecttermcolors": 0,
   \ 'enablescroll': 1, "1 is the default for gui vim, but will automatically set to 0 for terminals and Windows GVIM.
-  \ 'enablesigns': 0,
+  \ 'enablesigns': 1,
   \ 'signsid': 13100,
   \ 'signsretentionperiod': 4000,
   \ 'fademinimap': 1,
@@ -101,6 +101,8 @@ let g:vimade = {
   \ 'groupdiff': 1,
   \ 'groupscrollbind': 0,
   \ 'enablefocusfading': 0,
+  \ 'enablebasegroups': 1,
+  \ 'basegroups': ['Folded', 'Search', 'SignColumn', 'LineNr', 'CursorLine', 'CursorLineNr', 'DiffAdd', 'DiffChange', 'DiffDelete', 'DiffText', 'FoldColumn', 'Whitespace']
 }
 ```
 - **vimade.normalid** - if not specified, the normalid is determined when vimade is first loaded.  normalid provides the id of the "Normal" highlight which is used to calculate fading.  You can override this config with another highlight group.
@@ -113,7 +115,7 @@ let g:vimade = {
 - **vimade.checkinterval** - the amount of time in milliseconds that vimade should check the screen for changes.  This config is mainly used to detect resize and scroll changes that occur on inactive windows. Checkinterval does nothing on gvim, if you want to control the refresh time, see 'h updatetime'. Default is 100.  
 - **vimade.usecursorhold** -  disables the timer running in the background and instead relies `OnCursorHold` and `updatetime` (see h:updatetime).  The default value is `0` except on Windows GVIM, which defaults to `1` due to the timer breaking movements.  If you find that the timer is causing performance problems or other issues you can disable it by setting this option to `1`. 
 - **vimade.detecttermcolors** - detect the terminal background and foreground colors.  This will work for Vim8 + iTerm, Tilix, Kitty, Gnome, Rxvt, and other editors that support the following query (```\033]11;?\007``` or ```\033]11;?\033\\```).  Default is 0.  Enable this at your own risk as it can cause unwanted side effects.
-- **vimade.enablesigns** - Enables sign fading.  This feature is disabled by default due to how signs affect performance, however these are performance impacts are mostly solved in the latest versions of vim. 
+- **vimade.enablesigns** - Enabled by default and causes signs to be faded when switching buffers.  Only visible signs are faded.  Use signsretentionperiod to control the duration that vimade checks for sign updates after switching buffers.
 - **vimade.enablescroll** - Enables fading while scrolling inactive windows.  This is only useful in gui vim and does have a performance cost.  By default this setting is enabled in gui vim and disabled for terminals.
 - **vimade.signsid** - The starting id that Vimade should use when creating new signs. By default Vim requires numeric values to create signs and its possible that collisions may occur between plugins.  If you need to override this value for compatibility, please open an issue as well.  Default is 13100.
 - **vimade.signspriority** - Controls the signs fade priority. You may need to change this value if you find that not all signs are fading properly.  Please also open a defect if you need to tweak this value as Vimade strives to minimize manual configuration where possible.  Default is 31.
@@ -123,7 +125,9 @@ let g:vimade = {
 - **vimade.groupdiff** - Controls whether or not diffs will fade/unfade together.  If you want diffs to be treated separately, set this value to 0. Default is 1.
 - **vimade.groupscrollbind** - Controls whether or not scrollbound windows will fade/unfade together.  If you want scrollbound windows to unfade together, set this to 1.  Default is 0.
 - **vimade.enablefocusfading** - Fades the current active window on focus blur and unfades when focus gained.  This can be desirable when switching applications or TMUX splits.  Default value is 0.   
-
+- **vimade.enablebasegroups** - Neovim only setting.  Enabled by default and allows basegroups/built-in highlight fading using winhl.  This allows fading of built-in highlights such as Folded, Search, etc.
+- **vimade.basegroups** - Neovim only setting that specifies the basegroups/built-in highlight groups that will be faded using winhl when switching windows
+  
   *Requires additional setup for terminal and tmux:*
 
     1. Install `tmux-plugins/vim-tmux-focus-events`

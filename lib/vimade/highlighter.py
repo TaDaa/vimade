@@ -3,6 +3,7 @@ from vimade import global_state as GLOBALS
 from vimade import colors
 
 HI_CACHE = {}
+NAME_CACHE = {}
 
 def pre_check():
   values = list(HI_CACHE.values())
@@ -14,24 +15,64 @@ def pre_check():
       recalculate()
 
 def recalculate():
-  fade_ids(list(HI_CACHE.keys()), True)
+  keys = list(HI_CACHE.keys())
+  clearable = []
+  normal = []
+  for key in keys:
+    if key:
+      if key[0] == 'c':
+        clearable.append(key)
+      else:
+        normal.append(key)
+
+  fade_ids(normal, True)
+  fade_ids(clearable, True, True)
 
 def reset():
   HI_CACHE = {}
 
 #external - use cache / highlight ids
+def fade_names(names, force = False, clearable = False):
+  ipc = []
+  checks = {}
+  i = 0
+  ids = []
+  for name in names:
+    if not name in NAME_CACHE:
+      if not name in checks:
+        checks[name] = i
+        ipc.append('hlID("'+name+'")')
+        i += 1
+
+  if len(ipc):
+    ipc = vim.eval('[' + ','.join(ipc) + ']')
+
+  i = 0
+  for name in names:
+    if not name in NAME_CACHE:
+      id = ipc[checks[name]]
+      NAME_CACHE[name] = id
+      ids.append(id)
+    else:
+      ids.append(NAME_CACHE[name])
+  return fade_ids(ids, force, clearable)
+
+
+
 def fade_ids(ids, force = False, clearable = False):
   result = ids[:]
   exprs = []
   i = 0
   for id in ids:
       id = str(id)
+      if not id:
+        continue
       if id[0] == 'c':
         id = id.replace('c', '')
       key_id = id if not clearable else ('c'+str(id))
       if not key_id in HI_CACHE or force:
           hi = colors.getHi(id)
-          hi = __fade_id(id, hi[0], hi[1], hi[2], hi[3], hi[4], clearable)
+          hi = __fade_id(key_id, hi[0], hi[1], hi[2], hi[3], hi[4], clearable)
           result[i] = HI_CACHE[key_id] = hi
           
           group = hi[0]
