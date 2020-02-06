@@ -96,7 +96,7 @@ def fade_wins(wins, fade_bufs):
         sign['bufnr'] = bufnr
         lnum = sign['lnum']
         name = sign['name']
-        if GLOBALS.features['has_sign_priority']:
+        if int(GLOBALS.features['has_sign_priority']):
           if not 'priority' in sign:
             priority = GLOBALS.signs_priority
           else:
@@ -113,6 +113,7 @@ def fade_wins(wins, fade_bufs):
           sign['priority_text'] = ' priority='+str(sign['priority'])
         else:
           sign['priority'] = ''
+          sign['priority_text'] = ''
         if lnum in lines and name in lines[lnum] and (lines[lnum][name] == sign['priority'] or lines[lnum][name] == False):
           lines[lnum][name] = False
         else:
@@ -201,6 +202,7 @@ def fade_wins(wins, fade_bufs):
         next_id = GLOBALS.signs_id
         GLOBALS.signs_id = GLOBALS.signs_id + 1
       fade_bufs[sign['bufnr']].signs.append(str(next_id))
+      # print('sign place ' +  str(next_id) + GLOBALS.signs_group_text + 'line='+str(sign['lnum']) + ' name=vimade_' + sign['name'] + sign['priority_text'] + ' buffer=' + str(sign['bufnr']))
       PLACES.append('sign place ' +  str(next_id) + GLOBALS.signs_group_text + 'line='+str(sign['lnum']) + ' name=vimade_' + sign['name'] + sign['priority_text'] + ' buffer=' + str(sign['bufnr']))
   # print(PLACES)
 
