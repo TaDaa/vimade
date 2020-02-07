@@ -118,11 +118,12 @@ function! vimade#GetDefaults()
     let g:vimade_defaults.enablescroll = (g:vimade_features.has_gui_running || g:vimade_features.has_vimr) && !(g:vimade_features.has_gui_version)
 
     ""@setting vimade.enablesigns
-    "Enabled by default and causes signs to be faded when switching buffers.
-    "Only visible signs are faded.
+    "Enabled by default for vim/nvim versions that support sign priority and causes signs to be faded when switching buffers.
+    "Only visible signs are faded. This feature can cause performance issues
+    "on older nvim/vim versions that don't support sign priority. 
     "Use signsretentionperiod to control the duration that vimade checks for sign updates after switching buffers.
 
-    let g:vimade_defaults.enablesigns = 0
+    let g:vimade_defaults.enablesigns = g:vimade_features.has_sign_priority
 
     ""@setting vimade.signsid
     "The starting id that Vimade should use when creating new signs. By

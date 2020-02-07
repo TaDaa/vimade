@@ -53,7 +53,7 @@
 - [X] Wrapped Text
 - [X] Folded Text (detects folded rows and fades above/below -- see VimadeOverrideFolded for highlight recommendations on hi Folded)
 - [X] :ownsyntax support
-- [X] Sign column support (disabled by default)
+- [X] Sign column support 
 - [X] Vim Documentation/Help
 - [ ] Secondary buffer window highlighting
 
@@ -93,7 +93,7 @@ let g:vimade = {
   \ "usecursorhold": 0, "0 is default, but will automatically set to 1 for Windows GVIM
   \ "detecttermcolors": 0,
   \ 'enablescroll': 1, "1 is the default for gui vim, but will automatically set to 0 for terminals and Windows GVIM.
-  \ 'enablesigns': 1,
+  \ 'enablesigns': g:vimade_features.has_signs_priority, "enabled for vim/nvim versions that support sign priority.  Older vim/nvim versions may suffer performance issues
   \ 'signsid': 13100,
   \ 'signsretentionperiod': 4000,
   \ 'fademinimap': 1,
@@ -115,7 +115,7 @@ let g:vimade = {
 - **vimade.checkinterval** - the amount of time in milliseconds that vimade should check the screen for changes.  This config is mainly used to detect resize and scroll changes that occur on inactive windows. Checkinterval does nothing on gvim, if you want to control the refresh time, see 'h updatetime'. Default is 100.  
 - **vimade.usecursorhold** -  disables the timer running in the background and instead relies `OnCursorHold` and `updatetime` (see h:updatetime).  The default value is `0` except on Windows GVIM, which defaults to `1` due to the timer breaking movements.  If you find that the timer is causing performance problems or other issues you can disable it by setting this option to `1`. 
 - **vimade.detecttermcolors** - detect the terminal background and foreground colors.  This will work for Vim8 + iTerm, Tilix, Kitty, Gnome, Rxvt, and other editors that support the following query (```\033]11;?\007``` or ```\033]11;?\033\\```).  Default is 0.  Enable this at your own risk as it can cause unwanted side effects.
-- **vimade.enablesigns** - Enabled by default and causes signs to be faded when switching buffers.  Only visible signs are faded.  Use signsretentionperiod to control the duration that vimade checks for sign updates after switching buffers.
+- **vimade.enablesigns** - Enabled by default for vim/nvim versions that support sign priority and causes signs to be faded when switching buffers.  Only visible signs are faded.  This feature can cause performance issues on older vim/nvim versions that don't support sign priority.  Use signsretentionperiod to control the duration that vimade checks for sign updates after switching buffers.
 - **vimade.enablescroll** - Enables fading while scrolling inactive windows.  This is only useful in gui vim and does have a performance cost.  By default this setting is enabled in gui vim and disabled for terminals.
 - **vimade.signsid** - The starting id that Vimade should use when creating new signs. By default Vim requires numeric values to create signs and its possible that collisions may occur between plugins.  If you need to override this value for compatibility, please open an issue as well.  Default is 13100.
 - **vimade.signspriority** - Controls the signs fade priority. You may need to change this value if you find that not all signs are fading properly.  Please also open a defect if you need to tweak this value as Vimade strives to minimize manual configuration where possible.  Default is 31.

@@ -131,8 +131,10 @@ vim and does have a performance cost.  By default this setting is enabled in
 gui vim and disabled for terminals.
 
                                                         *g:vimade.enablesigns*
-Enabled by default and causes signs to be faded when switching buffers. Only
-visible signs are faded. Use signsretentionperiod to control the duration that
+Enabled by default for vim/nvim versions that support sign priority and causes
+signs to be faded when switching buffers. Only visible signs are faded. This
+feature can cause performance issues on older nvim/vim versions that don't
+support sign priority.  Use signsretentionperiod to control the duration that
 vimade checks for sign updates after switching buffers.
 
                                                             *g:vimade.signsid*
