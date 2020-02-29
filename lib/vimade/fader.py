@@ -554,7 +554,7 @@ def fadeWin(winState):
     colors = coords[row - 1]
     while column <= endCol:
       current = colors[column - 1]
-      if current and not winid in current:
+      if current and len(current['h']) > 0 and not winid in current:
         hi_id = current['h'][0]
         current[winid] = True
         if not hi_id in matches:
