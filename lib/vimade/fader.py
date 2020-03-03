@@ -358,13 +358,14 @@ def fadeWin(winState):
   width = winState.width
   height = winState.height
   is_explorer = winState.is_explorer
+  is_minimap = winState.is_minimap
   cursor = winState.cursor
   wrap = winState.wrap
   buf = win.buffer
   cursorCol = cursor[1]
   cursorRow = cursor[0]
   matches = {}
-  if winState.is_minimap:
+  if is_minimap:
     fade_priority='9'
   else:
     fade_priority = GLOBALS.fade_priority
@@ -423,7 +424,7 @@ def fadeWin(winState):
       text = bytes(rawText, 'utf-8', 'replace') if IS_V3 else rawText
       text_ln = len(text)
       if text_ln > 0:
-        if is_explorer:
+        if is_explorer or is_minimap:
           to_eval.append((row, 1, text_ln))
           texts.append(text)
           rows_so_far += 1
