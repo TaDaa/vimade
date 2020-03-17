@@ -541,10 +541,7 @@ def fadeWin(winState):
         vim.funcs.nvim_command('function! VimadeSynIDs() \n return ['+','.join(ids)+'] \n endfunction')
         ids = vim.funcs.nvim_command_output('echo VimadeSynIDs()')[1:-1].split(', ')
     else:
-      ids = vim.eval('[' + ','.join(ids) + ']')
-      # vim.command('let g:vimade_synids=['+','.join(ids)+']')
-      # ids = vim.vars['vimade_synids']
-
+        ids = vim.eval('[' + ','.join(ids) + ']')
     highlights = highlighter.fade_ids(ids)
 
     for i in range(0, len(highlights)):
