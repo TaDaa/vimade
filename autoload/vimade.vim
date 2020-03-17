@@ -241,6 +241,9 @@ function! vimade#BufDisable()
 endfunction
 
 function! vimade#Disable()
+  if winnr() == 0
+    return
+  endif
   "disable vimade
   let g:vimade_running = 0
   call vimade#StopTimer()
@@ -303,20 +306,34 @@ function! vimade#OverrideAll()
   call vimade#OverrideNonText()
 endfunction
 
-function! vimade#FocusGained()
+function! vimade#Pause()
+  let g:vimade_paused=1
+endfunction
+
+function! vimade#Unpause()
   let g:vimade_paused=0
+endfunction
+
+function! vimade#FocusGained()
+  call vimade#Unpause()
   call vimade#InvalidateSigns()
   if g:vimade.enablefocusfading
     call vimade#UnfadeActive()
   endif
 endfunction
+
 function! vimade#FocusLost()
   if g:vimade.enablefocusfading
     call vimade#FadeActive()
   endif
-  let g:vimade_paused=1
+  call vimade#Pause()
 endfunction
+
 function! vimade#InvalidateSigns()
+  "prevent if inside popup window
+  if winnr() == 0
+    return
+  endif
   if g:vimade_running && g:vimade_paused == 0
     exec g:vimade_py_cmd join([
         \ "from vimade import bridge",
@@ -337,6 +354,10 @@ function! vimade#Recalculate()
 endfunction
 
 function! vimade#Redraw()
+  "prevent if inside popup window
+  if winnr() == 0
+    return
+  endif
   if g:vimade_running && g:vimade_paused == 0
     exec g:vimade_py_cmd join([
         \ "from vimade import bridge",
@@ -411,6 +432,10 @@ endfunction
 
 function! vimade#CheckWindows()
   call vimade#UpdateState()
+  "prevent if inside popup window
+  if winnr() == 0
+    return
+  endif
   if g:vimade_running && g:vimade_paused == 0 && getcmdwintype() == ''
     exec g:vimade_py_cmd join([
         \ "from vimade import bridge",
@@ -420,6 +445,10 @@ function! vimade#CheckWindows()
 endfunction
 
 function! vimade#softInvalidateBuffer(bufnr)
+  "prevent if inside popup window
+  if winnr() == 0
+    return
+  endif
   "Don't check paused condition because the application may have not been regained and triggered FocusGained event
   if g:vimade_running
     exec g:vimade_py_cmd join([
