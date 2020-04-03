@@ -221,8 +221,10 @@ function! vimade#Enable()
 endfunction
 
 function! vimade#WinEnable()
-  unlet w:vimade_disabled
-  call vimade#CheckWindows()
+  if exists('w:vimade_disabled')
+    unlet w:vimade_disabled
+    call vimade#CheckWindows()
+  endif
 endfunction
 
 function! vimade#WinDisable()
@@ -231,8 +233,10 @@ function! vimade#WinDisable()
 endfunction
 
 function! vimade#BufEnable()
-  unlet b:vimade_disabled
-  call vimade#CheckWindows()
+  if exists('b:vimade_disabled')
+    unlet b:vimade_disabled
+    call vimade#CheckWindows()
+  endif
 endfunction
 
 function! vimade#BufDisable()
@@ -433,7 +437,7 @@ endfunction
 function! vimade#CheckWindows()
   call vimade#UpdateState()
   "prevent if inside popup window
-  if winnr() == 0
+  if winnr() == 0 || pumvisible()
     return
   endif
   if g:vimade_running && g:vimade_paused == 0 && getcmdwintype() == ''
