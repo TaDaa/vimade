@@ -310,6 +310,11 @@ def unfadeAll():
   for winState in currentWindows.values():
       if winState.faded:
         winState.faded = False
+        if GLOBALS.enable_basegroups:
+          unfadeBase(winState)
+        if winState.buffer in FADE.buffers:
+          bufState = FADE.buffers[winState.buffer]
+          bufState.faded = False
         unfadeWin(winState)
   unfadeAllSigns()
   returnToWin()
