@@ -374,17 +374,14 @@ function! vimade#Redraw()
   endif
 endfunction
 
-function! vimade#GetSigns (bufs)
+function! vimade#GetSigns (bufnr, rows)
+  let signs = get(getbufinfo(a:bufnr)[0],'signs',[])
   let result = []
-  for [bufnr, rows] in a:bufs
-    let set = []
-    let signs = get(getbufinfo(bufnr)[0],'signs',[])
-    call add(result, set)
-    for sign in signs
-      if has_key(rows, sign['lnum'])
-        call add(set, sign)
-      endif
-    endfor
+  let g:rows = a:rows
+  for sign in signs
+    if has_key(a:rows, sign['lnum'])
+      call add(result, sign)
+    endif
   endfor
   return result
 endfunction

@@ -64,7 +64,7 @@ def fade_wins(wins, fade_bufs):
 
   if len(bufs) == 0:
     return
-  infos = util.eval_and_return('vimade#GetSigns(['+ ','.join([('['+ x[0] +','+str(x[1])+']') for x in bufs])+'])')
+  infos = util.eval_and_return('[' + ','.join(['vimade#GetSigns('+x[0]+','+ str(x[1]) + ')' for x in bufs ]) + ']' )
   changes = []
   requests = []
   request_names = []

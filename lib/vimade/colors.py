@@ -2,7 +2,7 @@ import math
 import vim
 from vimade.term_256 import RGB_256, LOOKUP_256_RGB
 from vimade import util
-(is_nvim, normal_id) = vim.eval('[has("nvim"), hlID("Normal")]')
+(is_nvim, normal_id) = util.eval_and_return('[has("nvim"), hlID("Normal")]')
 is_nvim = int(is_nvim)
 
 

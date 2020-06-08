@@ -74,7 +74,7 @@ def update(nextState = None):
   fade = {}
   unfade = {}
 
-  FADE.startWin = FADE.currentWin = util.eval_and_return('win_getid('+str(vim.current.window.number)+')')
+  FADE.startWin = FADE.currentWin = util.mem_safe_eval('win_getid('+str(vim.current.window.number)+')')
   activeBuffer = nextState["activeBuffer"]
   activeWindow = nextState['activeWindow']
   activeTab = nextState['activeTab']
