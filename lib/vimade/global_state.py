@@ -2,12 +2,13 @@ import vim
 import sys
 from vimade import colors
 from vimade.term_256 import RGB_256
+from vimade import util
 
 GLOBALS = sys.modules[__name__]
 
-(is_nvim, is_term, original_background) = vim.eval('[has("nvim"), has("gui_running"), &background]')
+(is_nvim, is_term, original_background) = util.eval_and_return('[has("nvim"), has("gui_running"), &background]')
 (term_fg, term_bg) = ('#FFFFFF','#000000') if 'dark' in original_background else ('#000000', '#FFFFFF')
-features = vim.eval('g:vimade_features')
+features = util.eval_and_return('g:vimade_features')
 is_nvim = int(is_nvim) == 1
 is_term = int(is_term) == 0
 fade_level = None
@@ -73,7 +74,7 @@ def getInfo():
 
 def update():
   returnState = READY
-  allGlobals = vim.eval('[g:vimade, &background, execute(":colorscheme"), &termguicolors]')
+  allGlobals = util.eval_and_return('[g:vimade, &background, execute(":colorscheme"), &termguicolors]')
   nextGlobals = allGlobals[0]
   background = allGlobals[1]
   colorscheme = allGlobals[2]

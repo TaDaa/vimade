@@ -1,4 +1,5 @@
 import vim
+from vimade import util
 from vimade import global_state as GLOBALS
 from vimade import colors
 
@@ -10,7 +11,7 @@ def pre_check():
   if len(values):
     sample = values[0]
 
-    result = int(vim.eval('hlexists("'+sample[0]+'")'))
+    result = int(util.eval_and_return('hlexists("'+sample[0]+'")'))
     if not result:
       recalculate()
 
@@ -45,7 +46,7 @@ def fade_names(names, force = False, clearable = False):
         i += 1
 
   if len(ipc):
-    ipc = vim.eval('[' + ','.join(ipc) + ']')
+    ipc = util.eval_and_return('[' + ','.join(ipc) + ']')
 
   i = 0
   for name in names:

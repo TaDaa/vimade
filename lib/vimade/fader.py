@@ -6,6 +6,7 @@ if (sys.version_info > (3, 0)):
 import vim
 import math
 import time
+from vimade import util
 from vimade import highlighter
 from vimade import signs
 from vimade import colors
@@ -14,7 +15,7 @@ from vimade.win_state import WinState
 from vimade import global_state as GLOBALS
 
 FADE = sys.modules[__name__]
-HAS_NVIM_WIN_GET_CONFIG = True if int(vim.eval('exists("*nvim_win_get_config")')) else False
+HAS_NVIM_WIN_GET_CONFIG = True if int(util.eval_and_return('exists("*nvim_win_get_config")')) else False
 HAS_NVIM_COMMAND_OUTPUT = True if hasattr(vim, 'funcs') and hasattr(vim.funcs, 'nvim_command_output') else False
 
 
@@ -73,7 +74,7 @@ def update(nextState = None):
   fade = {}
   unfade = {}
 
-  FADE.startWin = FADE.currentWin = vim.eval('win_getid('+str(vim.current.window.number)+')')
+  FADE.startWin = FADE.currentWin = util.eval_and_return('win_getid('+str(vim.current.window.number)+')')
   activeBuffer = nextState["activeBuffer"]
   activeWindow = nextState['activeWindow']
   activeTab = nextState['activeTab']
@@ -94,9 +95,9 @@ def update(nextState = None):
     tabnr = str(window.tabpage.number)
     if activeTab != tabnr:
       continue
-    (winid, diff, wrap, buftype, win_disabled, buf_disabled, vimade_fade_active, scrollbind, win_syntax, buf_syntax, tabstop) = vim.eval('[win_getid('+winnr+'), gettabwinvar('+tabnr+','+winnr+',"&diff"), gettabwinvar('+tabnr+','+winnr+',"&wrap"), gettabwinvar('+tabnr+','+winnr+',"&buftype"), gettabwinvar('+tabnr+','+winnr+',"vimade_disabled"), getbufvar('+bufnr+', "vimade_disabled"),  g:vimade_fade_active, gettabwinvar('+tabnr+','+winnr+',"&scrollbind"), gettabwinvar('+tabnr+','+winnr+',"current_syntax"), gettabwinvar('+tabnr+','+winnr+',"&syntax"), gettabwinvar('+tabnr+','+winnr+',"&tabstop")]')
+    (winid, diff, wrap, buftype, win_disabled, buf_disabled, vimade_fade_active, scrollbind, win_syntax, buf_syntax, tabstop) = util.eval_and_return('[win_getid('+winnr+'), gettabwinvar('+tabnr+','+winnr+',"&diff"), gettabwinvar('+tabnr+','+winnr+',"&wrap"), gettabwinvar('+tabnr+','+winnr+',"&buftype"), gettabwinvar('+tabnr+','+winnr+',"vimade_disabled"), getbufvar('+bufnr+', "vimade_disabled"),  g:vimade_fade_active, gettabwinvar('+tabnr+','+winnr+',"&scrollbind"), gettabwinvar('+tabnr+','+winnr+',"current_syntax"), gettabwinvar('+tabnr+','+winnr+',"&syntax"), gettabwinvar('+tabnr+','+winnr+',"&tabstop")]')
     syntax = win_syntax if win_syntax else buf_syntax
-    floating = vim.eval('nvim_win_get_config('+str(winid)+')') if HAS_NVIM_WIN_GET_CONFIG else False
+    floating = util.eval_and_return('nvim_win_get_config('+str(winid)+')') if HAS_NVIM_WIN_GET_CONFIG else False
     if floating and 'relative' in floating:
       floating = floating['relative']
     else:
@@ -247,7 +248,7 @@ def update(nextState = None):
     if not win in nextWindows:
       expr.append('win_id2tabwin('+win+')')
       ids.append(win)
-  expr = vim.eval('['+','.join(expr)+']')
+  expr = util.eval_and_return('[' + ','.join(expr) + ']')
   i = 0
   for item in expr:
     if item[0] == '0' and item[1] == '0':
@@ -261,7 +262,7 @@ def update(nextState = None):
     if not key in nextBuffers:
       expr.append('win_findbuf('+key+')')
       ids.append(key)
-  expr = vim.eval('['+','.join(expr)+ ']')
+  expr = util.eval_and_return('[' + ','.join(expr) + ']')
   i = 0
   for item in expr:
     if len(item) == 0:
@@ -305,7 +306,7 @@ def unfadeAllSigns():
     signs.unfade_bufs(currentBuffers.values())
 
 def unfadeAll():
-  FADE.startWin = FADE.currentWin = vim.eval('win_getid('+str(vim.current.window.number)+')')
+  FADE.startWin = FADE.currentWin = util.eval_and_return('win_getid('+str(vim.current.window.number)+')')
   currentWindows = windows
   for winState in currentWindows.values():
       if winState.faded:
@@ -382,7 +383,7 @@ def fadeWin(winState):
     FADE.currentWin = winid
     vim.command('noautocmd call win_gotoid('+winid+')')
 
-  lookup = vim.eval('winsaveview()')
+  lookup = util.eval_and_return('winsaveview()')
   startRow = topline = int(lookup['topline'])
   endRow = startRow + height
   startCol = int(lookup['leftcol']) + int(lookup['skipcol']) + 1
@@ -546,7 +547,7 @@ def fadeWin(winState):
         vim.funcs.nvim_command('function! VimadeSynIDs() \n return ['+','.join(ids)+'] \n endfunction')
         ids = vim.funcs.nvim_command_output('echo VimadeSynIDs()')[1:-1].split(', ')
     else:
-        ids = vim.eval('[' + ','.join(ids) + ']')
+        ids = util.eval_and_return('[' + ','.join(ids) + ']')
     highlights = highlighter.fade_ids(ids)
 
     for i in range(0, len(highlights)):
@@ -596,7 +597,7 @@ def fadeBase(winState):
     hl += base + ':' + GLOBALS.basegroups_faded[i][0]
     i += 1
 
-  last_winhl = vim.eval('gettabwinvar('+winState.tab+','+winState.number+',"&winhl")')
+  last_winhl = util.eval_and_return('gettabwinvar('+winState.tab+','+winState.number+',"&winhl")')
   if last_winhl.find('vimade_') == -1:
     winState.last_winhl = last_winhl
   vim.command('setlocal winhl='+hl)

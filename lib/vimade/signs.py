@@ -1,6 +1,7 @@
 import re
 import time
 import vim
+from vimade import util
 from vimade import global_state as GLOBALS
 from vimade import highlighter
 
@@ -19,7 +20,7 @@ def parseParts(line):
   return item
 
 def get_signs(bufnr):
-  lines = vim.eval('execute("silent sign place buffer='+str(bufnr)+'")').split('\n')[2:]
+  lines = util.eval_and_return('execute("silent sign place buffer='+str(bufnr)+'")').split('\n')[2:]
   result = []
   for line in lines:
     item = parseParts(line)
@@ -63,7 +64,7 @@ def fade_wins(wins, fade_bufs):
 
   if len(bufs) == 0:
     return
-  infos = vim.eval('[' + ','.join(['vimade#GetSigns('+x[0]+','+ str(x[1]) + ')' for x in bufs ]) + ']' )
+  infos = util.eval_and_return('vimade#GetSigns(['+ ','.join([('['+ x[0] +','+str(x[1])+']') for x in bufs])+'])')
   changes = []
   requests = []
   request_names = []
@@ -141,7 +142,7 @@ def fade_wins(wins, fade_bufs):
 
   ids = {}
   if len(requests):
-    results = vim.eval('[' + ','.join(requests) + ']')
+    results = util.eval_and_return('[' + ','.join(requests) + ']')
     i = 0
     highlights = []
     cl_highlights = []

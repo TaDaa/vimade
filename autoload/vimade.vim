@@ -1,3 +1,5 @@
+let g:vimade_eval_ret = []
+
 function! vimade#CreateGlobals()
   if !exists('g:vimade_running')
 
@@ -372,28 +374,20 @@ function! vimade#Redraw()
   endif
 endfunction
 
-
-function! vimade#GetSigns (bufnr, rows)
-  let signs = get(getbufinfo(a:bufnr)[0],'signs',[])
+function! vimade#GetSigns (bufs)
   let result = []
-  let g:rows = a:rows
-  for sign in signs
-    if has_key(a:rows, sign['lnum'])
-      call add(result, sign)
-    endif
+  for [bufnr, rows] in a:bufs
+    let set = []
+    let signs = get(getbufinfo(bufnr)[0],'signs',[])
+    call add(result, set)
+    for sign in signs
+      if has_key(rows, sign['lnum'])
+        call add(set, sign)
+      endif
+    endfor
   endfor
   return result
-
-  "let result = []
-  "let signs = get(getbufinfo(a:bufnr)[0],'signs',[])
-  "for sign in signs
-    "if sign['lnum'] >= a:startRow and sign['lnum'] <= a:endRow
-      "add(result, sign)
-    "endif
-  "endfor
-  "return result
 endfunction
-
 
 function! vimade#GetInfo()
   "get debug info
@@ -521,6 +515,9 @@ function! vimade#UpdateState()
       call vimade#DetectTermColors()
     endif
   endif
+  let g:vimade.__background = &background
+  let g:vimade.__colorscheme = execute(":colorscheme")
+  let g:vimade.__termguicolors = &termguicolors
 endfunction
 
 function! vimade#Tick(num)
