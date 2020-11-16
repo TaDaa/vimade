@@ -166,7 +166,7 @@ def update(nextState = None):
     cursor = window.cursor
     width = window.width
     height = window.height
-    if (height != state.height or width != state.width or cursor[0] != state.cursor[0] or cursor[1] != state.cursor[1]):
+    if (height > state.height or width > state.width or cursor[0] != state.cursor[0] or cursor[1] != state.cursor[1]):
       state.height = height
       state.width = width
       state.cursor = (cursor[0], cursor[1])

@@ -5,8 +5,8 @@ class WinState:
     self.diff = False
     self.wrap = False
     self.number = None
-    self.height = None
-    self.width = None
+    self.height = -1
+    self.width = -1
     self.hasActiveBuffer = hasActiveBuffer
     self.hasActiveWindow = hasActiveWindow
     self.matches = []
