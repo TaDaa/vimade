@@ -193,12 +193,19 @@ function! vimade#GetDefaults()
     ""@setting vimade.basegroups
     "Neovim only setting that specifies the basegroups/built-in highlight groups that will be faded using winhl when switching windows
 
-    let g:vimade_defaults.basegroups = ['Folded', 'Search', 'SignColumn', 'LineNr', 'CursorLine', 'CursorLineNr', 'DiffAdd', 'DiffChange', 'DiffDelete', 'DiffText', 'FoldColumn', 'Whitespace']
+    let g:vimade_defaults.basegroups = ['Folded', 'Search', 'SignColumn', 'LineNr', 'CursorLine', 'CursorLineNr', 'DiffAdd', 'DiffChange', 'DiffDelete', 'DiffText', 'FoldColumn', 'Whitespace', 'NonText', 'SpecialKey', 'Conceal']
 
     ""@setting vimade.enablebasegroups
     "Neovim only setting.  Enabled by default and allows basegroups/built-in highlight fading using winhl.  This allows fading of built-in highlights such as Folded, Search, etc.
 
     let g:vimade_defaults.enablebasegroups = 1
+
+
+    ""@setting vimade.enabletreesitter
+    "EXPERIMENTAL FEATURE Neovim only setting.  Disabled by
+    "default and hooks vimade into the internals of treesitter.
+
+    let g:vimade_defaults.enabletreesitter = 0
 
     let g:vimade_defaults_keys = keys(g:vimade_defaults)
     if exists('g:vimade_detect_term_colors')

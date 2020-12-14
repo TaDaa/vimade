@@ -41,6 +41,7 @@ base_fg24b_last = '';
 term_response = False
 enable_scroll = False
 enable_signs = False
+enable_treesitter = False
 basegroups = []
 basegroups_faded = []
 enable_basegroups = False
@@ -51,6 +52,7 @@ group_diff = None
 group_scrollbind = None
 signs_group_text = ' group=vimade ' if int(features['has_sign_group']) else ' '
 signs_priority_text = ' '
+require_treesitter = 0
 
 
 READY = 0
@@ -95,6 +97,7 @@ def update():
   normalncid = nextGlobals['normalncid']
   enablesigns = int(nextGlobals['enablesigns'])
   enablescroll = int(nextGlobals['enablescroll'])
+  enabletreesitter = int(nextGlobals['enabletreesitter']) if is_nvim else 0
   groupscrollbind = int(nextGlobals['groupscrollbind'])
   groupdiff = int(nextGlobals['groupdiff'])
 
@@ -119,6 +122,18 @@ def update():
       returnState |= ENABLE_SIGNS
     else:
       returnState |= DISABLE_SIGNS
+
+  if enabletreesitter != GLOBALS.enable_treesitter:
+    GLOBALS.enable_treesitter = enabletreesitter
+    if GLOBALS.enable_treesitter and GLOBALS.require_treesitter == 0:
+      try:
+        vim.api.exec_lua("_vimade = require('vimade')", [])
+      except: 
+          pass
+      GLOBALS.require_treesitter = 1
+
+    returnState |= FULL_INVALIDATE
+
 
   if GLOBALS.colorscheme != colorscheme:
     GLOBALS.colorscheme = colorscheme

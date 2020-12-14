@@ -195,6 +195,10 @@ Neovim only setting.  Enabled by default and allows basegroups/built-in
 highlight fading using winhl.  This allows fading of built-in highlights such
 as Folded, Search, etc.
 
+                                                   *g:vimade.enabletreesitter*
+EXPERIMENTAL FEATURE Neovim only setting.  Disabled by
+default and hooks vimade into the internals of treesitter.
+
 ==============================================================================
 COMMANDS                                                     *vimade-commands*
 

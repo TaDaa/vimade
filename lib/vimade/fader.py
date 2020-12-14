@@ -428,10 +428,15 @@ def fadeWin(winState):
       winState.visible_rows[row] = 1
       rawText = buf[j]
       text = bytes(rawText, 'utf-8', 'replace') if IS_V3 else rawText
+      # text = bytes(rawText, 'utf-8', 'replace').decode('utf-8') if IS_V3 else rawText
+      #TODOn2
+      # text = buf[j]
       text_ln = len(text)
       if text_ln > 0:
         if is_explorer or is_minimap:
           to_eval.append((row, 1, text_ln))
+          #TODOn2
+          # to_eval.append([row, 1, text_ln])
           texts.append(text)
           rows_so_far += 1
           continue
@@ -457,6 +462,8 @@ def fadeWin(winState):
         if IS_V3:
           t1 = text[0:sCol]
           t2 = t1.replace(bytes('\t', 'utf-8'),bytes(' ', 'utf-8') * winState.tabstop)
+          # TODOn2
+          # t2 = t1.replace('\t', ' ' * winState.tabstop)
 
           adjustStart = len(t2) - len(t1)
           #TODO can adjustEnd be accurately calculated? Tab rules seem to cause breakage -- safer to leave at 0
@@ -473,6 +480,8 @@ def fadeWin(winState):
         sCol = max(sCol, 1)
         mCol = min(mCol + adjustEnd, text_ln)
         to_eval.append((row, sCol, mCol))
+        # TODOn2
+        # to_eval.append([row, sCol, mCol])
         texts.append(text)
 
   bufState = FADE.buffers[winState.buffer]
@@ -521,8 +530,19 @@ def fadeWin(winState):
 
   ids = []
   gaps = []
+  ts_empty = {}
   j = 0
   for (row, column, endCol) in to_eval:
+
+    ts_results = None
+    if GLOBALS.enable_treesitter:
+      try:
+        ts_results = vim.lua._vimade.get_highlights(winState.buffer,row-1,row,column-1,endCol)
+      except:
+        pass
+    if ts_results == None:
+      ts_results = ts_empty
+
     text = texts[j]
     j += 1
     text_ln = len(text)
@@ -538,7 +558,13 @@ def fadeWin(winState):
       #get syntax id and cache
       current = colors[column - 1]
       if current == None:
-        ids.append('synID(%s,%s,0)' % (row,column))
+        if text[column-1] != '' and text[column-1] != ' ' and text[column-1] != '\t':
+          if str(column-1) in ts_results:
+            ids.append(str(ts_results[str(column-1)]))
+          else:
+            ids.append('synID(%s,%s,0)' % (row,column))
+        else:
+          ids.append('0')
         gaps.append((index, column - 1, text[column - 1]))
       column = column + 1
 
