@@ -64,7 +64,12 @@ function M.get_highlights (bufnr, startRow, endRow, startCol, endCol)
             end
                 local capture_name = query.captures[capture]
                 local hl = highlighter_query.hl_cache[capture]
-                local rgb = vim.api.nvim_get_hl_by_id(hl, 1)
+                local rgb= nil
+                if hl ~= 0 then
+                    rgb = vim.api.nvim_get_hl_by_id(hl, 1)
+                else
+                    rgb = {}
+                end
                 if hl and capture ~= 0 and (rgb['background'] ~= nil or rgb['foreground'] ~= nil) then
                     local sr,sc,er,ec = node:range()
 
