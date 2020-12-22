@@ -193,17 +193,16 @@ def update(nextState = None):
 
     if 'coc-explorer' in state.name or 'NERD' in state.name:
       state.is_explorer = True
-    if 'minimap' in state.name:
+    if 'vim-minimap' in state.name or '-MINIMAP-' in state.name:
       state.is_minimap = True
-
-      currentBuf = '\n'.join(state.win.buffer)
       #TODO can we add additional buf comparisons and move bufState check out of fadeWin?
       if GLOBALS.fade_minimap:
+        currentBuf = '\n'.join(state.win.buffer)
         if not bufState.faded or currentBuf != bufState.last:
           bufState.last = currentBuf
           fade[winid] = state
-          if winid in unfade:
-            del unfade[winid]
+        if winid in unfade:
+          del unfade[winid]
       else:
         unfade[winid] = state
         if winid in fade:
