@@ -597,6 +597,11 @@ function! vimade#StopTimer()
   endif
 endfunction
 
+function! vimade#CreateHighlights()
+    let l:signcolcolors = vimade#GetHi(hlID("SignColumn"))
+    execute 'hi VimadeEmptyFillSignColumn guifg=' . l:signcolcolors[1] . ' guibg=' . l:signcolcolors[1]
+endfunction
+
 function! vimade#Init()
   let g:vimade_init = 1
   call vimade#CreateGlobals()
@@ -604,6 +609,7 @@ function! vimade#Init()
   call vimade#GetDefaults()
   call vimade#ExtendState()
   call vimade#UpdateEvents()
+  call vimade#CreateHighlights()
 
   let g:vimade_last = extend({}, g:vimade)
 

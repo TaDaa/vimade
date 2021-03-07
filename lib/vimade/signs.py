@@ -53,6 +53,13 @@ def fade_wins(wins, fade_bufs):
   global SIGN_IDS_UNUSED
   start = time.time()
 
+  sign_cols_num = 1
+  if GLOBALS.features['has_nvim']:
+    try:
+      sign_cols_num = int(util.eval_and_return("&signcolumn").split(':')[1])
+    except IndexError:
+      pass
+
   buf_map = {}
   for win in wins:
     if not win.buffer in buf_map:
@@ -65,7 +72,7 @@ def fade_wins(wins, fade_bufs):
   if len(bufs) == 0:
     return
   infos = util.eval_and_return('[' + ','.join(['vimade#GetSigns('+x[0]+','+ str(x[1]) + ')' for x in bufs ]) + ']' )
-  changes = []
+  changes = {}
   requests = []
   request_names = []
   i = 0
@@ -118,7 +125,9 @@ def fade_wins(wins, fade_bufs):
         if lnum in lines and name in lines[lnum] and (lines[lnum][name] == sign['priority'] or lines[lnum][name] == False):
           lines[lnum][name] = False
         else:
-          changes.append(sign)
+          lsigns = changes.get(lnum, [])
+          lsigns.append(sign)
+          changes[lnum] = lsigns
           if not lnum in lines:
             lines[lnum] = {}
           lines[lnum][name] = False
@@ -143,6 +152,10 @@ def fade_wins(wins, fade_bufs):
   ids = {}
   if len(requests):
     results = util.eval_and_return('[' + ','.join(requests) + ']')
+
+    request_names.append('Vimade_EmptyFill')
+    results.append('sign Vimade_EmptyFill text=! texthl=VimadeEmptyFillSignColumn')
+
     i = 0
     highlights = []
     cl_highlights = []
@@ -156,7 +169,7 @@ def fade_wins(wins, fade_bufs):
       if 'numhl' in item:
         cl_highlights.append(item['numhl'])
       i += 1
-    
+
     if len(highlights):
       highlights = highlighter.fade_names(highlights)
       cl_highlights = highlighter.fade_names(cl_highlights, False, True)
@@ -194,17 +207,27 @@ def fade_wins(wins, fade_bufs):
       vim.command(definition)
 
 
-  if len(changes):
+  if changes:
     place = []
-    for sign in changes:
-      if len(SIGN_IDS_UNUSED):
-        next_id = SIGN_IDS_UNUSED.pop(0)
-      else:
-        next_id = GLOBALS.signs_id
-        GLOBALS.signs_id = GLOBALS.signs_id + 1
-      fade_bufs[sign['bufnr']].signs.append(str(next_id))
-      # print('sign place ' +  str(next_id) + GLOBALS.signs_group_text + 'line='+str(sign['lnum']) + ' name=vimade_' + sign['name'] + sign['priority_text'] + ' buffer=' + str(sign['bufnr']))
-      PLACES.append('sign place ' +  str(next_id) + GLOBALS.signs_group_text + 'line='+str(sign['lnum']) + ' name=vimade_' + sign['name'] + sign['priority_text'] + ' buffer=' + str(sign['bufnr']))
+    for signs in changes.values():
+      fill_sings = sign_cols_num - len(signs)
+      if fill_sings > 0:
+          for _ in range(fill_sings):
+              signs.append({
+                  'lnum': signs[0]['lnum'],
+                  'name': 'Vimade_EmptyFill',
+                  'priority_text': signs[0]['priority_text'],
+                  'bufnr': signs[0]['bufnr']
+              })
+      for sign in signs:
+        if len(SIGN_IDS_UNUSED):
+          next_id = SIGN_IDS_UNUSED.pop(0)
+        else:
+          next_id = GLOBALS.signs_id
+          GLOBALS.signs_id = GLOBALS.signs_id + 1
+        fade_bufs[sign['bufnr']].signs.append(str(next_id))
+        # print('sign place ' +  str(next_id) + GLOBALS.signs_group_text + 'line='+str(sign['lnum']) + ' name=vimade_' + sign['name'] + sign['priority_text'] + ' buffer=' + str(sign['bufnr']))
+        PLACES.append('sign place ' +  str(next_id) + GLOBALS.signs_group_text + 'line='+str(sign['lnum']) + ' name=vimade_' + sign['name'] + sign['priority_text'] + ' buffer=' + str(sign['bufnr']))
   # print(PLACES)
 
 
