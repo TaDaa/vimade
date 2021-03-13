@@ -32,14 +32,23 @@ def unfade_bufs(bufs):
   global PLACES
   global SIGN_IDS_UNUSED
 
-  start = time.time()
-
-  for buf in bufs:
-    if len(buf.signs):
-      for id in buf.signs:
-        SIGN_IDS_UNUSED.append(id)
-        PLACES.append('silent! sign unplace ' + str(id) + GLOBALS.signs_group_text + 'buffer=' + str(buf.bufnr))
-      buf.signs = []
+  buf_signs = util.eval_and_return('[' + ','.join(['get(getbufinfo('+x.bufnr+')[0], \'signs\', [])' for x in bufs ]) + ']')
+  # start = time.time()
+  i = 0
+  for signs in buf_signs:
+    bufnr = bufs[i].bufnr
+    i = i + 1
+    for sign in signs:
+      name = sign['name']
+      is_vimade = sign['is_vimade'] = name.find('vimade_') != -1
+      if is_vimade == True:
+        sign['name'] = name.replace('vimade_', '')
+        sign['bufnr'] = bufnr
+        if int(GLOBALS.features['has_sign_priority']) and 'priority' in sign:
+          sign['priority_text'] = ' priority='+str(sign['priority'])
+        if int(GLOBALS.features['has_sign_group']) and 'group' in sign:
+          sign['group_text'] = ' group=' + str(sign['group'])
+        PLACES.append('silent! sign place ' +  str(sign['id']) + sign['group_text'] + ' line='+str(sign['lnum']) + ' name=' + sign['name'] + sign['priority_text'] + ' buffer=' + str(sign['bufnr']))
 
   if len(PLACES):
     vim.command('function! VimadeSignTemp() \n' + '\n'.join(PLACES) + '\nendfunction')
@@ -97,6 +106,11 @@ def fade_wins(wins, fade_bufs):
         sign['bufnr'] = bufnr
         lnum = sign['lnum']
         name = sign['name']
+        if int(GLOBALS.features['has_sign_group']):
+          if not 'group' in sign:
+            sign['group_text'] = ''
+          else:
+            sign['group_text'] = ' group='+str(sign['group'])
         if int(GLOBALS.features['has_sign_priority']):
           if not 'priority' in sign:
             priority = GLOBALS.signs_priority
@@ -126,19 +140,6 @@ def fade_wins(wins, fade_bufs):
             SIGN_CACHE[name] = True
             request_names.append(name)
             requests.append('execute("sign list ' + name + '")')
-    for sign in signs:
-      if sign['is_vimade'] == True:
-        lnum = sign['lnum']
-        id = str(sign['id'])
-        name = sign['name']
-        real_name = sign['real_name']
-        if lines[lnum][real_name] == True:
-          SIGN_IDS_UNUSED.append(id)
-          if bufnr in FADE.buffers:
-            s = FADE.buffers[bufnr].signs
-            if id in s:
-              s.remove(id)
-          PLACES.append('silent! sign unplace ' + id + ' buffer=' + bufnr)
 
   ids = {}
   if len(requests):
@@ -197,15 +198,7 @@ def fade_wins(wins, fade_bufs):
   if len(changes):
     place = []
     for sign in changes:
-      if len(SIGN_IDS_UNUSED):
-        next_id = SIGN_IDS_UNUSED.pop(0)
-      else:
-        next_id = GLOBALS.signs_id
-        GLOBALS.signs_id = GLOBALS.signs_id + 1
-      fade_bufs[sign['bufnr']].signs.append(str(next_id))
-      # print('sign place ' +  str(next_id) + GLOBALS.signs_group_text + 'line='+str(sign['lnum']) + ' name=vimade_' + sign['name'] + sign['priority_text'] + ' buffer=' + str(sign['bufnr']))
-      PLACES.append('sign place ' +  str(next_id) + GLOBALS.signs_group_text + 'line='+str(sign['lnum']) + ' name=vimade_' + sign['name'] + sign['priority_text'] + ' buffer=' + str(sign['bufnr']))
-  # print(PLACES)
+      PLACES.append('silent! sign place ' +  str(sign['id']) + sign['group_text'] + ' line='+str(sign['lnum']) + ' name=vimade_' + sign['name'] + sign['priority_text'] + ' buffer=' + str(sign['bufnr']))
 
 
 

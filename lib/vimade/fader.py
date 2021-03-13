@@ -302,7 +302,7 @@ def returnToWin():
 def unfadeAllSigns():
   currentBuffers = buffers
   if len(currentBuffers):
-    signs.unfade_bufs(currentBuffers.values())
+    signs.unfade_bufs(list(currentBuffers.values()))
 
 def unfadeAll():
   FADE.startWin = FADE.currentWin = util.eval_and_return('win_getid('+str(vim.current.window.number)+')')
