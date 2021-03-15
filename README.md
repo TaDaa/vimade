@@ -128,8 +128,6 @@ let g:vimade = {
 - **vimade.enablebasegroups** - Neovim only setting.  Enabled by default and allows basegroups/built-in highlight fading using winhl.  This allows fading of built-in highlights such as Folded, Search, etc.
 - **vimade.basegroups** - Neovim only setting that specifies the basegroups/built-in highlight groups that will be faded using winhl when switching windows
 - **vimade.enablefocusfading** - Fades the current active window on focus blur and unfades when focus gained.  This can be desirable when switching applications or TMUX splits.  Default value is 0.   
-- **vimade.enabletreesitter** - This is an EXPERIMENTAL feature.  Combines treesitter with syntax highlights if needed to fade buffer.  Default value is 0.   
-  
   *Requires additional setup for terminal and tmux:*
 
     1. Install `tmux-plugins/vim-tmux-focus-events`
@@ -140,6 +138,8 @@ let g:vimade = {
              call feedkeys(":silent execute '!' | redraw!\<CR>")
           endif
           ```
+- **vimade.enabletreesitter** - This is an EXPERIMENTAL feature.  Combines treesitter with syntax highlights if needed to fade buffer.  Default value is 0.   
+ 
 
 ##### Config Example(s)
 *Always remember to first set the global vimade object (`let g:vimade={}`)
