@@ -85,11 +85,11 @@ command! VimadeOverrideAll call vimade#OverrideAll()
 
 if (!exists('g:vimade_running') || g:vimade_running != 0)
   if v:vim_did_enter 
-    call vimade#Init()
+    call vimade#Empty()
   else
     augroup vimade
       au!
-      au VimEnter * call vimade#Init()
+      au VimEnter * call vimade#Empty()
     augroup END
   endif
 endif

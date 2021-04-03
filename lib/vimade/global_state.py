@@ -53,6 +53,7 @@ group_scrollbind = None
 signs_group_text = ' group=vimade ' if int(features['has_sign_group']) else ' '
 signs_priority_text = ' '
 require_treesitter = 0
+win_width = 20
 
 
 READY = 0
@@ -76,11 +77,12 @@ def getInfo():
 
 def update():
   returnState = READY
-  allGlobals = util.mem_safe_eval('[g:vimade, &background, execute(":colorscheme"), &termguicolors]')
+  allGlobals = util.mem_safe_eval('[g:vimade, &background, execute(":colorscheme"), &termguicolors, &winwidth]')
   nextGlobals = allGlobals[0]
   background = allGlobals[1]
   colorscheme = allGlobals[2]
   termguicolors = int(allGlobals[3]) == 1
+  winwidth = allGlobals[4]
   basegroups = nextGlobals['basegroups']
   enablebasegroups = int(nextGlobals['enablebasegroups'])
   fadelevel = float(nextGlobals['fadelevel'])
@@ -108,6 +110,7 @@ def update():
   GLOBALS.enable_scroll = enablescroll
   GLOBALS.group_scrollbind = groupscrollbind
   GLOBALS.group_diff = groupdiff
+  GLOBALS.win_width = winwidth
 
   if GLOBALS.signs_id == None:
     GLOBALS.signs_id = signsid

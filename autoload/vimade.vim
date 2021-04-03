@@ -1,5 +1,8 @@
 let g:vimade_eval_ret = []
 
+function! vimade#Empty()
+endfunction
+
 function! vimade#CreateGlobals()
   if !exists('g:vimade_running')
 
@@ -469,7 +472,7 @@ function! vimade#UpdateEvents()
       au FocusLost * call vimade#FocusLost()
       au BufEnter * call vimade#CheckWindows()
       au OptionSet diff call vimade#CheckWindows()
-      au ColorScheme * call vimade#CheckWindows()
+      au ColorScheme * call vimade#Redraw()
       au FileChangedShellPost * call vimade#softInvalidateBuffer(expand("<abuf>"))
       if g:vimade.usecursorhold
         au CursorHold * call vimade#Tick(0)
@@ -598,6 +601,10 @@ function! vimade#StopTimer()
 endfunction
 
 function! vimade#Init()
+  let l:already_running = 0
+  if exists('g:vimade_init')
+    let l:already_running = 1
+  endif
   let g:vimade_init = 1
   call vimade#CreateGlobals()
   call vimade#GetFeatures()
@@ -612,7 +619,11 @@ function! vimade#Init()
   endif
 
   "check immediately
-  call vimade#CheckWindows()
+  if l:already_running == 0
+    call vimade#CheckWindows()
+  else
+    call vimade#Redraw()
+  endif
   call vimade#StartTimer()
 
   "run the timer once during startup
@@ -624,3 +635,5 @@ function! vimade#Init()
     endtry
   endif
 endfunction
+
+call vimade#Init()
