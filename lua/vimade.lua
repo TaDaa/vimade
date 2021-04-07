@@ -9,6 +9,7 @@ end
 --local hl_map = vim.treesitter.highlighter.hl_map
 local lang_map = {}
 local seen={}
+local hl_is_string = nil
 
 function dump(t,i)
     seen[t]=true
@@ -66,6 +67,12 @@ function M.get_highlights (bufnr, startRow, endRow, startCol, endCol)
                 local hl = highlighter_query.hl_cache[capture]
                 local rgb= nil
                 if hl ~= 0 then
+                    if hl_is_string == nil then
+                        hl_is_string = type(hl) == 'string'
+                    end
+                    if hl_is_string == true then
+                        hl = vim.api.nvim_get_hl_id_by_name(hl)
+                    end
                     rgb = vim.api.nvim_get_hl_by_id(hl, 1)
                 else
                     rgb = {}
