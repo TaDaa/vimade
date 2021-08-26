@@ -64,6 +64,7 @@ function M.get_highlights (bufnr, startRow, endRow, startCol, endCol)
                 break
             end
                 local capture_name = query.captures[capture]
+                --dump(capture)
                 local hl = highlighter_query.hl_cache[capture]
                 local rgb= nil
                 if hl ~= 0 then
@@ -79,34 +80,25 @@ function M.get_highlights (bufnr, startRow, endRow, startCol, endCol)
                 end
                 if hl and capture ~= 0 and (rgb['background'] ~= nil or rgb['foreground'] ~= nil) then
                     local sr,sc,er,ec = node:range()
+                    local r
+                    local _sc = sc
+                    local _ec = endCol
 
-                    if sr > startRow or sc > endCol then
-                        goto next
-                    end
-
-                    if sc < startCol then
-                        sc = startCol
-                    end
-
-                    if ec > endCol then
-                        ec = endCol
-                    end
-
-                    if sr < startRow then
-                        sr = startRow
-                        sc = startCol 
-                    end
-
-                    if er > startRow then
-                        er = startRow
-                        ec = endCol
-                    end
-
-                    ec = ec - 1
-
-                    local i
-                    for i=sc,ec do
-                        result[i..''] = hl
+                    for r=sr,er do
+                        if r > sr then
+                            _sc = 0
+                        end
+                        if r == er then
+                            _ec = ec
+                        end
+                        if r >= startRow and r < endRow then
+                            local i
+                            for i=_sc,_ec do
+                                if i >= startCol and i < endCol then
+                                    result[i..''] = hl
+                                end
+                            end
+                        end
                     end
                 end
                 ::next::
