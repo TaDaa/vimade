@@ -46,8 +46,10 @@ def unfade_bufs(bufs):
         sign['bufnr'] = bufnr
         if int(GLOBALS.features['has_sign_priority']) and 'priority' in sign:
           sign['priority_text'] = ' priority='+str(sign['priority'])
-        if int(GLOBALS.features['has_sign_group']) and 'group' in sign:
+        if int(GLOBALS.features['has_sign_group']) and 'group' in sign and sign['group'] != '':
           sign['group_text'] = ' group=' + str(sign['group'])
+        else:
+          sign['group_text'] = ' '
         PLACES.append('silent! sign place ' +  str(sign['id']) + sign['group_text'] + ' line='+str(sign['lnum']) + ' name=' + sign['name'] + sign['priority_text'] + ' buffer=' + str(sign['bufnr']))
 
   if len(PLACES):
@@ -106,11 +108,10 @@ def fade_wins(wins, fade_bufs):
         sign['bufnr'] = bufnr
         lnum = sign['lnum']
         name = sign['name']
-        if int(GLOBALS.features['has_sign_group']):
-          if not 'group' in sign:
-            sign['group_text'] = ''
-          else:
-            sign['group_text'] = ' group='+str(sign['group'])
+        if int(GLOBALS.features['has_sign_group']) and 'group' in sign and sign['group'] != '':
+          sign['group_text'] = ' group='+str(sign['group'])
+        else:
+          sign['group_text'] = ' '
         if int(GLOBALS.features['has_sign_priority']):
           if not 'priority' in sign:
             priority = GLOBALS.signs_priority
