@@ -89,7 +89,7 @@ function M.get_highlights (bufnr, startRow, endRow, startCol, endCol)
                             _sc = 0
                         end
                         if r == er then
-                            _ec = ec
+                            _ec = ec - 1
                         end
                         if r >= startRow and r < endRow then
                             local i
