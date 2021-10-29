@@ -420,7 +420,8 @@ def fadeWin(winState):
 
   vim.command('let g:vimade_visrows=vimade#GetVisibleRows('+str(startRow)+','+str(endRow)+')')
   visible_rows = vim.vars['vimade_visrows']
-  buf = buf[visible_rows[0][0]-1:visible_rows[len(visible_rows)-1][0]]
+  if len(visible_rows):
+    buf = buf[visible_rows[0][0]-1:visible_rows[len(visible_rows)-1][0]]
   texts = []
   winState.visible_rows = {} 
 
