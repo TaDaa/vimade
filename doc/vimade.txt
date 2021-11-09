@@ -196,8 +196,8 @@ highlight fading using winhl.  This allows fading of built-in highlights such
 as Folded, Search, etc.
 
                                                    *g:vimade.enabletreesitter*
-EXPERIMENTAL FEATURE Neovim only setting.  Disabled by
-default and hooks vimade into the internals of treesitter.
+EXPERIMENTAL FEATURE Neovim only setting.  Disabled by default and hooks
+vimade into the internals of treesitter.
 
 ==============================================================================
 COMMANDS                                                     *vimade-commands*
@@ -267,6 +267,12 @@ COMMANDS                                                     *vimade-commands*
   EXPERIMENTAL -- Overrides the NonText highlight by creating a link to the
   Vimade base fade. This should produce acceptable results for colorschemes
   that include Folded highlights that are distracting in faded windows.
+
+:VimadeOverrideEndOfBuffer                        *:VimadeOverrideEndOfBuffer*
+  EXPERIMENTAL -- Overrides the EndOfBuffer highlight by creating a link to
+  the Vimade base fade. This should produce acceptable results for
+  colorschemes that include Folded highlights that are distracting in faded
+  windows.
 
 :VimadeOverrideAll                                        *:VimadeOverrideAll*
   EXPERIMENTAL -- Overrides static highlights by creating a link to the Vimade

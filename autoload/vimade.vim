@@ -196,7 +196,7 @@ function! vimade#GetDefaults()
     ""@setting vimade.basegroups
     "Neovim only setting that specifies the basegroups/built-in highlight groups that will be faded using winhl when switching windows
 
-    let g:vimade_defaults.basegroups = ['Folded', 'Search', 'SignColumn', 'LineNr', 'CursorLine', 'CursorLineNr', 'DiffAdd', 'DiffChange', 'DiffDelete', 'DiffText', 'FoldColumn', 'Whitespace', 'NonText', 'SpecialKey', 'Conceal']
+    let g:vimade_defaults.basegroups = ['Folded', 'Search', 'SignColumn', 'LineNr', 'CursorLine', 'CursorLineNr', 'DiffAdd', 'DiffChange', 'DiffDelete', 'DiffText', 'FoldColumn', 'Whitespace', 'NonText', 'SpecialKey', 'Conceal', 'EndOfBuffer']
 
     ""@setting vimade.enablebasegroups
     "Neovim only setting.  Enabled by default and allows basegroups/built-in highlight fading using winhl.  This allows fading of built-in highlights such as Folded, Search, etc.
@@ -309,6 +309,11 @@ function! vimade#OverrideVertSplit()
   hi! link VertSplit vimade_0
 endfunction
 
+function! vimade#OverrideEndOfBuffer()
+  hi! clear EndOfBuffer
+  hi! link EndOfBuffer vimade_0
+endfunction
+
 function! vimade#OverrideNonText()
   hi! clear NonText
   hi! link NonText vimade_0
@@ -320,6 +325,7 @@ function! vimade#OverrideAll()
   call vimade#OverrideLineNr()
   call vimade#OverrideVertSplit()
   call vimade#OverrideNonText()
+  call vimade#OverrideEndOfBuffer()
 endfunction
 
 function! vimade#Pause()
