@@ -164,6 +164,12 @@ let g:vimade.enablesigns = 1
 - **VimadeFadeActive** - Fades the current active window
 - **VimadeUnfadeActive** - Unfades the current active window
 - **VimadeOverrideFolded** - Overrides the Folded highlight by creating a link to the Vimade base fade.  This should produce acceptable results for colorschemes that include Folded highlights that are distracting in faded windows.
+- **VimadeOverrideSignColumn** - Overrides the SignColumn highlight by creating a link to the Vimade base fade.  This should produce acceptable results for colorschemes that include SignColumn highlights that are distracting in faded windows.
+- **VimadeOverrideLineNr** - Overrides the LineNr highlight by creating a link to the Vimade base fade.  This should produce acceptable results for colorschemes that include LineNr highlights that are distracting in faded windows.
+- **VimadeOverrideSplits** - Overrides the VertSplit highlight by creating a link to the Vimade base fade.  This should produce acceptable results for colorschemes that include VertSplit highlights that are distracting in faded windows.
+- **VimadeOverrideNonText** - Overrides the NonText highlight by creating a link to the Vimade base fade.  This should produce acceptable results for colorschemes that include NonText highlights that are distracting in faded windows.
+- **VimadeOverrideEndOfBuffer** - Overrides the EndOfBuffer highlight by creating a link to the Vimade base fade.  This should produce acceptable results for colorschemes that include EndOfBuffer highlights that are distracting in faded windows.
+- **VimadeOverrideAll** - Combines all VimadeOverride commands.
 
 ##### FAQ/Help
 I am using GVIM and my mappings are not working
