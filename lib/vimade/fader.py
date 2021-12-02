@@ -151,7 +151,7 @@ def update(nextState = None):
 
     if state.wrap != wrap:
       state.wrap = wrap
-      if not hasActiveWindow:
+      if not hasActiveBuffer:
         fade[winid] = state
 
     if diff and GLOBALS.group_diff:
