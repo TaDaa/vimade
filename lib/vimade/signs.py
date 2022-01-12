@@ -32,7 +32,7 @@ def unfade_bufs(bufs):
   global PLACES
   global SIGN_IDS_UNUSED
 
-  buf_signs = util.eval_and_return('[' + ','.join(['get(getbufinfo('+x.bufnr+')[0], \'signs\', [])' for x in bufs ]) + ']')
+  buf_signs = util.eval_and_return('[' + ','.join(['get(get(getbufinfo('+x.bufnr+'), 0, {}), \'signs\', [])' for x in bufs ]) + ']')
   # start = time.time()
   i = 0
   for signs in buf_signs:
