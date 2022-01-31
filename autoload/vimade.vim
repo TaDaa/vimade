@@ -41,7 +41,11 @@ function! vimade#GetFeatures()
     let g:vimade_features.has_gui = has('gui')
     let g:vimade_features.has_nvim = has('nvim')
     let g:vimade_features.has_vimr = has('gui_vimr')
-    let g:vimade_features.has_python = has('python')
+    try
+      let g:vimade_features.has_python = has('python')
+    catch
+      let g:vimade_features.has_python = 0
+    endtry
     let g:vimade_features.has_python3 = has('python3')
     let g:vimade_features.has_gui_version = !has('nvim') && (execute('version')=~"GUI version")
     "sign group/priority test
