@@ -9,7 +9,7 @@ SIGN_CACHE = {}
 PLACES = []
 SIGN_IDS_UNUSED = []
 def parseParts(line):
-  parts = re.split('[\s\t]+', line)
+  parts = re.split(r'[\s\t]+', line)
   item = {}
   for part in parts:
     split = part.split('=')
