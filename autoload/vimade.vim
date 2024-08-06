@@ -214,6 +214,12 @@ function! vimade#GetDefaults()
 
     let g:vimade_defaults.enabletreesitter = 0
 
+    ""@setting vimade.ignorebuffers
+    "A list of buffer names or patterns to ignore. Buffers matching these will not be faded.
+    "Example: ['neo-tree', 'NvimTree', '*.log']
+
+    let g:vimade_defaults.ignorebuffers = []
+
     let g:vimade_defaults_keys = keys(g:vimade_defaults)
     if exists('g:vimade_detect_term_colors')
       let g:vimade.detecttermcolors = g:vimade_detect_term_colors
