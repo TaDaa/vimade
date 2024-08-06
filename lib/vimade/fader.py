@@ -102,6 +102,9 @@ def update(nextState = None):
     tabnr = str(window.tabpage.number)
     if activeTab != tabnr:
       continue
+    buffer_name = window.buffer.name
+    if should_ignore_buffer(buffer_name):
+      continue
     (winid, diff, wrap, buftype, win_disabled, buf_disabled, vimade_fade_active, scrollbind, win_syntax, buf_syntax, tabstop) = util.eval_and_return('[win_getid('+winnr+'), gettabwinvar('+tabnr+','+winnr+',"&diff"), gettabwinvar('+tabnr+','+winnr+',"&wrap"), gettabwinvar('+tabnr+','+winnr+',"&buftype"), gettabwinvar('+tabnr+','+winnr+',"vimade_disabled"), getbufvar('+bufnr+', "vimade_disabled"),  g:vimade_fade_active, gettabwinvar('+tabnr+','+winnr+',"&scrollbind"), gettabwinvar('+tabnr+','+winnr+',"current_syntax"), gettabwinvar('+tabnr+','+winnr+',"&syntax"), gettabwinvar('+tabnr+','+winnr+',"&tabstop")]')
     syntax = win_syntax if win_syntax else buf_syntax
     floating = util.eval_and_return('nvim_win_get_config('+str(winid)+')') if HAS_NVIM_WIN_GET_CONFIG else False

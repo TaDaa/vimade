@@ -64,6 +64,8 @@ ENABLE_SIGNS = 8
 DISABLE_SIGNS = 16
 BASEGROUPS = 32
 
+ignorebuffers = []
+
 def getInfo():
   global_vars = vars(GLOBALS)
   result = {}
