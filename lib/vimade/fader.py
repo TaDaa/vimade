@@ -6,6 +6,7 @@ if (sys.version_info > (3, 0)):
 import vim
 import math
 import time
+import fnmatch
 from vimade import util
 from vimade import highlighter
 from vimade import signs
@@ -28,6 +29,10 @@ changedWin = False
 buffers = {}
 activeWindow = util.eval_and_return('win_getid('+str(vim.current.window.number)+')')
 activeBuffer = str(vim.current.buffer.number)
+
+def should_ignore_buffer(buffer_name):
+    ignore_patterns = GLOBALS.ignorebuffers
+    return any(fnmatch.fnmatch(buffer_name, pattern) for pattern in ignore_patterns)
 
 
 
