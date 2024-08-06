@@ -32,7 +32,7 @@ activeBuffer = str(vim.current.buffer.number)
 
 def should_ignore_buffer(buffer_name):
     ignore_patterns = GLOBALS.ignorebuffers
-    return any(fnmatch.fnmatch(buffer_name, pattern) for pattern in ignore_patterns)
+    return any(pattern in buffer_name or fnmatch.fnmatch(buffer_name, pattern) for pattern in ignore_patterns)
 
 
 
