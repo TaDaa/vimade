@@ -1,4 +1,5 @@
 import sys
+import fnmatch
 IS_V3 = False
 if (sys.version_info > (3, 0)):
     IS_V3 = True
@@ -31,11 +32,25 @@ activeWindow = util.eval_and_return('win_getid('+str(vim.current.window.number)+
 activeBuffer = str(vim.current.buffer.number)
 
 def should_ignore_buffer(buffer_name):
-    ignore_patterns = GLOBALS.ignorebuffers
-    return any(pattern in buffer_name or fnmatch.fnmatch(buffer_name, pattern) for pattern in ignore_patterns)
+  global GLOBALS
 
+  # print(f"Debug: Checking buffer: {buffer_name}")
+  # print(f"Debug: GLOBALS.ignorebuffers = {GLOBALS.ignorebuffers}")
 
+  ignore_patterns = GLOBALS.ignorebuffers
+  
+  if not isinstance(ignore_patterns, list):
+      ignore_patterns = [ignore_patterns]
+  
+  buffer_name = buffer_name.lower()  # Make case-insensitive
+  
+  result = any(
+      str(pattern).lower() in buffer_name or fnmatch.fnmatch(buffer_name, str(pattern).lower())
+      for pattern in ignore_patterns
+  )
 
+  # print(f"Debug: Should ignore {buffer_name}: {result}")
+  return result
 
 
 def update(nextState = None):
@@ -201,7 +216,7 @@ def update(nextState = None):
     elif not state.faded and not hasActiveBuffer:
       fade[winid] = state
 
-    if 'coc-explorer' in state.name or 'NERD' in state.name:
+    if 'coc-explorer' in state.name or 'NERD' in state.name or 'neo-tree' in state.name:
       state.is_explorer = True
     if 'vim-minimap' in state.name or '-MINIMAP-' in state.name:
       state.is_minimap = True

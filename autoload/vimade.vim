@@ -458,9 +458,10 @@ function! vimade#CheckWindows()
     return
   endif
   if g:vimade_running && g:vimade_paused == 0 && getcmdwintype() == ''
+    " echo "Debug: ignorebuffers = " . string(g:vimade.ignorebuffers)
     exec g:vimade_py_cmd join([
         \ "from vimade import bridge",
-        \ "bridge.update({'activeBuffer': str(vim.current.buffer.number), 'activeTab': '".tabpagenr()."', 'activeWindow': '".win_getid(winnr())."'})",
+        \ "bridge.update({'activeBuffer': str(vim.current.buffer.number), 'activeTab': '".tabpagenr()."', 'activeWindow': '".win_getid(winnr())."', 'ignorebuffers': vim.eval('string(g:vimade.ignorebuffers)')})",
     \ ], "\n")
   endif
 endfunction
