@@ -28,10 +28,8 @@ changedWin = False
 buffers = {}
 activeWindow = util.eval_and_return('win_getid('+str(vim.current.window.number)+')')
 activeBuffer = str(vim.current.buffer.number)
-
-
-
-
+tab = (bytes('\t', 'utf-8', 'replace') if IS_V3 else '\t')[0]
+sp = (bytes(' ', 'utf-8', 'replace') if IS_V3 else ' ')[0]
 
 def update(nextState = None):
   start = time.time()
@@ -569,14 +567,17 @@ def fadeWin(winState):
       #get syntax id and cache
       current = colors[column - 1]
       if current == None:
-        if text[column-1] != '' and text[column-1] != ' ' and text[column-1] != '\t':
+        if text[column-1] != '' and text[column-1] != sp and text[column-1] != tab:
           if str(column-1) in ts_results:
             ids.append(str(ts_results[str(column-1)]))
           else:
             ids.append('synID(%s,%s,0)' % (row,column))
-        else:
-          ids.append('0')
-        gaps.append((index, column - 1, text[column - 1]))
+          gaps.append((index, column - 1, text[column - 1]))
+        # if enable_basegroups isn't supported, we need to force spaces and tabs to be fade as Normal.
+        # Neovim will typically cover listchars via NonText or another basegroup.
+        elif GLOBALS.enable_basegroups == False:
+            ids.append('0')
+            gaps.append((index, column - 1, text[column - 1]))
       column = column + 1
 
   if len(ids):
