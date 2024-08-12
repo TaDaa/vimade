@@ -299,7 +299,11 @@ def gotoWin(winid):
     FADE.currentWin = winid
     if FADE.changedWin == False:
       FADE.changedWin = True
-      vim.command('noautocmd set winwidth=1 | noautocmd call win_gotoid('+winid+')')
+      # neovim 10-only win switching error can occur while buffer is closing
+      try:
+        vim.command('noautocmd set winwidth=1 | noautocmd call win_gotoid('+winid+')')
+      except:
+        pass
     else:
       vim.command('noautocmd call win_gotoid('+winid+')')
 
