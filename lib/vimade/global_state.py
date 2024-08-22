@@ -77,7 +77,7 @@ def getInfo():
 
 def update():
   returnState = READY
-  allGlobals = util.mem_safe_eval('[g:vimade, &background, execute(":colorscheme"), &termguicolors, &winwidth]')
+  allGlobals = util.mem_safe_eval('[g:vimade, &background, exists("g:colors_name") ? g:colors_name : "", &termguicolors, &winwidth]')
   nextGlobals = allGlobals[0]
   background = allGlobals[1]
   colorscheme = allGlobals[2]

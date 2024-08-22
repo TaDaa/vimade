@@ -533,7 +533,7 @@ function! vimade#UpdateState()
     endif
   endif
   let g:vimade.__background = &background
-  let g:vimade.__colorscheme = execute(":colorscheme")
+  let g:vimade.__colorscheme = exists('g:colors_name') ? g:colors_name : ""
   let g:vimade.__termguicolors = &termguicolors
 endfunction
 
