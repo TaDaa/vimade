@@ -196,7 +196,8 @@ M.from_other = function (wininfo, skip_link)
     }, win, M.CHANGED))
 
 
-    if not GLOBALS.nohlcheck
+    if not win.ns
+      or not GLOBALS.nohlcheck
       or GLOBALS.tick_state >= GLOBALS.RECALCULATE then
       local ns = NAMESPACE.get_replacement(win, real_ns)
       if ns.modified == true then
