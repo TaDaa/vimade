@@ -72,8 +72,6 @@ M.from_winid = function (winid)
   return result and result.vimade_ns
 end
 
---M.namespace_compare = function (ns)
-
 M.clear_winid = function (winid)
   local current_win_ns = M.winid_lookup[winid] 
   if current_win_ns ~= nil then

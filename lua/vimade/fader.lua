@@ -21,7 +21,7 @@ end
 local update = function (global_update)
   local windows = vim.fn.getwininfo()
   local fade_windows = GLOBALS.fademode == 'windows'
-  local fade_buffers = GLOBALS.fademode == 'buffers'
+  local fade_buffers = not fade_windows
   local current = GLOBALS.current
   local updated_cache = {}
 

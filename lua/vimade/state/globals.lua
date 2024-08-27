@@ -96,7 +96,7 @@ local DEFAULTS = {
       win_vars = nil,
       win_config = nil,
     },
-    -- include_alternative matchers if desird
+    -- include_alternative matchers if desired
     -- function(win, activeWin) end
   },
   blocklist = {
@@ -114,19 +114,10 @@ local DEFAULTS = {
       win_vars = nil,
       win_config = nil,
     },
-    -- include_alternative matchers if desird
+    -- include_alternative matchers if desired
     -- function(win) end
   }
 }
-
--- cached -- not state related
---[[
-   [M.highlights = {
-   [  normal = nil,
-   [  normalnc = nil,
-   [  vimade_0 = nil,
-   [}
-   ]]
 
 local check_fields = function (fields, next, current, defaults, return_state)
   local modified = false
@@ -168,8 +159,6 @@ M.refresh = function ()
   M.tick_state = bit.bor(M.tick_state, check_fields({
     'normalid',
     'normalncid',
-    --'fadelevel', -- TODO support functions for each of these
-    --'tint', -- TODO support functions for each of these
   }, vimade, M, DEFAULTS, M.RECALCULATE))
   M.tick_state = bit.bor(M.tick_state, check_fields({
     'dark',
@@ -177,7 +166,6 @@ M.refresh = function ()
   }, {
     is_dark = vim.go.background == 'dark',
     colorscheme = vim.g.colors_name,
-    -- TODO fix nohlcheck
   }, M, OTHER, M.RECALCULATE))
   M.tick_state = bit.bor(M.tick_state, check_fields({
     'vimade_fade_active',
@@ -186,7 +174,6 @@ M.refresh = function ()
   }, M, OTHER, M.UPDATE))
   M.tick_state = bit.bor(M.tick_state, check_fields({
     'fademode',
-    -- TODO just extend these via props
   }, vimade, M, DEFAULTS, M.UPDATE))
   M.tick_state = bit.bor(M.tick_state, check_fields({
     'winid',
@@ -194,23 +181,6 @@ M.refresh = function ()
     'tabnr',
   }, current, M.current, CURRENT, M.UPDATE))
 
-  --[[
-     [if M.global_ns == nil then
-     [  M.global_ns = NAMESPACE.get_replacement({winid= 'g'}, 0)
-     [else
-     [  -- TODO is this line below needed
-     [  -- verify recalculate behaviors and
-     [  --global_ns.modified = false
-     [  -- TODO fix nohlcheck
-     [  if not M.nohlcheck or bit.band(M.RECALCULATE, M.tick_state) > 0 then
-     [    NAMESPACE.check_ns_modified(M.global_ns)
-     [  end
-     [end
-     [if M.global_ns.modified == true then
-     [  M.global_highlights = M.global_ns.real_highlights
-     [  M.tick_state = bit.bor(M.UPDATE, M.tick_state)
-     [end
-     ]]
   if not M.global_ns or not M.nohlcheck or bit.band(M.RECALCULATE, M.tick_state) > 0 then
     M.refresh_global_ns()
     if M.nohlcheck and M.global_ns.modified == true then

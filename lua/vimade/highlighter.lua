@@ -6,7 +6,6 @@ local TYPE = require('vimade.util.type')
 local get_highlights = function (win, config)
   local output = TYPE.deep_copy(GLOBALS.global_highlights)
   if win.ns.real_ns ~=0 then
-    --print('override', win.ns.real_ns)
     local overrides = TYPE.deep_copy(win.ns.real_highlights)
     for name, override in pairs(overrides) do
       if output[name] == nil then
@@ -20,7 +19,6 @@ local get_highlights = function (win, config)
     end
     return output
   else
-    --print('condition2')
     return output
   end
 end
@@ -36,23 +34,13 @@ M.set_highlights = function(win)
 
   if win.is_active_win then
     --pass
-    --normal = normal_nc
   else
-    --if normal_nc.ctermfg ~= nil then
-      --normal.ctermfg = normal_nc.ctermfg
-    --end
     if normal_nc.ctermbg ~= nil then
       normal.ctermbg = normal_nc.ctermbg
     end
     if normal_nc.bg ~= nil then
       normal.bg = normal_nc.bg
     end
-    --if normal_nc.sp ~= nil then
-      --normal.sp = normal_nc.sp
-    --end
-    --if normal_nc.fg ~= nil then
-      --normal.fg = normal_nc.fg
-    --end
   end
 
   local normal_bg = normal.bg or default_bg
@@ -90,10 +78,8 @@ M.set_highlights = function(win)
     if name == 'NormalNC' or name =='Normal' then
       --pass
     else
-      --if highlight.link == nil then
       local hi = M.create_highlight(highlight, target, fade)
       vim.api.nvim_set_hl(win.ns.vimade_ns, name, hi)
-      --end
     end
   end
   normal = M.create_highlight(normal, target, fade)
