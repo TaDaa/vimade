@@ -29,4 +29,8 @@ M.update = function ()
   FADER.tick();
 end
 
+M.softInvalidateSigns = function ()
+  -- no plans for implementation at this time
+end
+
 return M
