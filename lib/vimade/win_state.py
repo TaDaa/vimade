@@ -1,5 +1,5 @@
 class WinState:
-  def __init__(self, id, window, hasActiveBuffer = False, hasActiveWindow = False):
+  def __init__(self, id, window, hasActive = False, hasActiveBuffer = False, hasActiveWindow = False):
     self.win = window
     self.id = id
     self.diff = False
@@ -7,6 +7,7 @@ class WinState:
     self.number = None
     self.height = -1
     self.width = -1
+    self.hasActive = hasActive
     self.hasActiveBuffer = hasActiveBuffer
     self.hasActiveWindow = hasActiveWindow
     self.matches = []

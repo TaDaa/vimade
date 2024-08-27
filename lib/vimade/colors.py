@@ -5,7 +5,6 @@ from vimade import util
 (is_nvim, normal_id) = util.eval_and_return('[has("nvim"), hlID("Normal")]')
 is_nvim = int(is_nvim)
 
-
 def fromHexStringToRGB(source):
   return [int(source[1:3], 16), int(source[3:5], 16), int(source[5:7], 16)]
 def fromRGBToHexString(source):
@@ -67,7 +66,9 @@ def interpolate24b(source, to, fade_level):
 
 #this algorithm is better at preserving color
 #TODO we need to handle grays better
-thresholds = [-1,0, 95, 135, 175, 215, 255, 256]
+rgb_thresholds = [-1,0, 95, 135, 175, 215, 255, 256]
+grey_thresholds = [-1, 8, 18, 28, 38, 48, 58, 68, 78, 88, 98, 108, 118, 128, 138, 148, 158, 168, 178, 188, 198, 208, 218, 228, 238, 258]
+grey_thresholds_target_ln = len(grey_thresholds) - 2
 def interpolate256(source, to, fade_level):
   if not isinstance(source, list):
     source = RGB_256[int(source)]
@@ -78,30 +79,37 @@ def interpolate256(source, to, fade_level):
     dir = (to[0]+to[1]+to[2]) / 3 - (source[0]+source[1]+source[2]) / 3
 
     i = -1
-    result = [0,0,0]
+    rgb_result = [0,0,0]
+    grey_result = [0,0,0]
     for v in rgb: 
       i += 1
       j = 1
-      last = - 1
-      while j < len(thresholds) - 1:
-        if v > thresholds[j]:
+      while j < len(rgb_thresholds) - 1:
+        if v > rgb_thresholds[j]:
           j += 1
           continue
-        if v < (thresholds[j]/2.5 + thresholds[j-1]/2):
-          result[i] = j - 1
+        if v < (rgb_thresholds[j]/2.5 + rgb_thresholds[j-1]/2):
+          rgb_result[i] = j - 1
         else:
-          result[i] = j
+          rgb_result[i] = j
+        break
+      j = 1
+      while j < len(grey_thresholds) - 1:
+        if v > grey_thresholds[j]:
+          j += 1
+          continue
+        if v < (grey_thresholds[j]/2.5 + grey_thresholds[j-1]/2):
+          grey_result[i] = j - 1
+        else:
+          grey_result[i] = j
         break
 
-    r = result[0]
-    g = result[1]
-    b = result[2]
-
-    i = -1
+    r = rgb_result[0]
+    g = rgb_result[1]
+    b = rgb_result[2]
     r0 = rgb[0]
     g0 = rgb[1]
     b0 = rgb[2]
-    
     thres = 25
     dir = -1 if dir > thres  else 1
     if dir < 0:
@@ -112,34 +120,43 @@ def interpolate256(source, to, fade_level):
     #color fix
     if r == g and g == b and r == b:
       if (r0 >= g0 or r0 >= b0) and (r0 <= g0 or r0 <= b0):
-        if g0 - thres > r0: g = result[1]+dir
-        if b0 - thres > r0: b = result[2]+dir
-        if g0 + thres < r0: g = result[1]-dir
-        if b0 + thres < r0: b = result[2]-dir
+        if g0 - thres > r0: g = rgb_result[1]+dir
+        if b0 - thres > r0: b = rgb_result[2]+dir
+        if g0 + thres < r0: g = rgb_result[1]-dir
+        if b0 + thres < r0: b = rgb_result[2]-dir
       elif (g0 >= r0 or g0 >= b0) and (g0 <= r0 or g0 <= b0):
-        if r0 - thres > g0: r = result[0]+dir
-        if b0 - thres > g0: b = result[2]+dir
-        if r0 + thres < g0: r = result[0]-dir
-        if b0 + thres < g0: b = result[2]-dir
+        if r0 - thres > g0: r = rgb_result[0]+dir
+        if b0 - thres > g0: b = rgb_result[2]+dir
+        if r0 + thres < g0: r = rgb_result[0]-dir
+        if b0 + thres < g0: b = rgb_result[2]-dir
       elif (b0 >= g0 or b0 >= r0) and (b0 <= g0 or b0 <= r0):
-        if g0 - thres > b0: g = result[1]+dir
-        if r0 - thres > b0: r = result[0]+dir
-        if g0 + thres < b0: g = result[1]-dir
-        if r0 + thres < b0: r = result[0]-dir
+        if g0 - thres > b0: g = rgb_result[1]+dir
+        if r0 - thres > b0: r = rgb_result[0]+dir
+        if g0 + thres < b0: g = rgb_result[1]-dir
+        if r0 + thres < b0: r = rgb_result[0]-dir
 
-    if r == 0 or g == 0 or b == 0:
-      r += 1
-      g += 1
-      b += 1
+    if r < 1 or g < 1 or b < 1:
+      r = r + 1
+      g = g + 1
+      b = b + 1
+    if r == 7 or g == 7 or b == 7:
+      r = r - 1
+      g = g - 1
+      b = b - 1
+    r = min(max(r, 1), 6)
+    g = min(max(g, 1), 6)
+    b = min(max(b, 1), 6)
 
-    if b == 7 or r == 7 or g == 7:
-      r -= 1
-      g -= 1
-      b -= 1
-
-    r = thresholds[r]
-    g = thresholds[g]
-    b = thresholds[b]
+    r = rgb_thresholds[r]
+    g = rgb_thresholds[g]
+    b = rgb_thresholds[b]
+    grey = max(grey_result[0], grey_result[1], grey_result[2])
+    grey = min(max(grey, 1), grey_thresholds_target_ln)
+    grey = grey_thresholds[grey]
+    if abs(grey-r0) + abs(grey - g0) + abs(grey - b0) < (abs(r-r0) + abs(g - g0) + abs(b - b0)) / 1.2:
+      r = grey
+      g = grey
+      b = grey
   else:
     r = source[0]
     g = source[1]

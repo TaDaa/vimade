@@ -95,7 +95,7 @@ def update(nextState = None):
     tabnr = str(window.tabpage.number)
     if activeTab != tabnr:
       continue
-    (winid, diff, wrap, buftype, win_disabled, buf_disabled, vimade_fade_active, scrollbind, win_syntax, buf_syntax, tabstop) = util.eval_and_return('[win_getid('+winnr+'), gettabwinvar('+tabnr+','+winnr+',"&diff"), gettabwinvar('+tabnr+','+winnr+',"&wrap"), gettabwinvar('+tabnr+','+winnr+',"&buftype"), gettabwinvar('+tabnr+','+winnr+',"vimade_disabled"), getbufvar('+bufnr+', "vimade_disabled"),  g:vimade_fade_active, gettabwinvar('+tabnr+','+winnr+',"&scrollbind"), gettabwinvar('+tabnr+','+winnr+',"current_syntax"), gettabwinvar('+tabnr+','+winnr+',"&syntax"), gettabwinvar('+tabnr+','+winnr+',"&tabstop")]')
+    (winid, diff, wrap, buftype, win_disabled, buf_disabled, vimade_fade_active, scrollbind, win_syntax, buf_syntax, tabstop, wincolor) = util.eval_and_return('[win_getid('+winnr+'), gettabwinvar('+tabnr+','+winnr+',"&diff"), gettabwinvar('+tabnr+','+winnr+',"&wrap"), gettabwinvar('+tabnr+','+winnr+',"&buftype"), gettabwinvar('+tabnr+','+winnr+',"vimade_disabled"), getbufvar('+bufnr+', "vimade_disabled"),  g:vimade_fade_active, gettabwinvar('+tabnr+','+winnr+',"&scrollbind"), gettabwinvar('+tabnr+','+winnr+',"current_syntax"), gettabwinvar('+tabnr+','+winnr+',"&syntax"), gettabwinvar('+tabnr+','+winnr+',"&tabstop"), gettabwinvar('+tabnr+','+winnr+',"&wincolor")]')
     syntax = win_syntax if win_syntax else buf_syntax
     floating = util.eval_and_return('nvim_win_get_config('+str(winid)+')') if HAS_NVIM_WIN_GET_CONFIG else False
     if floating and 'relative' in floating:
@@ -110,6 +110,7 @@ def update(nextState = None):
     vimade_fade_active = int(vimade_fade_active)
     hasActiveBuffer = False if vimade_fade_active else bufnr == activeBuffer
     hasActiveWindow = False if vimade_fade_active else winid == activeWindow
+    hasActive = (GLOBALS.fade_windows and hasActiveWindow) or (GLOBALS.fade_buffers and hasActiveBuffer)
 
     # window was unhandled -- add to FADE
     if not bufnr in FADE.buffers:
@@ -120,7 +121,7 @@ def update(nextState = None):
       
 
     if not winid in FADE.windows:
-      state = FADE.windows[winid] = WinState(winid, window, hasActiveBuffer, hasActiveWindow)
+      state = FADE.windows[winid] = WinState(winid, window, hasActive, hasActiveBuffer, hasActiveWindow)
       state.syntax = syntax
     else:
       state = FADE.windows[winid]
@@ -141,7 +142,7 @@ def update(nextState = None):
     if syntax != state.syntax:
       state.clear_syntax = state.syntax
       state.syntax = syntax
-      if not hasActiveBuffer:
+      if not hasActive:
         fade[winid] = state
 
 
@@ -149,17 +150,20 @@ def update(nextState = None):
 
     if state.wrap != wrap:
       state.wrap = wrap
-      if not hasActiveBuffer:
+      if not hasActive:
         fade[winid] = state
+
+    if not hasActive and hasActiveBuffer:
+      fade[winid] = state
 
     if diff and GLOBALS.group_diff:
       diffs.append(state)
-      if hasActiveBuffer:
+      if hasActive:
         activeDiff = True
 
     if scrollbind and GLOBALS.group_scrollbind:
       scrollbinds.append(state)
-      if hasActiveBuffer:
+      if hasActive:
         activeScrollbind = True
 
     # window state changed
@@ -170,25 +174,26 @@ def update(nextState = None):
       state.height = height
       state.width = width
       state.cursor = (cursor[0], cursor[1])
-      if not hasActiveBuffer:
+      if not hasActive:
         fade[winid] = state
       state.size_changed = True
     else:
       state.size_changed = False
     if state.buffer != bufnr:
       state.buffer = bufnr
-    if state.hasActiveBuffer != hasActiveBuffer:
-      state.hasActiveBuffer = hasActiveBuffer
-      if hasActiveBuffer:
+    if state.hasActive != hasActive:
+      state.hasActive = hasActive
+      if hasActive:
         unfade[winid] = state
       else:
         fade[winid] = state
-    if state.hasActiveWindow != hasActiveWindow:
-      state.hasActiveWindow = hasActiveWindow
 
-    if state.faded and hasActiveBuffer:
+    state.hasActiveBuffer = hasActiveBuffer
+    state.hasActiveWindow = hasActiveWindow
+
+    if state.faded and hasActive:
       unfade[winid] = state
-    elif not state.faded and not hasActiveBuffer:
+    elif not state.faded and not hasActive:
       fade[winid] = state
 
     if 'coc-explorer' in state.name or 'NERD' in state.name:
@@ -225,6 +230,8 @@ def update(nextState = None):
 
   for win in fade.values():
     fadeWin(win)
+    if not GLOBALS.is_nvim and GLOBALS.fade_windows:
+       util.eval_and_return('settabwinvar('+win.tab+','+win.number+',"&wincolor", "vimade_0")')
     if GLOBALS.enable_basegroups:
       fadeBase(win)
     if not FADE.buffers[win.buffer].faded:
@@ -235,6 +242,8 @@ def update(nextState = None):
     if win.faded:
       unfadeWin(win)
       win.faded = False
+      if not GLOBALS.is_nvim and GLOBALS.fade_windows:
+         util.eval_and_return('settabwinvar('+win.tab+','+win.number+',"&wincolor", "")')
       if GLOBALS.enable_basegroups:
         unfadeBase(win)
       if not win.buffer in unfade_signs:
@@ -299,11 +308,7 @@ def gotoWin(winid):
     FADE.currentWin = winid
     if FADE.changedWin == False:
       FADE.changedWin = True
-      # neovim 10-only win switching error can occur while buffer is closing
-      try:
-        vim.command('noautocmd set winwidth=1 | noautocmd call win_gotoid('+winid+')')
-      except:
-        pass
+      vim.command('noautocmd set winwidth=1 | noautocmd call win_gotoid('+winid+')')
     else:
       vim.command('noautocmd call win_gotoid('+winid+')')
 
@@ -550,7 +555,7 @@ def fadeWin(winState):
     ts_results = None
     if GLOBALS.enable_treesitter:
       try:
-        ts_results = vim.lua._vimade.get_highlights(winState.buffer,row-1,row,column-1,endCol)
+        ts_results = vim.lua._vimade_legacy_treesitter.get_highlights(winState.buffer,row-1,row,column-1,endCol)
       except:
         pass
     if ts_results == None:

@@ -20,6 +20,9 @@ background = None
 colorscheme = None
 row_buf_size = None
 col_buf_size = None
+fade_windows = False
+fade_buffers = True
+fade_mode = 'buffers'
 fade_priority = None
 fade_minimap = None
 normal_id = None
@@ -102,6 +105,7 @@ def update():
   enabletreesitter = int(nextGlobals['enabletreesitter']) if is_nvim else 0
   groupscrollbind = int(nextGlobals['groupscrollbind'])
   groupdiff = int(nextGlobals['groupdiff'])
+  fademode = nextGlobals['fademode']
 
   GLOBALS.fade_minimap = fademinimap
   GLOBALS.row_buf_size = rowbufsize
@@ -111,6 +115,9 @@ def update():
   GLOBALS.group_scrollbind = groupscrollbind
   GLOBALS.group_diff = groupdiff
   GLOBALS.win_width = winwidth
+  GLOBALS.fade_mode = fademode
+  GLOBALS.fade_windows = fademode == 'windows'
+  GLOBALS.fade_buffers = not GLOBALS.fade_windows
 
   if GLOBALS.signs_id == None:
     GLOBALS.signs_id = signsid
@@ -130,7 +137,7 @@ def update():
     GLOBALS.enable_treesitter = enabletreesitter
     if GLOBALS.enable_treesitter and GLOBALS.require_treesitter == 0:
       try:
-        vim.api.exec_lua("_vimade = require('vimade')", [])
+        vim.api.exec_lua("_vimade_legacy_treesitter = require('vimade_legacy_treesitter')", [])
       except: 
           pass
       GLOBALS.require_treesitter = 1

@@ -4,6 +4,7 @@ function! vimade#Empty()
 endfunction
 
 function! vimade#CreateGlobals()
+  let g:vimade_lua_renderer = exists('g:vimade') && get(g:vimade, 'renderer') =~ 'lua'
   if !exists('g:vimade_running')
 
     ""@setting vimade_running
@@ -18,21 +19,25 @@ function! vimade#CreateGlobals()
     let g:vimade = {}
   endif
 
-  if !exists('g:vimade_py_cmd')
-    if has('python3')
-      let g:vimade_py_cmd = "py3"
-    elseif has('python')
-      let g:vimade_py_cmd = "py"
-    else
-      finish
+  if !g:vimade_lua_renderer
+    if !exists('g:vimade_py_cmd')
+      if has('python3')
+        let g:vimade_py_cmd = "py3"
+      elseif has('python')
+        let g:vimade_py_cmd = "py"
+      elseif has('nvim') 
+        " default to lua renderer if python not found and the user is using
+        " neovim. Currently experimental
+        let g:vimade_lua_renderer = 1
+        return
+      endif
     endif
+
+    exec g:vimade_py_cmd  join([
+        \ "import vim",
+        \ "sys.path.append(vim.eval('g:vimade_plugin_current_directory'))",
+    \ ], "\n")
   endif
-
-  exec g:vimade_py_cmd  join([
-      \ "import vim",
-      \ "sys.path.append(vim.eval('g:vimade_plugin_current_directory'))",
-  \ ], "\n")
-
 endfunction
 function! vimade#GetFeatures()
   if !exists('g:vimade_features')
@@ -49,16 +54,18 @@ function! vimade#GetFeatures()
     let g:vimade_features.has_python3 = has('python3')
     let g:vimade_features.has_gui_version = !has('nvim') && (execute('version')=~"GUI version")
     "sign group/priority test
-    try
-      sign define Vimade_Test text=1
-      sign place 1 group=vimade line=1 name=Vimade_Test priority=100
-      sign unplace 1 group=vimade
-      let g:vimade_features.has_sign_group = 1
-      let g:vimade_features.has_sign_priority = 1
-    catch
-      let g:vimade_features.has_sign_group = 0
-      let g:vimade_features.has_sign_priority = 0
-    endtry
+    if !g:vimade_lua_renderer
+      try
+        sign define Vimade_Test text=1
+        sign place 1 group=vimade line=1 name=Vimade_Test priority=100
+        sign unplace 1 group=vimade
+        let g:vimade_features.has_sign_group = 1
+        let g:vimade_features.has_sign_priority = 1
+      catch
+        let g:vimade_features.has_sign_group = 0
+        let g:vimade_features.has_sign_priority = 0
+      endtry
+    endif
   endif
   return g:vimade_features
 endfunction
@@ -95,6 +102,12 @@ function! vimade#GetDefaults()
     "Amount of fading applied between text and basebg.  0 will make the text the same color as the background and 1 applies no fading.  The default value is 0.4.  If you are using terminal, you may need to tweak this value to get better results.
 
     let g:vimade_defaults.fadelevel = 0.4
+
+    ""@setting vimade.fademode
+    "Whether to fade active windows or buffers.  Options are 'windows' or
+    "'buffers'.  Defaults to 'buffers'.
+
+    let g:vimade_defaults.fademode = 'buffers'
    
     ""@setting vimade.colbufsize
     "The number of cols left and right of the determined scroll area that should be precalculated. Reduce this value to improve performance. Default is 15 for gui vim and 5 for terminals/gvim.
@@ -124,7 +137,7 @@ function! vimade#GetDefaults()
     ""@setting vimade.enablescroll
     "Enables fading while scrolling inactive windows.  This is only useful in gui vim and does have a performance cost.  By default this setting is enabled in gui vim and disabled for terminals.
 
-    let g:vimade_defaults.enablescroll = (g:vimade_features.has_gui_running || g:vimade_features.has_vimr) && !(g:vimade_features.has_gui_version)
+    let g:vimade_defaults.enablescroll = g:vimade_lua_renderer || ((g:vimade_features.has_gui_running || g:vimade_features.has_vimr) && !(g:vimade_features.has_gui_version))
 
     ""@setting vimade.enablesigns
     "Enabled by default for vim/nvim versions that support sign priority and causes signs to be faded when switching buffers.
@@ -132,7 +145,7 @@ function! vimade#GetDefaults()
     "on older nvim/vim versions that don't support sign priority. 
     "Use signsretentionperiod to control the duration that vimade checks for sign updates after switching buffers.
 
-    let g:vimade_defaults.enablesigns = g:vimade_features.has_sign_priority
+    let g:vimade_defaults.enablesigns = g:vimade_lua_renderer || g:vimade_features.has_sign_priority
 
     ""@setting vimade.signsid
     "The starting id that Vimade should use when creating new signs. By
@@ -268,7 +281,9 @@ function! vimade#Disable()
   let g:vimade_running = 0
   call vimade#StopTimer()
 
-  if exists('g:vimade_py_cmd')
+  if g:vimade_lua_renderer
+    lua require('vimade').unfadeAll()
+  elseif exists('g:vimade_py_cmd')
     exec g:vimade_py_cmd join([
         \ "from vimade import bridge",
         \ "bridge.unfadeAll()",
@@ -277,10 +292,12 @@ function! vimade#Disable()
 endfunction
 
 function! vimade#DetectTermColors()
-  exec g:vimade_py_cmd join([
-      \ "from vimade import bridge",
-      \ "bridge.detectTermColors()",
-  \ ], "\n")
+  if !g:vimade_lua_renderer
+    exec g:vimade_py_cmd join([
+        \ "from vimade import bridge",
+        \ "bridge.detectTermColors()",
+    \ ], "\n")
+  endif
 endfunction
 
 function! vimade#Toggle()
@@ -292,7 +309,6 @@ function! vimade#Toggle()
   endif
 endfunction
 
-"TODO these should just interpolate and expose intensity 
 function! vimade#OverrideFolded()
   hi! clear Folded
   hi! link Folded vimade_0
@@ -314,8 +330,10 @@ function! vimade#OverrideVertSplit()
 endfunction
 
 function! vimade#OverrideEndOfBuffer()
-  hi! clear EndOfBuffer
-  hi! link EndOfBuffer vimade_0
+  if !g:vimade_lua_renderer
+    hi! clear EndOfBuffer
+    hi! link EndOfBuffer vimade_0
+  endif
 endfunction
 
 function! vimade#OverrideNonText()
@@ -361,21 +379,28 @@ function! vimade#InvalidateSigns()
     return
   endif
   if g:vimade_running && g:vimade_paused == 0
-    exec g:vimade_py_cmd join([
-        \ "from vimade import bridge",
-        \ "bridge.softInvalidateSigns()",
-    \ ], "\n")
-
-    call vimade#CheckWindows()
+    if g:vimade_lua_renderer
+      lua require('vimade').softInvalidateSigns()
+    else
+      exec g:vimade_py_cmd join([
+          \ "from vimade import bridge",
+          \ "bridge.softInvalidateSigns()",
+      \ ], "\n")
+      call vimade#CheckWindows()
+    endif
   endif
 endfunction
 
 function! vimade#Recalculate()
   if g:vimade_running && g:vimade_paused == 0
-    exec g:vimade_py_cmd join([
-        \ "from vimade import bridge",
-        \ "bridge.recalculate()",
-    \ ], "\n")
+    if g:vimade_lua_renderer
+      lua require('vimade').recalculate()
+    else
+      exec g:vimade_py_cmd join([
+          \ "from vimade import bridge",
+          \ "bridge.recalculate()",
+      \ ], "\n")
+    endif
   endif
 endfunction
 
@@ -385,12 +410,16 @@ function! vimade#Redraw()
     return
   endif
   if g:vimade_running && g:vimade_paused == 0
-    exec g:vimade_py_cmd join([
-        \ "from vimade import bridge",
-        \ "bridge.unfadeAll()",
-        \ "bridge.recalculate()",
-    \ ], "\n")
-    call vimade#CheckWindows()
+    if g:vimade_lua_renderer
+      lua require('vimade').recalculate()
+    else
+      exec g:vimade_py_cmd join([
+          \ "from vimade import bridge",
+          \ "bridge.unfadeAll()",
+          \ "bridge.recalculate()",
+      \ ], "\n")
+      call vimade#CheckWindows()
+    endif
   endif
 endfunction
 
@@ -408,11 +437,16 @@ endfunction
 
 function! vimade#GetInfo()
   "get debug info
-  exec g:vimade_py_cmd join([
-      \ "from vimade import bridge",
-      \ "import vim",
-      \ "vim.vars['vimade_python_info'] = bridge.getInfo()",
-  \ ], "\n")
+  if g:vimade_lua_renderer
+    " TODO lua require('vimade').getInfo()
+    " Currently unimplemented
+  else
+    exec g:vimade_py_cmd join([
+        \ "from vimade import bridge",
+        \ "import vim",
+        \ "vim.vars['vimade_python_info'] = bridge.getInfo()",
+    \ ], "\n")
+  endif
   return {
       \ 'version': '0.0.5',
       \ 'config': g:vimade,
@@ -445,6 +479,10 @@ function! vimade#FadePriority(priority)
   call vimade#CheckWindows()
 endfunction
 
+function! vimade#DeferredCheckWindows()
+  call timer_start(0, 'vimade#Tick')
+endfunction
+
 function! vimade#CheckWindows()
   call vimade#UpdateState()
   "prevent if inside popup window
@@ -452,10 +490,14 @@ function! vimade#CheckWindows()
     return
   endif
   if g:vimade_running && g:vimade_paused == 0 && getcmdwintype() == ''
-    exec g:vimade_py_cmd join([
-        \ "from vimade import bridge",
-        \ "bridge.update({'activeBuffer': str(vim.current.buffer.number), 'activeTab': '".tabpagenr()."', 'activeWindow': '".win_getid(winnr())."'})",
-    \ ], "\n")
+    if g:vimade_lua_renderer
+      lua require('vimade').update()
+    else
+      exec g:vimade_py_cmd join([
+          \ "from vimade import bridge",
+          \ "bridge.update({'activeBuffer': str(vim.current.buffer.number), 'activeTab': '".tabpagenr()."', 'activeWindow': '".win_getid(winnr())."'})",
+      \ ], "\n")
+    endif
   endif
 endfunction
 
@@ -466,10 +508,14 @@ function! vimade#softInvalidateBuffer(bufnr)
   endif
   "Don't check paused condition because the application may have not been regained and triggered FocusGained event
   if g:vimade_running
-    exec g:vimade_py_cmd join([
-        \ "from vimade import bridge",
-        \ "bridge.softInvalidateBuffer('".a:bufnr."')",
-    \ ], "\n")
+    if g:vimade_lua_renderer
+      lua require('vimade').softInvalidateBuffer()
+    else
+      exec g:vimade_py_cmd join([
+          \ "from vimade import bridge",
+          \ "bridge.softInvalidateBuffer('".a:bufnr."')",
+      \ ], "\n")
+    endif
   endif
   call vimade#CheckWindows()
 endfunction
@@ -480,12 +526,12 @@ function! vimade#UpdateEvents()
       au VimLeave * call vimade#Disable()
       au FocusGained * call vimade#FocusGained()
       au FocusLost * call vimade#FocusLost()
-      au BufEnter * call vimade#CheckWindows()
-      au OptionSet diff call vimade#CheckWindows()
+      au WinEnter,BufEnter * call vimade#CheckWindows()
+      au OptionSet diff call vimade#DeferredCheckWindows()
       au ColorScheme * call vimade#Redraw()
       au FileChangedShellPost * call vimade#softInvalidateBuffer(expand("<abuf>"))
       if g:vimade.usecursorhold
-        au CursorHold * call vimade#Tick(0)
+        au CursorHold,CursorHoldI * call vimade#Tick(0)
         au VimResized * call vimade#Tick(0)
       endif
   augroup END
