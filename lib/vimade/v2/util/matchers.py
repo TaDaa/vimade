@@ -24,7 +24,7 @@ def match_table_any(target, value):
         if M.match_contains_any(target_value, real_value):
           return True
     else:
-      if M.match_contains_any(target_value, value[target_key], M.match_table_any):
+      if M.match_contains_any(target_value, value.get(target_key), M.match_table_any):
         return True
   return False
   
@@ -38,7 +38,7 @@ def each_match_contains_any(target, values):
 
 def _each_match_contains_any(target, value, counts, counts_ln, i):
   for key, t in _pairs(target):
-    counts[key] = counts[key] or {'count': 0}
+    counts[key] = counts.get(key, {'count': 0})
     found = False
     if type(key) == int:
       if callable(t) and type(value) in (list, dict):
@@ -60,10 +60,10 @@ def _each_match_contains_any(target, value, counts, counts_ln, i):
         if t(value[key]) == True:
           found = True
       elif type(t) in list_dict and type(value) in (list, dict):
-        if M._each_match_contains_any(t, value[key], counts[key], counts_ln, i):
+        if M._each_match_contains_any(t, value.get(key), counts[key], counts_ln, i):
           found = True
       elif type(value) in (list, dict):
-        if M.match_primitive(t, value[key]):
+        if M.match_primitive(t, value.get(key)):
           found = True
       elif M.match_primitive(t, value):
         found = True
@@ -93,12 +93,12 @@ def match_table_all(target, value):
           found = M.match_contains_any(target_value, real_value)
      else:
        if callable(target_value):
-          found = target_value(value[target_key])
-        elif type(target_value) in (list, dict) and type(value[target_key]) in (list, dict):
-          found = M.match_table_all(target_value, value[target_key])
+          found = target_value(value.get(target_key))
+        elif type(target_value) in (list, dict) and type(value.get(target_key)) in (list, dict):
+          found = M.match_table_all(target_value, value.get(target_key))
         else:
           # outer compare
-          found = M.match_contains(target_value, value[target_key])
+          found = M.match_contains(target_value, value.get(target_key))
      # we don't care if the value has other keys, this is left match
      if not found:
        return False
@@ -158,7 +158,7 @@ def match_contains_string(target, value):
     for i,v in _pairs(target):
       if M.match_contains_string(v, value):
         return True
-   return false
+   return False
 
 def match_string(target, value):
   return (value+'').lower() in (target+'').lower()

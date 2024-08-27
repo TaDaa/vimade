@@ -138,13 +138,13 @@ _DEFAULTS = {
   'signsretentionperiod': 4000,
 }
 
+def safe
+
 def _check_fields(fields, next, current, defaults, return_state):
   modified = false
   for field in fields:
-    value = next[field] 
-    if value == None:
-      value = defaults[field]
-    if current[field] != value:
+    value = next.get(field, defaults.get(field))
+    if current.get(field) != value:
       current[field] = value
       modified = true
   return modified and return_state or M.READY
@@ -154,9 +154,7 @@ def refresh():
   M.tick_state = M.READY
   current = {
   }
-
-  (
-    vimade,
+  (vimade,
     background,
     colorscheme,
     termguicolors,
@@ -186,7 +184,6 @@ def refresh():
     'normalid',
     'normalncid'
   ], vimade, M, _DEFAULTS, M.RECALCULATE)
-
   M.tick_state |= check_fields([
     'dark',
     'colorscheme'
@@ -204,53 +201,51 @@ def refresh():
   else:
     vimade.enabletreesitter = 0
   vimade.enabletreesitter = enabletreesitter and M.is_nvim
+
   M.tick_state |= check_fields([
     'fadepriority',
     'enabletreesitter'
   ], vimade, M, _DEFAULTS, M.FULL_INVALIDATE)
-
   M.tick_state |= check_fields([
     'vimade_fade_active'
   ], {
     'vimade_fade_active': vimade_fade_active
   }, M, _OTHER, M.UPDATE)
-
   M.tick_state |= check_fields([
     'fademode',
     'enablescroll',
     'colbufsize',
     'rowbufsize'
   ], vimade, M, _DEFAULTS, M.UPDATE)
-
   M.tick_state |= check_fields([
     'winid',
     'bufnr',
     'tabnr',
   ], current, M.current, _CURRENT, M.UPDATE)
-
   M.tick_state |= check_fields([
     'enablesigns'
   ], vimade, M, _DEFAULTS, M.SIGNS)
 
   ## handled in win state
-  M.basegroups = vimade.basegroups or DEFAULTS.basegroups
-  M.signsid = vimade.signsid
-  M.signspriority = vimade.signspriority
-  M.signsretentionperiod = vimade.signsretentionperiod
-  M.link = vimade.link or DEFAULTS.link
-  M.blocklist = vimade.blocklist or DEFAULTS.blocklist
-  M.basebg = vimade.basebg if vimade.basebg != '' else DEFAULTS.basebg
-  M.groupdiff = bool(vimade.groupdiff) if vimade.groupdiff != None else DEFAULTS.groupdiff
-  M.groupscrollbind = bool(vimade.groupscrollbind) if vimade.groupscrollbind != None else DEFAULTS.groupscrollbind
-  M.fademinimap = bool(vimade.fademinimap) if vimade.fademinimap != None else DEFAULTS.fademinimap
-  M.tint = vimade.tint or DEFAULTS.tint
-  M.fadelevel = vimade.fadelevel if vimade.fadelevel != None else DEFAULTS.fadelevel
-  if type(vimade.fadeconditions) == dict or type(vimade.fadeconditions) == list:
-    M.fadeconditions = vimade.fadeconditions
-  elif callable(vimade.fadeconditions):
-    M.fadeconditions = [vimade.fadeconditions]
-  else:
-    M.fadeconditions = vimade.fadeconditions
+  M.basegroups = vimade.get('basegroups', DEFAULTS.basegroups)
+  M.signsid = vimade.get('signsid', DEFAULTS.signsid)
+  M.signspriority = vimade.get('signspriority', DEFAULTS.signspriority)
+  M.signsretentionperiod = vimade.get('signsretentionperiod', DEFAULTS.signsretentionperiod)
+  M.link = vimade.get('link', DEFAULTS.link)
+  M.blocklist = vimade.get('blocklist', DEFAULTS.blocklist)
+  M.basebg = vimade.get('basebg', DEFAULTS.basebg) # TODO empty string needed? 
+  M.groupdiff = bool(vimade.get('groupdiff', DEFAULTS.groupdiff))
+  M.groupscrollbind = bool(vimade.get('groupscrollbind', DEFAULTS.groupscrollbind))
+  M.fademinimap = bool(vimade.get('fademinimap', DEFAULTS.fademinimap))
+  M.tint = vimade.get('tint', DEFAULTS.tint)
+  M.fadelevel = vimade.get('fadelevel', DEFAULTS.fadelevel)
+  if 'fadeconditions' in vimade:
+    if type(vimade.fadeconditions) == dict or type(vimade.fadeconditions) == list:
+      M.fadeconditions = vimade.fadeconditions
+    elif callable(vimade.fadeconditions):
+      M.fadeconditions = [vimade.fadeconditions]
+    else:
+      M.fadeconditions = vimade.fadeconditions
 
   ## already checked
   M.fade_windows = M.fademode == 'windows'

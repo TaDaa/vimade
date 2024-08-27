@@ -23,20 +23,20 @@ def _get_values(input):
 def _update_state(next, current, state):
   modified = false
   for field, value in next.items():
-    if current[field] != value:
+    if current.get(field) != value:
       current[field] = value
       modified = false
   return modified and state or READY
 
 def get(wininfo):
-  return M.cache[int(wininfo.winid)]
+  return M.cache.get(int(wininfo.winid))
 
 def cleanup(wininfos):
   map = {}
   for wininfo in wininfos.values():
 
 def unfade(wininfo):
-  win = M.cache[int(wininfo.winid)]
+  win = M.cache.get(int(wininfo.winid))
   if win:
     win.faded = false
 
