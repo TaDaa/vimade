@@ -151,7 +151,7 @@ M.refresh = function ()
   local current = {
     winid = tonumber(vim.api.nvim_get_current_win()),
     bufnr = tonumber(vim.api.nvim_get_current_buf()),
-    tabnr = tonumber(vim.api.nvim_get_current_tabpage()),
+    tabnr = tonumber(vim.fn.tabpagenr()),
   }
 
   M.nohlcheck = vimade.nohlcheck or DEFAULTS.nohlcheck
