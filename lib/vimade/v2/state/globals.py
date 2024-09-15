@@ -2,8 +2,8 @@ import sys
 #  M = sys.modules[__name__]
 
 import vim
-from vimade import util
 from vimade.v2.config_helpers import tint as TINT
+from vimade.v2.util import ipc as IPC
 from vimade.v2.util import matchers as MATCHERS
 
 MAX_TICK_ID = 1000000
@@ -68,14 +68,13 @@ _DEFAULTS = {
   'signsretentionperiod': 4000,
 }
 
-class Globals:
+class Globals(object):
   def __init__(self):
-    sys.modules[__name__] = self
     # python specific
     (is_nvim,
      is_gui_running,
      original_background,
-     features) = util.eval_and_return('['+','.join([
+     features) = IPC.eval_and_return('['+','.join([
        'has("nvim")',
        'has("gui_running")',
        '&background',
@@ -131,12 +130,29 @@ class Globals:
       'require_treesitter': False,
       'termguicolors': None,
     }
+    self.vim = vim
+    self.TINT = TINT
+    self.IPC = IPC
+    self.MATCHERS = MATCHERS
+    self.MAX_TICK_ID = MAX_TICK_ID
+    self._OTHER = _OTHER
+    self._CURRENT = _CURRENT
+    self._DEFAULTS = _DEFAULTS
+    sys.modules[__name__] = self
 
-  def __getattr__(self, name):
-    if name == '__internal':
-      return self.__internal
+  def __getattribute__(self, key):
+    if key == '_Globals__internal':
+      return object.__getattribute__(self, key)
+    elif not key in self.__internal:
+      return object.__getattribute__(self, key)
     else:
-      return self.__internal[name]
+      return object.__getattribute__(self, '_Globals__internal')[key]
+  def __setattr__(self, key, value):
+    if key == '_Globals__internal':
+      object.__setattr__(self, key, value)
+    else:
+      object.__getattribute__(self, '_Globals__internal')[key] = value
+    return value
 
   def __getitem__(self, name):
     return self.__internal[name]
@@ -155,7 +171,7 @@ class Globals:
 
   def _next_tick_id(self):
     tick_id = self.tick_id + 1
-    if tick_id > MAX_TICK_ID:
+    if tick_id > self.MAX_TICK_ID:
       tick_id = 1
     return tick_id
 
@@ -170,7 +186,7 @@ class Globals:
       vimade_fade_active,
       winid,
       bufnr,
-      tabnr) = util.mem_safe_eval('['+','.join([
+      tabnr) = self.IPC.mem_safe_eval('['+','.join([
       'g:vimade',
       '&background',
       'exists("g:colors_name") ? g:colors_name : ""',
@@ -196,7 +212,7 @@ class Globals:
       'is_dark': background == 'dark',
       'colorscheme': colorscheme,
       'termguicolors': termguicolors
-    }, self, _OTHER, self.INVALIDATE | self.CHANGED)
+    }, self, self._OTHER, self.INVALIDATE | self.CHANGED)
 
     # neovim only - no tricky
     if self.is_nvim:
@@ -211,44 +227,44 @@ class Globals:
       'normalid',
       'normalncid',
       'enablebasegroups',
-    ], vimade, self, _DEFAULTS, self.RECALCULATE)
+    ], vimade, self, self._DEFAULTS, self.RECALCULATE)
     self.tick_state |= self._check_fields([
       'fadepriority',
       'enabletreesitter'
-    ], vimade, self, _DEFAULTS, self.INVALIDATE | self.CHANGED)
+    ], vimade, self, self._DEFAULTS, self.INVALIDATE | self.CHANGED)
     self.tick_state |= self._check_fields([
       'vimade_fade_active'
     ], {
       'vimade_fade_active': vimade_fade_active
-    }, self, _OTHER, self.CHANGED)
+    }, self, self._OTHER, self.CHANGED)
     self.tick_state |= self._check_fields([
       'fademode',
       'enablescroll',
       'colbufsize',
       'rowbufsize'
-    ], vimade, self, _DEFAULTS, self.CHANGED)
+    ], vimade, self, self._DEFAULTS, self.CHANGED)
     self.tick_state |= self._check_fields([
       'winid',
       'bufnr',
       'tabnr',
-    ], current, self.current, _CURRENT, self.CHANGED)
+    ], current, self.current, self._CURRENT, self.CHANGED)
     self.tick_state |= self._check_fields([
       'enablesigns'
-    ], vimade, self, _DEFAULTS, self.SIGNS)
+    ], vimade, self, self._DEFAULTS, self.SIGNS)
 
     ## handled in win state
-    self.basegroups = vimade.get('basegroups', _DEFAULTS['basegroups'])
-    self.signsid = vimade.get('signsid', _DEFAULTS['signsid'])
-    self.signspriority = vimade.get('signspriority', _DEFAULTS['signspriority'])
-    self.signsretentionperiod = vimade.get('signsretentionperiod', _DEFAULTS['signsretentionperiod'])
-    self.link = vimade.get('link', _DEFAULTS['link'])
-    self.blocklist = vimade.get('blocklist', _DEFAULTS['blocklist'])
-    self.basebg = vimade.get('basebg', _DEFAULTS['basebg']) # TODO empty string needed? 
-    self.groupdiff = bool(vimade.get('groupdiff', _DEFAULTS['groupdiff']))
-    self.groupscrollbind = bool(vimade.get('groupscrollbind', _DEFAULTS['groupscrollbind']))
-    self.fademinimap = bool(vimade.get('fademinimap', _DEFAULTS['fademinimap']))
-    self.tint = vimade.get('tint', _DEFAULTS['tint'])
-    self.fadelevel = vimade.get('fadelevel', _DEFAULTS['fadelevel'])
+    self.basegroups = vimade.get('basegroups', self._DEFAULTS['basegroups'])
+    self.signsid = vimade.get('signsid', self._DEFAULTS['signsid'])
+    self.signspriority = vimade.get('signspriority', self._DEFAULTS['signspriority'])
+    self.signsretentionperiod = vimade.get('signsretentionperiod', self._DEFAULTS['signsretentionperiod'])
+    self.link = vimade.get('link', self._DEFAULTS['link'])
+    self.blocklist = vimade.get('blocklist', self._DEFAULTS['blocklist'])
+    self.basebg = vimade.get('basebg', self._DEFAULTS['basebg']) # TODO empty string needed? 
+    self.groupdiff = bool(vimade.get('groupdiff', self._DEFAULTS['groupdiff']))
+    self.groupscrollbind = bool(vimade.get('groupscrollbind', self._DEFAULTS['groupscrollbind']))
+    self.fademinimap = bool(vimade.get('fademinimap', self._DEFAULTS['fademinimap']))
+    self.tint = vimade.get('tint', self._DEFAULTS['tint'])
+    self.fadelevel = vimade.get('fadelevel', self._DEFAULTS['fadelevel'])
     if 'fadeconditions' in vimade:
       if type(vimade.fadeconditions) == dict or type(vimade.fadeconditions) == list:
         self.fadeconditions = vimade.fadeconditions
@@ -261,4 +277,5 @@ class Globals:
     self.fade_windows = self.fademode == 'windows'
     self.fade_buffers = not self.fade_windows
 
-TINT.__init(Globals())
+M = Globals()
+M.TINT.__init(M)

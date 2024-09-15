@@ -3,9 +3,8 @@ import vim
 M = sys.modules[__name__]
 
 from vimade.v2.state import globals as GLOBALS
-from vimade.v2.state import win as WIN
 from vimade.v2 import colors as COLORS
-from vimade import util
+from vimade.v2.util import ipc as IPC
 
 M.next_id = 0
 M.free_ids = []
@@ -88,7 +87,7 @@ def _get_hl_ids_for_names(win, to_process):
         to_process[i] = id
 
   if cnt:
-    ids = util.eval_and_return('[' + ','.join(id_eval) + ']')
+    ids = IPC.eval_and_return('[' + ','.join(id_eval) + ']')
     for i,id in enumerate(ids):
       id = int(id)
       index = name_index_map[i]
@@ -139,7 +138,7 @@ def create_highlights(win, to_process):
       ids.append(id)
       attrs_eval.append(hi_string % id)
 
-  attrs = util.eval_and_return('[' + ','.join(attrs_eval) + ']')
+  attrs = IPC.eval_and_return('[' + ','.join(attrs_eval) + ']')
 
   for i, id in enumerate(ids):
     base = M.base_id_cache[id]

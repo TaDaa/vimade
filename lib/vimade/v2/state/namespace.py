@@ -7,7 +7,7 @@ IS_V3 = False
 if (sys.version_info > (3, 0)):
     IS_V3 = True
 
-from vimade import util
+from vimade.v2.util import ipc as IPC
 from vimade.v2.state import globals as GLOBALS
 from vimade.v2 import highlighter as HIGHLIGHTER
 
@@ -19,7 +19,7 @@ M.buf_shared_lookup = {}
 M._changed_win = False
 
 def _goto_win(winid):
-  current_winid = int(util.eval_and_return('win_getid()'))
+  current_winid = int(IPC.eval_and_return('win_getid()'))
   if current_winid != winid:
     if GLOBALS.current['winid'] == current_winid:
       vim.command('noautocmd set winwidth=1 | noautocmd call win_gotoid('+str(winid)+')')
@@ -86,10 +86,10 @@ class Namespace:
     replacement_winhl = ','.join([ '%s:vimade_%s' % (basegroups[i], replacement)
                                   for i,replacement in enumerate(replacement_ids)])
     if replacement_winhl != self.win.winhl:
-      util.mem_safe_eval('settabwinvar(%s,%s,"&winhl","%s")' % (self.win.tabnr, self.win.winnr, replacement_winhl))
+      IPC.mem_safe_eval('settabwinvar(%s,%s,"&winhl","%s")' % (self.win.tabnr, self.win.winnr, replacement_winhl))
 
   def remove_basegroups(self):
-    util.mem_safe_eval('settabwinvar(%s,%s,"&winhl","%s")' % (self.win.tabnr, self.win.winnr, self.win.original_winhl))
+    IPC.mem_safe_eval('settabwinvar(%s,%s,"&winhl","%s")' % (self.win.tabnr, self.win.winnr, self.win.original_winhl))
 
   def invalidate(self):
     self.unfade()
@@ -184,7 +184,7 @@ class Namespace:
       find_start_col_eval.append('screenpos(%s,%s,%s)' % (winid, cursor_row, i))
 
     if len(find_start_col_eval):
-      find_start_col_eval = util.eval_and_return('[' + ','.join(find_start_col_eval) + ']')
+      find_start_col_eval = IPC.eval_and_return('[' + ','.join(find_start_col_eval) + ']')
       last_col = -1
       v_i = 0
       for i in range(max(cursor_col - width, 0), cursor_col + 1):
@@ -231,7 +231,7 @@ class Namespace:
       visible_rows_eval.append('screenpos(%s,%s,%s)'%(winid, r, 1))
 
     if len(visible_rows_eval):
-      visible_rows_eval = util.eval_and_return('['+ ','.join(visible_rows_eval) +']')
+      visible_rows_eval = IPC.eval_and_return('['+ ','.join(visible_rows_eval) +']')
       v_i = 0
 
       last_visible_row = -1
@@ -451,7 +451,7 @@ class Namespace:
         if not on_win:
           _goto_win(winid)
           on_win = True
-        syn_eval = util.eval_and_return('[' + ','.join(syn_eval) + ']')
+        syn_eval = IPC.eval_and_return('[' + ','.join(syn_eval) + ']')
         for i, id in enumerate(syn_eval):
             ids[syn_indices[i]] = int(id or 0)
 
@@ -506,4 +506,4 @@ class Namespace:
       if len(matchadds):
         vim.vars['vimade_shared_var'] = {'window': winid}
         # add to current matches
-        self.matches += util.eval_and_return('['+','.join(matchadds)+']')
+        self.matches += IPC.eval_and_return('['+','.join(matchadds)+']')

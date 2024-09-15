@@ -3,10 +3,10 @@ import time
 M = sys.modules[__name__]
 
 import vim
-from vimade.v2.state import globals as GLOBALS
 from vimade.v2 import highlighter as HIGHLIGHTER
+from vimade.v2.state import globals as GLOBALS
 from vimade.v2.state import win as WIN_STATE
-from vimade import util as UTIL
+from vimade.v2.util import ipc as IPC
 
 def _pairs(input):
   if type(input) == list:
@@ -28,14 +28,14 @@ def _invalidate(win):
     win.ns.invalidate()
 
 def _return_to_win():
-  current_winid = int(UTIL.eval_and_return('win_getid()'))
+  current_winid = int(IPC.eval_and_return('win_getid()'))
   start_winid = GLOBALS.current['winid']
   if current_winid != start_winid:
     cmd = ('| let g:vimade_cmd="noautocmd vert resize ".winwidth(".") |  noautocmd set winwidth=' + str(GLOBALS.winwidth) + ' | execute g:vimade_cmd')
     vim.command('noautocmd call win_gotoid(%d) %s' % (start_winid, cmd))
 
 def _update():
-  windows = UTIL.eval_and_return('getwininfo()')
+  windows = IPC.eval_and_return('getwininfo()')
   fade_windows = GLOBALS.fade_windows
   fade_buffers = not fade_windows
   current = GLOBALS.current
@@ -77,7 +77,7 @@ def _update():
 
 # recalculate is likely too difficult to implement in this new setup
 def recalculate():
-  windows = UTIL.eval_and_return('getwininfo()')
+  windows = IPC.eval_and_return('getwininfo()')
   current = GLOBALS.current
   updated_cache = {}
 

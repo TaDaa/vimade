@@ -8,8 +8,10 @@ from vimade.v2.state import namespace as NAMESPACE
 from vimade.v2.config_helpers import link as LINK
 from vimade.v2.config_helpers import blocklist as BLOCKLIST
 from vimade.v2 import colors as COLORS
-from vimade import util
-HAS_NVIM_WIN_GET_CONFIG = True if int(util.eval_and_return('exists("*nvim_win_get_config")')) else False
+from vimade.v2.util import ipc as IPC
+
+
+HAS_NVIM_WIN_GET_CONFIG = True if int(IPC.eval_and_return('exists("*nvim_win_get_config")')) else False
 
 M.cache = {}
 M.current = None
@@ -65,7 +67,7 @@ def from_other(wininfo, skip_link = False):
   win.refresh(wininfo, skip_link)
   return win
 
-class WinState:
+class WinState(object):
   def __init__(self, wininfo):
     self.__internal = {
       # common
@@ -76,6 +78,7 @@ class WinState:
       'window': None,
       'buf_name': None,
       'win_config': None,
+      'basebg': None,
       'linked': False,
       'blocked': False,
       'faded': False,
@@ -113,11 +116,19 @@ class WinState:
       'original_wincolor': '',
       'original_winhl': '',
     }
-  def __getattr__(self, key):
-    if key == '__internal':
-      return self.__internal
+  def __getattribute__(self, key):
+    if key == '_WinState__internal':
+      return object.__getattribute__(self, key)
+    elif not key in self.__internal:
+      return object.__getattribute__(self, key)
     else:
-      return self.__internal[key]
+      return object.__getattribute__(self, '_WinState__internal')[key]
+  def __setattr__(self, key, value):
+    if key == '_WinState__internal':
+      object.__setattr__(self, key, value)
+    else:
+      object.__getattribute__(self, '_WinState__internal')[key] = value
+    return value
   def __getitem__(self, key):
     if key == '__internal':
       return self.__internal
@@ -156,6 +167,7 @@ class WinState:
             for window in tabpage.windows:
               if window.number == self.winnr:
                 self.window = window
+                return self.window
     except:
       return None
     return None
@@ -167,6 +179,7 @@ class WinState:
     self.winnr = winnr = wininfo['winnr']
     self.tabnr = tabnr = wininfo['tabnr']
     self.bufnr = bufnr = wininfo['bufnr']
+    self.basebg = GLOBALS.basebg
 
     window = self.get_window()
     if window == None:
@@ -183,7 +196,7 @@ class WinState:
     if GLOBALS.is_nvim:
       wincolor = 'Normal' if self.is_active_win else 'NormalNC'
     else:
-      wincolor = (util.eval_and_return( \
+      wincolor = (IPC.eval_and_return( \
              'gettabwinvar(%d,%d,"&wincolor")' % (tabnr, winnr)))
 
     self.wincolor = wincolor
@@ -212,7 +225,7 @@ class WinState:
      normalhl,
      wincolorhl,
      winhl, #(local winhl)
-     win_config) = util.eval_and_return('['+
+     win_config) = IPC.eval_and_return('['+
       ','.join([
         'gettabwinvar(%d,%d,"&wrap")' % (tabnr, winnr),
         'gettabwinvar(%d,%d,"&buftype")' % (tabnr, winnr),

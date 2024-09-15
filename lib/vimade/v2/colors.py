@@ -82,7 +82,7 @@ def interpolate24b(source, target, fade):
   r = M.interpolateLinear((source & 0XFF0000) >> 16, target_r, fade)
   g = M.interpolateLinear((source & 0X00FF00) >> 8, target_g, fade)
   b = M.interpolateLinear((source & 0X0000FF), target_b, fade)
-  return '#' + hex(r)[2:].zfill(2) + hex(g)[2:].zfill(2) + hex(b)[2:].zfill(2)
+  return '#' + hex(int(r))[2:].zfill(2) + hex(int(g))[2:].zfill(2) + hex(int(b))[2:].zfill(2)
 
 def interpolateLinear(source, target, fade):
   return math.floor(target + (source - target) * fade)
