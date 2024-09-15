@@ -263,7 +263,7 @@ class Namespace:
         text_ln = len(text)
         if text_ln > 0:
           if is_explorer or is_minimap:
-            to_eval.append((row, 1, text_ln))
+            to_eval.append((row-1, 0, text_ln-1))
             texts.append(text)
             rows_so_far += 1
             continue

@@ -88,7 +88,7 @@ def recalculate():
         #  TODO
 
 def tick():
-  start_time = time.time()
+  # start_time = time.time()
   GLOBALS.refresh()
   last_ei = vim.options['ei']
   vim.options['ei'] = 'all'
@@ -98,11 +98,11 @@ def tick():
 
   _update()
   vim.options['ei'] = last_ei
-  #  delta = time.time() - start_time
+  # delta = time.time() - start_time
   # time looks great about 0.1ms on average even with 8k screen filled with 9k loc windows
   # with fademode windows enabled
-  #  if delta > 1:
-    #  print(delta)
+  # if delta > 1:
+    # print(delta)
 
 def unfadeAll():
   print('TODO')
