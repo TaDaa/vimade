@@ -41,11 +41,11 @@ def py3_coerceTypes (input):
 coerceTypes = py3_coerceTypes if IS_V3 else py2_coerceTypes
 
 def _vim_mem_safe_eval (statement):
-  vim.command('unlet g:vimade_eval_ret | noautocmd let g:vimade_eval_ret=' + statement)
+  vim.command('unlet g:vimade_eval_ret | let g:vimade_eval_ret=' + statement)
   return coerceTypes(vim.vars['vimade_eval_ret'])
 
 def _vim_eval_and_return (statement):
-  vim.command('unlet g:vimade_eval_ret | noautocmd let g:vimade_eval_ret=' + statement + '')
+  vim.command('unlet g:vimade_eval_ret | let g:vimade_eval_ret=' + statement + '')
   return vim.eval('g:vimade_eval_ret')
 
 eval_and_return = None
