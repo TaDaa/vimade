@@ -254,17 +254,17 @@ class Globals(object):
 
     ## handled in win state
     self.basegroups = vimade.get('basegroups', self._DEFAULTS['basegroups'])
-    self.signsid = vimade.get('signsid', self._DEFAULTS['signsid'])
-    self.signspriority = vimade.get('signspriority', self._DEFAULTS['signspriority'])
-    self.signsretentionperiod = vimade.get('signsretentionperiod', self._DEFAULTS['signsretentionperiod'])
+    self.signsid = vimade.get('signsid', int(self._DEFAULTS['signsid']))
+    self.signspriority = int(vimade.get('signspriority', self._DEFAULTS['signspriority']))
+    self.signsretentionperiod = int(vimade.get('signsretentionperiod', self._DEFAULTS['signsretentionperiod']))
     self.link = vimade.get('link', self._DEFAULTS['link'])
     self.blocklist = vimade.get('blocklist', self._DEFAULTS['blocklist'])
     self.basebg = vimade.get('basebg', self._DEFAULTS['basebg']) # TODO empty string needed? 
-    self.groupdiff = bool(vimade.get('groupdiff', self._DEFAULTS['groupdiff']))
-    self.groupscrollbind = bool(vimade.get('groupscrollbind', self._DEFAULTS['groupscrollbind']))
-    self.fademinimap = bool(vimade.get('fademinimap', self._DEFAULTS['fademinimap']))
+    self.groupdiff = bool(int(vimade.get('groupdiff', self._DEFAULTS['groupdiff'])))
+    self.groupscrollbind = bool(int(vimade.get('groupscrollbind'), self._DEFAULTS['groupscrollbind']))
+    self.fademinimap = bool(int(vimade.get('fademinimap', self._DEFAULTS['fademinimap'])))
     self.tint = vimade.get('tint', self._DEFAULTS['tint'])
-    self.fadelevel = vimade.get('fadelevel', self._DEFAULTS['fadelevel'])
+    self.fadelevel = float(vimade.get('fadelevel', self._DEFAULTS['fadelevel']))
     if 'fadeconditions' in vimade:
       if type(vimade.fadeconditions) == dict or type(vimade.fadeconditions) == list:
         self.fadeconditions = vimade.fadeconditions

@@ -1,5 +1,23 @@
 import sys
+import vim
 M = sys.modules[__name__]
+
+TYPE_VARS = type(vim.vars) # handle vim and nvim remote objects
+TYPE_OPTS = type(vim.options) # handle vim and nvim remote objects
+DICTIONARY_LIKE_TYPES = (list, dict, TYPE_VARS, TYPE_OPTS)
+
+def _safe_get(value, key):
+  if type(value) == list:
+    if type(key) == int and key < len(value):
+      return value[key]
+  elif type(value) == dict:
+    return value.get(key)
+  elif type(value) == TYPE_VARS:
+    return value.get(key)
+  elif type(value) == TYPE_OPTS:
+    if key in value:
+      return value[key]
+  return None
 
 def _pairs(input):
   if type(input) == list:
@@ -8,9 +26,9 @@ def _pairs(input):
     return input.items()
 
 def match_contains_any(target, value):
-  if type(target) in (list, dict) and type(value) in (list, dict):
+  if type(target) in DICTIONARY_LIKE_TYPES and (type(value) in DICTIONARY_LIKE_TYPES):
     return M.match_table_any(target, value)
-  elif type(target) in (list, dict):
+  elif type(target) in DICTIONARY_LIKE_TYPES:
     for i, v in _pairs(target):
       if M.match_contains_any(v, value):
         return True
@@ -24,7 +42,7 @@ def match_table_any(target, value):
         if M.match_contains_any(target_value, real_value):
           return True
     else:
-      if M.match_contains_any(target_value, value.get(target_key), M.match_table_any):
+      if M.match_contains_any(target_value, _safe_get(value, target_key)):
         return True
   return False
   
@@ -41,34 +59,34 @@ def _each_match_contains_any(target, value, counts, counts_ln, i):
     counts[key] = counts.get(key, {'count': 0})
     found = False
     if type(key) == int:
-      if callable(t) and type(value) in (list, dict):
+      if callable(t) and type(value) in DICTIONARY_LIKE_TYPES:
         for j, v in _pairs(value):
           if t(v) == True:
             found = True
-      elif type(t) in (list, dict) and type(value) in (list, dict):
+      elif type(t) in DICTIONARY_LIKE_TYPES and type(value) in DICTIONARY_LIKE_TYPES:
         for j, v in _pairs(value):
           if M._each_match_contains_any(t, v, counts[key], counts_ln, i):
             return True
-      elif type(value) in (list, dict):
+      elif type(value) in DICTIONARY_LIKE_TYPES:
         for j, v in _pairs(value):
           if M.match_primitive(t, v):
             found = True
       elif M.match_primitive(t, value):
         found = True
     else:
-      if callable(t) and type(value) in (list, dict):
+      if callable(t) and type(value) in DICTIONARY_LIKE_TYPES:
         if t(value[key]) == True:
           found = True
-      elif type(t) in (list, dict) and type(value) in (list, dict):
-        if M._each_match_contains_any(t, value.get(key), counts[key], counts_ln, i):
+      elif type(t) in DICTIONARY_LIKE_TYPES and type(value) in DICTIONARY_LIKE_TYPES:
+        if M._each_match_contains_any(t, _safe_get(value, key), counts[key], counts_ln, i):
           found = True
-      elif type(value) in (list, dict):
-        if M.match_primitive(t, value.get(key)):
+      elif type(value) in DICTIONARY_LIKE_TYPES:
+        if M.match_primitive(t, _safe_get(value, key)):
           found = True
       elif M.match_primitive(t, value):
         found = True
-    if found and counts[key]['count'] == i - 1:
-      counts[key]['count'] = i
+    if found and counts[key]['count'] == i:
+      counts[key]['count'] = i + 1
     if counts[key]['count'] == counts_ln:
       return True
   return False
@@ -87,18 +105,18 @@ def match_table_all(target, value):
       for real_key, real_value in _pairs(value):
         if callable(target_value):
           found = target_value(real_value)
-        elif type(target_value) in (list, dict) and type(real_value) in (list, dict):
+        elif type(target_value) in DICTIONARY_LIKE_TYPES and type(real_value) in DICTIONARY_LIKE_TYPES:
           found = M.match_table_all(target_value, real_value)
         else:
           found = M.match_contains_any(target_value, real_value)
     else:
       if callable(target_value):
-        found = target_value(value.get(target_key))
-      elif type(target_value) in (list, dict) and type(value.get(target_key)) in (list, dict):
-        found = M.match_table_all(target_value, value.get(target_key))
+        found = target_value(_safe_get(value, target_key))
+      elif type(target_value) in DICTIONARY_LIKE_TYPES and type(_safe_get(value, target_key)) in DICTIONARY_LIKE_TYPES:
+        found = M.match_table_all(target_value, _safe_get(value, target_key))
       else:
         # outer compare
-        found = M.match_contains(target_value, value.get(target_key))
+        found = M.match_contains(target_value, _safe_get(value, target_key))
     # we don't care if the value has other keys, this is left match
     if not found:
       return False
@@ -110,11 +128,11 @@ def each_match_contains_all(target, values):
     found = None
     # second is the target and value a table?
     # If yes, continue the recursion step
-    if type(target) in (list, dict) and type(value) in (list, dict):
+    if type(target) in DICTIONARY_LIKE_TYPES and type(value) in DICTIONARY_LIKE_TYPES:
       found = M.match_table_all(target, value)
     # otherwise outer compare the target to a real value
     # from here on out
-    elif type(target) in (list, dict):
+    elif type(target) in DICTIONARY_LIKE_TYPES:
       for i, v in _pairs(target):
         if not M.match_contains_all(v, value):
           found = false
@@ -204,7 +222,7 @@ def IsTruthy(target):
 
 def StringMatcher(target):
   def _StringMatcher(value):
-    if type(target) in (list, dict):
+    if type(target) in DICTIONARY_LIKE_TYPES:
       return M.match_contains_string(target, value)
     elif type(target) == str:
       return M.match_string(target, value)
