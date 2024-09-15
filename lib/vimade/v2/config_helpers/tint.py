@@ -1,7 +1,7 @@
 import sys
 M = sys.modules[__name__]
 
-from vimade.util import color as COLOR_UTIL
+from vimade.v2.util import color as COLOR_UTIL
 GLOBALS = None
 
 def __init(globals):
@@ -12,7 +12,7 @@ M.__init = __init
 M.MIX = 'MIX'
 M.REPLACE = 'REPLACE'
 
-def DEFAULT(win):
+def DEFAULT(win, current):
   if GLOBALS.basebg:
     ## basebg was previously used as a semi-tint mechanism used in place of the Normalbg
     ## this doesn't exactly reproduce the same colors but gets close

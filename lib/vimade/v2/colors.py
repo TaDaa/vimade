@@ -1,8 +1,10 @@
 import sys
 import math
 M = sys.modules[__name__]
-from vimade.config_helpers import tint as TINT
-from vimade.util import color as COLOR
+
+from vimade.v2.config_helpers import tint as TINT
+from vimade.v2.state import globals as GLOBALS
+from vimade.v2.util import color as COLOR_UTIL
 
 def _get_or_default_intensity(value):
   if 'intensity' in value and value.intensity != None:
@@ -27,23 +29,33 @@ def _tint256(tint, bg256):
 def get_tint_key(tint):
   if not tint:
     return ''
-  local bg = tint.bg
-  local fg = tint.fg if tint.fg != None else bg
-  local sp = tint.sp if tint.sp != None else fg
+  bg = tint.bg
+  fg = tint.fg if tint.fg != None else bg
+  sp = tint.sp if tint.sp != None else fg
 
-  local sp_rgb
-  local fg_rgb
-  local bg_rgb
+  sp_rgb = None
+  fg_rgb = None
+  bg_rgb = None
   if type(sp) == dict and type(sp.rgb) != list:
     sp_rgb = COLOR_UTIL.toRgb(sp.rgb)
-  if type(fg) == dict and and type(fg.rgb) != list:
+  if type(fg) == dict and type(fg.rgb) != list:
     fg_rgb = COLOR_UTIL.toRgb(fg.rgb)
   if type(bg) == dict and type(bg.rgb) != list:
     bg_rgb = COLOR_UTIL.toRgb(bg.rgb)
 
-  return ((sp_rgb[1] + sp_rgb[2] + sp_rgb[3] + _get_or_default_intensity(sp)) if type(sp) == dict else '')
-   + ((fg_rgb[1] + fg_rgb[2] + fg_rgb[3] + _get_or_default_intensity(fg)) if type(fg) == dict else '')
-   + ((bg_rgb[1] + bg_rgb[2] + bg_rgb[3] + _get_or_default_intensity(bg)) if type(bg) == dict else '')
+  return ((sp_rgb[1] + sp_rgb[2] + sp_rgb[3] + _get_or_default_intensity(sp)) if type(sp_rgb) == list else '') \
+   + ((fg_rgb[1] + fg_rgb[2] + fg_rgb[3] + _get_or_default_intensity(fg)) if type(fg_rgb) == list else '') \
+   + ((bg_rgb[1] + bg_rgb[2] + bg_rgb[3] + _get_or_default_intensity(bg)) if type(bg_rgb) == list else '')
+
+def convertHi(hi, default = [None, None, None, None, None]):
+  if GLOBALS.is_nvim:
+    hi = [default[i] if x == '-1' else int(x) for i, x in enumerate(hi)]
+  else:
+    if hi[0] and hi[0][0] == '#' or hi[1] and hi[1][0] == '#' or hi[2] and hi[2][0] == '#':
+      hi = [default[0], default[1]] + [int(a[1:], 16) if a else default[i+2] for i,a in enumerate(hi)]
+    else:
+      hi = [int(a) if a else default[i] for i,a in enumerate(hi[0:2])] + [default[2], default[3], default[4]]
+  return hi
 
 def tint(tint, bg24, bg256):
   result = {}
@@ -63,23 +75,21 @@ def tint(tint, bg24, bg256):
   return result
 
 def interpolate24b(source, target, fade):
-  target_r = target & 0xFF0000 >> 16
-  target_g = target & 0x00FF00 >> 8
-  target_b = target & 0x0000FF
+  target_r = (target & 0xFF0000) >> 16
+  target_g = (target & 0x00FF00) >> 8
+  target_b = (target & 0x0000FF)
 
-  r = M.interpolateLinear(source & 0XFF0000 >> 16, target_r, fade)
-  g = M.interpolateLinear(source & 0X00FF00 >> 8, target_g, fade)
-  b = M.interpolateLinear(source & 0X0000FF, target_b, fade)
+  r = M.interpolateLinear((source & 0XFF0000) >> 16, target_r, fade)
+  g = M.interpolateLinear((source & 0X00FF00) >> 8, target_g, fade)
+  b = M.interpolateLinear((source & 0X0000FF), target_b, fade)
   return '#' + hex(r)[2:].zfill(2) + hex(g)[2:].zfill(2) + hex(b)[2:].zfill(2)
 
-def interpolateLinear(ssource, target, fade):
+def interpolateLinear(source, target, fade):
   return math.floor(target + (source - target) * fade)
 
--- TODO update python version with updated grey algo
-def interpolate256(source, target, fade, prefer_color):
-  prefer_color = prefer_color or False
-  source = source if type(source) == list else COLOR_UTIL.RGB_256[source+1]
-  to = target if type(target) == list else COLOR_UTIL.RGB_256[target+1]
+def interpolate256(source, target, fade, prefer_color = False):
+  source = source if type(source) == list else COLOR_UTIL.RGB_256[source]
+  to = target if type(target) == list else COLOR_UTIL.RGB_256[target]
   r = 0
   g = 0
   b = 0
@@ -93,35 +103,35 @@ def interpolate256(source, target, fade, prefer_color):
     i = -1
     rgb_result = [0,0,0]
     grey_result = [0,0,0]
-    for v in target do
-        i = i + 1
-        j = 1
-        while j < COLOR_UTIL.RGB_THRESHOLDS.length:
-          if v > COLOR_UTIL.RGB_THRESHOLDS[j]:
-            j = j + 1
+    for v in target:
+      i = i + 1
+      j = 1
+      while j < len(COLOR_UTIL.RGB_THRESHOLDS):
+        if v > COLOR_UTIL.RGB_THRESHOLDS[j]:
+          j = j + 1
+        else:
+          if v <= (COLOR_UTIL.RGB_THRESHOLDS[j]/2.5 + COLOR_UTIL.RGB_THRESHOLDS[j-1]/2):
+            rgb_result[i] = j - 1 
           else:
-            if v <= (COLOR_UTIL.RGB_THRESHOLDS[j]/2.5 + COLOR_UTIL.RGB_THRESHOLDS[j-1]/2):
-              rgb_result[i] = j - 1 
-            else:
-              rgb_result[i] = j
-            break
-        j = 1
-        while j < COLOR_UTIL.GREY_THRESHOLDS.length:
-          if v > COLOR_UTIL.GREY_THRESHOLDS[j]:
-            j = j+1
+            rgb_result[i] = j
+          break
+      j = 1
+      while j < len(COLOR_UTIL.GREY_THRESHOLDS):
+        if v > COLOR_UTIL.GREY_THRESHOLDS[j]:
+          j = j+1
+        else:
+          if v < (COLOR_UTIL.GREY_THRESHOLDS[j]/2.5 + COLOR_UTIL.GREY_THRESHOLDS[j-1]/2):
+            grey_result[i] = j - 1 
           else:
-            if v < (COLOR_UTIL.GREY_THRESHOLDS[j]/2.5 + COLOR_UTIL.GREY_THRESHOLDS[j-1]/2):
-              grey_result[i] = j - 1 
-            else:
-              grey_result[i] = j
-            break
+            grey_result[i] = j
+          break
     r = rgb_result[0]
     g = rgb_result[1]
     b = rgb_result[2]
-    local r0 = target[0]
-    local g0 = target[1]
-    local b0 = target[2]
-    local thres = 25
+    r0 = target[0]
+    g0 = target[1]
+    b0 = target[2]
+    thres = 25
     dir = -1 if (dir > thres) else 1
     if dir < 0:
       r = r + dir
@@ -133,12 +143,12 @@ def interpolate256(source, target, fade, prefer_color):
         if b0 - thres > r0: b = rgb_result[2]+dir
         if g0 + thres < r0: g = rgb_result[1]-dir
         if b0 + thres < r0: b = rgb_result[2]-dir
-      elseif (g0 >= r0 or g0 >= b0) and (g0 <= r0 or g0 <= b0):
+      elif (g0 >= r0 or g0 >= b0) and (g0 <= r0 or g0 <= b0):
         if r0 - thres > g0: r = rgb_result[0]+dir
         if b0 - thres > g0: b = rgb_result[2]+dir
         if r0 + thres < g0: r = rgb_result[0]-dir
         if b0 + thres < g0: b = rgb_result[2]-dir
-      elseif (b0 >= g0 or b0 >= r0) and (b0 <= g0 or b0 <= r0):
+      elif (b0 >= g0 or b0 >= r0) and (b0 <= g0 or b0 <= r0):
         if g0 - thres > b0: g = rgb_result[1]+dir
         if r0 - thres > b0: r = rgb_result[0]+dir
         if g0 + thres < b0: g = rgb_result[1]-dir
@@ -151,23 +161,21 @@ def interpolate256(source, target, fade, prefer_color):
       r = r - 1
       g = g - 1
       b = b - 1
-    r = math.min(math.max(r, 1), 6)
-    g = math.min(math.max(g, 1), 6)
-    b = math.min(math.max(b, 1), 6)
+    r = min(max(r, 1), 6)
+    g = min(max(g, 1), 6)
+    b = min(max(b, 1), 6)
     r = COLOR_UTIL.RGB_THRESHOLDS[r]
     g = COLOR_UTIL.RGB_THRESHOLDS[g]
     b = COLOR_UTIL.RGB_THRESHOLDS[b]
 
 
-    grey = math.max(grey_result[0], grey_result[1], grey_result[2])
-    grey = math.min(math.max(grey, 1), len(COLOR_UTIL.GREY_THRESHOLDS)-2)
+    grey = max(grey_result[0], grey_result[1], grey_result[2])
+    grey = min(max(grey, 1), len(COLOR_UTIL.GREY_THRESHOLDS)-2)
     grey = COLOR_UTIL.GREY_THRESHOLDS[grey]
 
-    if math.abs(grey-r0) + math.abs(grey - g0) + math.abs(grey - b0)
-      < (math.abs(r-r0) + math.abs(g - g0) + math.abs(b - b0)) / (100 if prefer_color == true else 1.2):
+    if abs(grey-r0) + abs(grey - g0) + abs(grey - b0) \
+      < (abs(r-r0) + abs(g - g0) + abs(b - b0)) / (100 if prefer_color == True else 1.2):
       r = grey
       g = grey
       b = grey
-  return COLOR_UTIL.LOOKUP_256_RGB[r + '-' + g + '-' + b]
-
-return M
+  return COLOR_UTIL.LOOKUP_256_RGB['%d-%d-%d' % (r, g, b)]

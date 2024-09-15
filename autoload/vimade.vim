@@ -5,6 +5,8 @@ endfunction
 
 function! vimade#CreateGlobals()
   let g:vimade_lua_renderer = exists('g:vimade') && get(g:vimade, 'renderer') =~ 'lua'
+  let g:vimade_py_v2_renderer = exists('g:vimade') && get(g:vimade, 'renderer') =~ 'python-v2'
+
   if !exists('g:vimade_running')
 
     ""@setting vimade_running
@@ -285,7 +287,7 @@ function! vimade#Disable()
     lua require('vimade').unfadeAll()
   elseif exists('g:vimade_py_cmd')
     exec g:vimade_py_cmd join([
-        \ "from vimade import bridge",
+        \ g:vimade_py_v2_renderer ? "from vimade.v2 import bridge" : "from vimade import bridge",
         \ "bridge.unfadeAll()",
     \ ], "\n")
   endif
@@ -294,7 +296,7 @@ endfunction
 function! vimade#DetectTermColors()
   if !g:vimade_lua_renderer
     exec g:vimade_py_cmd join([
-        \ "from vimade import bridge",
+        \ g:vimade_py_v2_renderer ? "from vimade.v2 import bridge" : "from vimade import bridge",
         \ "bridge.detectTermColors()",
     \ ], "\n")
   endif
@@ -383,7 +385,7 @@ function! vimade#InvalidateSigns()
       lua require('vimade').softInvalidateSigns()
     else
       exec g:vimade_py_cmd join([
-          \ "from vimade import bridge",
+          \ g:vimade_py_v2_renderer ? "from vimade.v2 import bridge" : "from vimade import bridge",
           \ "bridge.softInvalidateSigns()",
       \ ], "\n")
       call vimade#CheckWindows()
@@ -397,7 +399,7 @@ function! vimade#Recalculate()
       lua require('vimade').recalculate()
     else
       exec g:vimade_py_cmd join([
-          \ "from vimade import bridge",
+          \ g:vimade_py_v2_renderer ? "from vimade.v2 import bridge" : "from vimade import bridge",
           \ "bridge.recalculate()",
       \ ], "\n")
     endif
@@ -414,7 +416,7 @@ function! vimade#Redraw()
       lua require('vimade').recalculate()
     else
       exec g:vimade_py_cmd join([
-          \ "from vimade import bridge",
+          \ g:vimade_py_v2_renderer ? "from vimade.v2 import bridge" : "from vimade import bridge",
           \ "bridge.unfadeAll()",
           \ "bridge.recalculate()",
       \ ], "\n")
@@ -442,7 +444,7 @@ function! vimade#GetInfo()
     " Currently unimplemented
   else
     exec g:vimade_py_cmd join([
-        \ "from vimade import bridge",
+        \ g:vimade_py_v2_renderer ? "from vimade.v2 import bridge" : "from vimade import bridge",
         \ "import vim",
         \ "vim.vars['vimade_python_info'] = bridge.getInfo()",
     \ ], "\n")
@@ -492,6 +494,11 @@ function! vimade#CheckWindows()
   if g:vimade_running && g:vimade_paused == 0 && getcmdwintype() == ''
     if g:vimade_lua_renderer
       lua require('vimade').update()
+    elseif g:vimade_py_v2_renderer
+      exec g:vimade_py_cmd join([
+          \ "from vimade.v2 import bridge",
+          \ "bridge.update()",
+      \ ], "\n")
     else
       exec g:vimade_py_cmd join([
           \ "from vimade import bridge",
@@ -512,7 +519,7 @@ function! vimade#softInvalidateBuffer(bufnr)
       lua require('vimade').softInvalidateBuffer()
     else
       exec g:vimade_py_cmd join([
-          \ "from vimade import bridge",
+          \ g:vimade_py_v2_renderer ? "from vimade.v2 import bridge" : "from vimade import bridge",
           \ "bridge.softInvalidateBuffer('".a:bufnr."')",
       \ ], "\n")
     endif
@@ -614,8 +621,8 @@ endfunction
 
 function! vimade#GetNvimHi(id)
   let tid = synIDtrans(a:id)
-  let norgb = nvim_get_hl_by_id(tid, 0)
-  let rgb = nvim_get_hl_by_id(tid, 1)
+  let norgb = nvim_get_hl_by_id(tid, 0) ?? {}
+  let rgb = nvim_get_hl_by_id(tid, 1) ?? {}
   return [get(norgb, 'foreground', -1), get(norgb, 'background', -1), get(rgb, 'foreground', -1), get(rgb, 'background', -1), get(rgb, 'special', -1)]
 endfunction
 

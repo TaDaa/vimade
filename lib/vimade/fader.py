@@ -551,7 +551,6 @@ def fadeWin(winState):
   ts_empty = {}
   j = 0
   for (row, column, endCol) in to_eval:
-
     ts_results = None
     if GLOBALS.enable_treesitter:
       try:

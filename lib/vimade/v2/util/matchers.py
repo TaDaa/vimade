@@ -3,7 +3,7 @@ M = sys.modules[__name__]
 
 def _pairs(input):
   if type(input) == list:
-    return enumerate(list)
+    return enumerate(input)
   elif type(input) == dict:
     return input.items()
 
@@ -59,7 +59,7 @@ def _each_match_contains_any(target, value, counts, counts_ln, i):
       if callable(t) and type(value) in (list, dict):
         if t(value[key]) == True:
           found = True
-      elif type(t) in list_dict and type(value) in (list, dict):
+      elif type(t) in (list, dict) and type(value) in (list, dict):
         if M._each_match_contains_any(t, value.get(key), counts[key], counts_ln, i):
           found = True
       elif type(value) in (list, dict):
@@ -67,9 +67,9 @@ def _each_match_contains_any(target, value, counts, counts_ln, i):
           found = True
       elif M.match_primitive(t, value):
         found = True
-    if found and counts[key].count == i - 1:
-      counts[key].count = i
-    if counts[key].count == counts_ln:
+    if found and counts[key]['count'] == i - 1:
+      counts[key]['count'] = i
+    if counts[key]['count'] == counts_ln:
       return True
   return False
 
@@ -91,17 +91,17 @@ def match_table_all(target, value):
           found = M.match_table_all(target_value, real_value)
         else:
           found = M.match_contains_any(target_value, real_value)
-     else:
-       if callable(target_value):
-          found = target_value(value.get(target_key))
-        elif type(target_value) in (list, dict) and type(value.get(target_key)) in (list, dict):
-          found = M.match_table_all(target_value, value.get(target_key))
-        else:
-          # outer compare
-          found = M.match_contains(target_value, value.get(target_key))
-     # we don't care if the value has other keys, this is left match
-     if not found:
-       return False
+    else:
+      if callable(target_value):
+        found = target_value(value.get(target_key))
+      elif type(target_value) in (list, dict) and type(value.get(target_key)) in (list, dict):
+        found = M.match_table_all(target_value, value.get(target_key))
+      else:
+        # outer compare
+        found = M.match_contains(target_value, value.get(target_key))
+    # we don't care if the value has other keys, this is left match
+    if not found:
+      return False
   return True
 
 def each_match_contains_all(target, values):
@@ -130,11 +130,10 @@ def match_primitive(target, value):
   elif type(target) == bool:
     if target:
       return M.match_truthy(value)
-    else
+    else:
       return M.match_falsy(value)
-  elif (type(target) in (int, float, str))
-    and (type(value) in (int, float, str)):
-      return target + '' == value + ''
+  elif (type(target) in (int, float, str)) and (type(value) in (int, float, str)):
+    return target + '' == value + ''
   else:
     return target == value
 
@@ -158,7 +157,7 @@ def match_contains_string(target, value):
     for i,v in _pairs(target):
       if M.match_contains_string(v, value):
         return True
-   return False
+  return False
 
 def match_string(target, value):
   return (value+'').lower() in (target+'').lower()
