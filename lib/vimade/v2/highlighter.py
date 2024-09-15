@@ -120,16 +120,11 @@ def create_highlights(win, to_process):
 
   if tint != None and (tint.get('bg') != None or tint.get('fg') != None or tint.get('sp') != None):
     tint_out = COLORS.tint(tint, normal_bg, normal_ctermbg)
-    if tint_out.get('fg') != None:
-      target.fg = tint_out.fg
-    if tint_out.get('ctermfg') != None:
-      target.ctermfg = tint_out.ctermfg
-    if tint_out.sp != None:
-      target.sp = tint_out.sp
-    if tint_out.bg != None:
-      target.bg = tint_out.bg
-    if tint_out.ctermbg != None:
-      target.ctermbg = tint_out.ctermbg
+    target['fg'] = tint_out.get('fg', target['fg'])
+    target['ctermfg'] = tint_out.get('ctermfg', target['ctermfg'])
+    target['sp'] = tint_out.get('sp', target['sp'])
+    target['bg'] = tint_out.get('bg', target['bg'])
+    target['ctermbg'] = tint_out.get('ctermbg', target['ctermbg'])
 
   result = []
   for i, id in enumerate(to_process):

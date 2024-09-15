@@ -6,42 +6,42 @@ from vimade.v2.config_helpers import tint as TINT
 from vimade.v2.state import globals as GLOBALS
 from vimade.v2.util import color as COLOR_UTIL
 
-def _get_or_default_intensity(value):
-  if 'intensity' in value and value.intensity != None:
-    return value.intensity
-  return 1
+def _get_or_default_intensity(tint):
+  return tint.get('intensity', 1)
 
 def _tint24b(tint, bg24):
-  if tint.type == TINT.MIX:
-    return COLOR_UTIL.to24b(M.interpolate24b(COLOR_UTIL.to24b(tint.rgb), bg24, _get_or_default_intensity(tint)))
-  elif tint.type == TINT.REPLACE:
-    return COLOR_UTIL.to24b(tint.rgb)
+  tint_type = tint.get('type', TINT.MIX)
+  if tint_type == TINT.MIX:
+    return COLOR_UTIL.to24b(M.interpolate24b(COLOR_UTIL.to24b(tint['rgb']), bg24, _get_or_default_intensity(tint)))
+  elif tint_type == TINT.REPLACE:
+    return COLOR_UTIL.to24b(tint['rgb'])
 
 def _tint256(tint, bg256):
-  if not tint.type or tint.type == TINT.MIX:
-    result = M.interpolate24b(COLOR_UTIL.to24b(tint.rgb), bg256, _get_or_default_intensity(tint))
+  tint_type = tint.get('type', TINT.MIX)
+  if tint_type == TINT.MIX:
+    result = M.interpolate24b(COLOR_UTIL.to24b(tint['rgb']), bg256, _get_or_default_intensity(tint))
     result = COLOR_UTIL.to24b(result)
     result = COLOR_UTIL.toRgb(result)
     return M.interpolate256(0, result, 0, True)
-  elif tint.type == TINT.REPLACE:
-    return M.interpolate256(0, COLOR_UTIL.toRgb(tint.rgb), 1 - _get_or_default_intensity(tint), True)
+  elif tint_type == TINT.REPLACE:
+    return M.interpolate256(0, COLOR_UTIL.toRgb(tint['rgb']), 1 - _get_or_default_intensity(tint), True)
 
 def get_tint_key(tint):
   if not tint:
     return ''
-  bg = tint.bg
-  fg = tint.fg if tint.fg != None else bg
-  sp = tint.sp if tint.sp != None else fg
+  bg = tint.get('bg')
+  fg = tint.get('fg', bg)
+  sp = tint.get('sp', fg)
 
   sp_rgb = None
   fg_rgb = None
   bg_rgb = None
-  if type(sp) == dict and type(sp.rgb) != list:
-    sp_rgb = COLOR_UTIL.toRgb(sp.rgb)
-  if type(fg) == dict and type(fg.rgb) != list:
-    fg_rgb = COLOR_UTIL.toRgb(fg.rgb)
-  if type(bg) == dict and type(bg.rgb) != list:
-    bg_rgb = COLOR_UTIL.toRgb(bg.rgb)
+  if type(sp) == dict and type(sp['rgb']) != list:
+    sp_rgb = COLOR_UTIL.toRgb(sp['rgb'])
+  if type(fg) == dict and type(fg['rgb']) != list:
+    fg_rgb = COLOR_UTIL.toRgb(fg['rgb'])
+  if type(bg) == dict and type(bg['rgb']) != list:
+    bg_rgb = COLOR_UTIL.toRgb(bg['rgb'])
 
   return ((sp_rgb[1] + sp_rgb[2] + sp_rgb[3] + _get_or_default_intensity(sp)) if type(sp_rgb) == list else '') \
    + ((fg_rgb[1] + fg_rgb[2] + fg_rgb[3] + _get_or_default_intensity(fg)) if type(fg_rgb) == list else '') \
@@ -59,18 +59,16 @@ def convertHi(hi, default = [None, None, None, None, None]):
 
 def tint(tint, bg24, bg256):
   result = {}
-  bg = tint.bg
-  fg = tint.fg
-  sp = tint.sp
-  ctermbg = COLOR_UTIL.to24b(bg256, true)
+  bg = tint.get('bg')
+  fg = tint.get('fg')
+  sp = tint.get('sp')
+  ctermbg = COLOR_UTIL.to24b(bg256, True)
 
-  if bg:
-    bg = tint24b(bg, bg24)
-    ctermbg = tint256(bg, ctermbg)
-
-  result.fg = tint24b(fg, bg24) if fg else result.bg
-  result.ctermfg = tint256(fg, ctermbg) if fg else result.ctermbg
-  result.sp = tint24b(sp, bg24) if sp else result.fg
+  result['bg'] = _tint24b(bg, bg24) if bg else None
+  result['ctermbg'] = _tint256(bg, bg24) if bg else None
+  result['fg'] = _tint24b(fg, bg24) if fg else result['bg']
+  result['ctermfg'] = _tint256(fg, ctermbg) if fg else result['ctermbg']
+  result['sp'] = _tint24b(sp, bg24) if sp else result['fg']
 
   return result
 

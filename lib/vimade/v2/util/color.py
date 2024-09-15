@@ -8,7 +8,7 @@ M.LOOKUP_256_RGB = {}
 for i,rgb in enumerate(M.RGB_256):
   M.LOOKUP_256_RGB['%d-%d-%d' % (rgb[0], rgb[1], rgb[2])] = i
 
-def to24b(color, is256):
+def to24b(color, is256 = False):
   r = 0
   g = 0
   b = 0
@@ -17,24 +17,24 @@ def to24b(color, is256):
     color = M.RGB_256[color] or M.RGB_256[0]
 
   if type(color) == list:
-    r = color[1] or 0
-    g = color[2] or 0
-    b = color[3] or 0
+    r = int(color[0]) or 0
+    g = int(color[1]) or 0
+    b = int(color[2]) or 0
     result = '0x' + hex(r)[2:].zfill(2) + '' + hex(g)[2:].zfill(2) + '' + hex(b)[2:].zfill(2)
     return int(result, 16) or 0
   elif type(color) == str and color[0] == '#':
-    color = '0x' + colors[1:]
+    color = '0x' + color[1:]
     return int(color, 16) or 0
   else:
-    return tonumber(color) or 0
+    return int(color or 0)
 
-def toRgb(color, is256):
+def toRgb(color, is256 = False):
   r = 0
   g = 0
   b = 0
 
   if type(color) == str and color[0] == '#':
-    color = int('0x'+colors[1:], 16) or 0
+    color = int('0x'+color[1:], 16) or 0
   if type(color) == int:
     if is256:
      color = M.RGB_256[color] or M.RGB_256[0]
