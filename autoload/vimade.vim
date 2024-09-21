@@ -621,10 +621,13 @@ endfunction
 
 function! vimade#GetNvimHi(id)
   let tid = synIDtrans(a:id)
-  let norgb = nvim_get_hl_by_id(tid, 0) ?? {}
-  let rgb = nvim_get_hl_by_id(tid, 1) ?? {}
-  return [get(norgb, 'foreground', -1), get(norgb, 'background', -1), get(rgb, 'foreground', -1), get(rgb, 'background', -1), get(rgb, 'special', -1)]
-endfunction
+  if tid > 0
+    let norgb = nvim_get_hl_by_id(tid, 0)
+    let rgb = nvim_get_hl_by_id(tid, 1)
+    return [get(norgb, 'foreground', -1), get(norgb, 'background', -1), get(rgb, 'foreground', -1), get(rgb, 'background', -1), get(rgb, 'special', -1)]
+  endif
+  return [-1,-1,-1,-1,-1]
+endfunctio
 
 function! vimade#GetHi(id)
   "resolve root linkedTo id
