@@ -627,7 +627,7 @@ function! vimade#GetNvimHi(id)
     return [get(norgb, 'foreground', -1), get(norgb, 'background', -1), get(rgb, 'foreground', -1), get(rgb, 'background', -1), get(rgb, 'special', -1)]
   endif
   return [-1,-1,-1,-1,-1]
-endfunctio
+endfunction
 
 function! vimade#GetHi(id)
   "resolve root linkedTo id
