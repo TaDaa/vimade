@@ -12,19 +12,19 @@ def _get_or_default_intensity(tint):
 def _tint24b(tint, bg24):
   tint_type = tint.get('type', TINT.MIX)
   if tint_type == TINT.MIX:
-    return COLOR_UTIL.to24b(M.interpolate24b(COLOR_UTIL.to24b(tint['rgb']), bg24, _get_or_default_intensity(tint)))
+    return COLOR_UTIL.to24b(M.interpolate24b(COLOR_UTIL.to24b(tint['rgb']), bg24, tint.get('intensity',1)))
   elif tint_type == TINT.REPLACE:
     return COLOR_UTIL.to24b(tint['rgb'])
 
 def _tint256(tint, bg256):
   tint_type = tint.get('type', TINT.MIX)
   if tint_type == TINT.MIX:
-    result = M.interpolate24b(COLOR_UTIL.to24b(tint['rgb']), bg256, _get_or_default_intensity(tint))
+    result = M.interpolate24b(COLOR_UTIL.to24b(tint['rgb']), bg256, tint.get('intensity', 1))
     result = COLOR_UTIL.to24b(result)
     result = COLOR_UTIL.toRgb(result)
     return M.interpolate256(0, result, 0, True)
   elif tint_type == TINT.REPLACE:
-    return M.interpolate256(0, COLOR_UTIL.toRgb(tint['rgb']), 1 - _get_or_default_intensity(tint), True)
+    return M.interpolate256(0, COLOR_UTIL.toRgb(tint['rgb']), 1 - tint.get('intensity', 1), True)
 
 def get_tint_key(tint):
   if not tint:
@@ -33,23 +33,22 @@ def get_tint_key(tint):
   fg = tint.get('fg', bg)
   sp = tint.get('sp', fg)
 
-  sp_rgb = None
-  fg_rgb = None
-  bg_rgb = None
-  if type(sp) == dict and type(sp['rgb']) != list:
+  sp_rgb = fg_rgb = bg_rgb = None
+  if type(sp) == dict and type(sp['rgb']) == list:
     sp_rgb = COLOR_UTIL.toRgb(sp['rgb'])
-  if type(fg) == dict and type(fg['rgb']) != list:
+  if type(fg) == dict and type(fg['rgb']) == list:
     fg_rgb = COLOR_UTIL.toRgb(fg['rgb'])
-  if type(bg) == dict and type(bg['rgb']) != list:
+  if type(bg) == dict and type(bg['rgb']) == list:
     bg_rgb = COLOR_UTIL.toRgb(bg['rgb'])
 
-  return ((sp_rgb[1] + sp_rgb[2] + sp_rgb[3] + _get_or_default_intensity(sp)) if type(sp_rgb) == list else '') \
-   + ((fg_rgb[1] + fg_rgb[2] + fg_rgb[3] + _get_or_default_intensity(fg)) if type(fg_rgb) == list else '') \
-   + ((bg_rgb[1] + bg_rgb[2] + bg_rgb[3] + _get_or_default_intensity(bg)) if type(bg_rgb) == list else '')
+  return ''.join([
+    ''.join(map(str, sp_rgb)) + str(sp.get('intensity', 1)) if sp_rgb else '',
+    ''.join(map(str, fg_rgb)) + str(fg.get('intensity', 1)) if fg_rgb else '',
+    ''.join(map(str, bg_rgb)) + str(bg.get('intensity', 1)) if bg_rgb else ''])
 
 def convertHi(hi, default = [None, None, None, None, None]):
   if GLOBALS.is_nvim:
-    hi = [default[i] if x == '-1' else int(x) for i, x in enumerate(hi)]
+    hi = [default[i] if int(x) == -1 else int(x) for i, x in enumerate(hi)]
   else:
     if hi[0] and hi[0][0] == '#' or hi[1] and hi[1][0] == '#' or hi[2] and hi[2][0] == '#':
       hi = [default[0], default[1]] + [int(a[1:], 16) if a else default[i+2] for i,a in enumerate(hi)]
@@ -73,14 +72,11 @@ def tint(tint, bg24, bg256):
   return result
 
 def interpolate24b(source, target, fade):
-  target_r = (target & 0xFF0000) >> 16
-  target_g = (target & 0x00FF00) >> 8
-  target_b = (target & 0x0000FF)
-
-  r = M.interpolateLinear((source & 0XFF0000) >> 16, target_r, fade)
-  g = M.interpolateLinear((source & 0X00FF00) >> 8, target_g, fade)
-  b = M.interpolateLinear((source & 0X0000FF), target_b, fade)
-  return '#' + hex(int(r))[2:].zfill(2) + hex(int(g))[2:].zfill(2) + hex(int(b))[2:].zfill(2)
+  return '#' + ''.join(
+    map(lambda c: c[2:].zfill(2), map(hex, map(int,(
+      M.interpolateLinear((source & 0XFF0000) >> 16, (target & 0xFF0000) >> 16, fade),
+      M.interpolateLinear((source & 0X00FF00) >> 8, (target & 0x00FF00) >> 8, fade),
+      M.interpolateLinear((source & 0X0000FF), (target & 0x0000FF), fade))))))
 
 def interpolateLinear(source, target, fade):
   return math.floor(target + (source - target) * fade)

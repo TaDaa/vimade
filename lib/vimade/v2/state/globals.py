@@ -1,5 +1,4 @@
 import sys
-#  M = sys.modules[__name__]
 
 import vim
 from vimade.v2.config_helpers import tint as TINT
@@ -8,13 +7,13 @@ from vimade.v2.util import matchers as MATCHERS
 
 MAX_TICK_ID = 1000000
 
-
 _OTHER = {
   'vimade_fade_active': False,
   'is_dark': False
 }
 _CURRENT = {
   'winid': -1,
+  'winnr': -1,
   'bufnr': -1,
   'tabnr': -1,
 }
@@ -52,7 +51,9 @@ _DEFAULTS = {
       'buf_vars': None,
       'win_opts': None,
       'win_vars': None,
-      'win_config': None,
+      'win_config': {
+        'relative': True #block all floating windows # TODO we can make this more customized soon
+       },
     }
   },
   # python only config
@@ -84,12 +85,13 @@ class Globals(object):
     self.__internal = {
       'READY': 0,
       'ERROR': 1,
-      'RECALCULATE': 2,
-      'CHANGED': 4,
-      'INVALIDATE': 8,
-      'SIGNS': 16,
+      'CHANGED': 2,
+      'INVALIDATE_HIGHLIGHTS': 4,
+      'INVALIDATE_BUFFER_CACHE': 8,
+      'RECALCULATE': 16,
+      'SIGNS': 32,
 
-      'tick_id': 0,
+      'tick_id': 1000,
       'tick_state': 0,
       'vimade_fade_active': False,
       'basebg': None,
@@ -108,6 +110,7 @@ class Globals(object):
       'is_dark': False,
       'current': {
           'winid': -1,
+          'winnr': -1,
           'bufnr': -1,
           'tabnr': -1,
       },
@@ -172,34 +175,39 @@ class Globals(object):
   def _next_tick_id(self):
     tick_id = self.tick_id + 1
     if tick_id > self.MAX_TICK_ID:
-      tick_id = 1
+      tick_id = 1000
     return tick_id
 
-  def refresh(self):
+  def refresh(self, tick_state = 0):
     self.tick_id = self._next_tick_id()
-    self.tick_state = self.READY
-    (vimade,
-      background,
+    self.tick_state = tick_state
+    (background,
       colorscheme,
       termguicolors,
       winwidth,
       vimade_fade_active,
       winid,
+      winnr,
       bufnr,
       tabnr) = self.IPC.mem_safe_eval('['+','.join([
-      'g:vimade',
       '&background',
       'exists("g:colors_name") ? g:colors_name : ""',
       '&termguicolors',
       '&winwidth',
       'exists("g:vimade_fade_active") ? g:vimade_fade_active : ""',
       'win_getid()',
+      'winnr()',
       'bufnr()',
       'tabpagenr()',
     ])+']')
+    # we need the actual converted object here
+    # for config
+    vimade = self.vim.vars['vimade']
+    
 
     current = {
       'winid': int(winid),
+      'winnr': int(winnr),
       'bufnr': int(bufnr),
       'tabnr': int(tabnr)
     }
@@ -211,12 +219,12 @@ class Globals(object):
     ], {
       'is_dark': background == 'dark',
       'colorscheme': colorscheme,
-      'termguicolors': termguicolors
-    }, self, self._OTHER, self.INVALIDATE | self.CHANGED)
+      'termguicolors': bool(int(termguicolors))
+    }, self, self._OTHER, self.INVALIDATE_HIGHLIGHTS | self.RECALCULATE | self.CHANGED)
 
     # neovim only - no tricky
     if self.is_nvim:
-      if vimade.get('enabletreesitter') and not self.require_treesitter:
+      if int(vimade.get('enabletreesitter')) and not self.require_treesitter:
         vim.api.exec_lua("_vimade_legacy_treesitter = require('vimade_legacy_treesitter')", [])
         self.require_treesitter = 1
     else:
@@ -227,15 +235,15 @@ class Globals(object):
       'normalid',
       'normalncid',
       'enablebasegroups',
-    ], vimade, self, self._DEFAULTS, self.RECALCULATE)
-    self.tick_state |= self._check_fields([
       'fadepriority',
+    ], vimade, self, self._DEFAULTS, self.INVALIDATE_HIGHLIGHTS | self.CHANGED)
+    self.tick_state |= self._check_fields([
       'enabletreesitter'
-    ], vimade, self, self._DEFAULTS, self.INVALIDATE | self.CHANGED)
+    ], vimade, self, self._DEFAULTS, self.INVALIDATE_BUFFER_CACHE | self.INVALIDATE_HIGHLIGHTS | self.CHANGED)
     self.tick_state |= self._check_fields([
       'vimade_fade_active'
     ], {
-      'vimade_fade_active': vimade_fade_active
+      'vimade_fade_active': bool(int(vimade_fade_active))
     }, self, self._OTHER, self.CHANGED)
     self.tick_state |= self._check_fields([
       'fademode',
@@ -245,23 +253,24 @@ class Globals(object):
     ], vimade, self, self._DEFAULTS, self.CHANGED)
     self.tick_state |= self._check_fields([
       'winid',
+      'winnr',
       'bufnr',
       'tabnr',
-    ], current, self.current, self._CURRENT, self.CHANGED)
+    ], current, self.current, self._CURRENT, self.READY) #TODO just set
     self.tick_state |= self._check_fields([
       'enablesigns'
     ], vimade, self, self._DEFAULTS, self.SIGNS)
 
     ## handled in win state
     self.basegroups = vimade.get('basegroups', self._DEFAULTS['basegroups'])
-    self.signsid = vimade.get('signsid', int(self._DEFAULTS['signsid']))
+    self.signsid = int(vimade.get('signsid', self._DEFAULTS['signsid']))
     self.signspriority = int(vimade.get('signspriority', self._DEFAULTS['signspriority']))
     self.signsretentionperiod = int(vimade.get('signsretentionperiod', self._DEFAULTS['signsretentionperiod']))
-    self.link = vimade.get('link', self._DEFAULTS['link'])
-    self.blocklist = vimade.get('blocklist', self._DEFAULTS['blocklist'])
+    self.link = vimade.get('link', self._DEFAULTS['link']) # TODO this should be singlekey merge (allow users to override the default or add additional config)
+    self.blocklist = vimade.get('blocklist', self._DEFAULTS['blocklist']) # TODO this should be singlekey merge (allow users to override the default or add additional config)
     self.basebg = vimade.get('basebg', self._DEFAULTS['basebg']) # TODO empty string needed? 
     self.groupdiff = bool(int(vimade.get('groupdiff', self._DEFAULTS['groupdiff'])))
-    self.groupscrollbind = bool(int(vimade.get('groupscrollbind'), self._DEFAULTS['groupscrollbind']))
+    self.groupscrollbind = bool(int(vimade.get('groupscrollbind', self._DEFAULTS['groupscrollbind'])))
     self.fademinimap = bool(int(vimade.get('fademinimap', self._DEFAULTS['fademinimap'])))
     self.tint = vimade.get('tint', self._DEFAULTS['tint'])
     self.fadelevel = float(vimade.get('fadelevel', self._DEFAULTS['fadelevel']))

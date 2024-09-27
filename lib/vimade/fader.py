@@ -299,7 +299,7 @@ def update(nextState = None):
       signs.unfade_bufs(unfade_signs)
   returnToWin()
   FADE.prevent = False
-  # if (time.time() - start) * 1000 > 10:
+  # if (time.time() - start) * 1000 > 4:
     # print('update',(time.time() - start) * 1000)
 
 def gotoWin(winid):

@@ -488,7 +488,9 @@ endfunction
 function! vimade#CheckWindows()
   call vimade#UpdateState()
   "prevent if inside popup window
-  if winnr() == 0 || pumvisible()
+  " TODO: confirm if this is needed in newer renderers, which perform
+  " significantly better
+  if winnr() == 0 || pumvisible() 
     return
   endif
   if g:vimade_running && g:vimade_paused == 0 && getcmdwintype() == ''
@@ -524,7 +526,7 @@ function! vimade#softInvalidateBuffer(bufnr)
       \ ], "\n")
     endif
   endif
-  call vimade#CheckWindows()
+  call vimade#DeferredCheckWindows()
 endfunction
 
 function! vimade#UpdateEvents()
@@ -533,8 +535,17 @@ function! vimade#UpdateEvents()
       au VimLeave * call vimade#Disable()
       au FocusGained * call vimade#FocusGained()
       au FocusLost * call vimade#FocusLost()
-      au WinEnter,BufEnter * call vimade#CheckWindows()
-      au OptionSet diff call vimade#DeferredCheckWindows()
+      " TODO neovim is broken in many scenarios in v0.10. Python logic is not
+      " executed properly when called directly off and autoevent. This is
+      " easily reproduceable when using netrw...
+      " Using async here should work fine even in legacy.
+      if has('nvim')
+        au WinEnter,BufEnter * call vimade#DeferredCheckWindows()
+        au OptionSet diff call vimade#DeferredCheckWindows()
+      else
+        au WinEnter,BufEnter * call vimade#CheckWindows()
+        au OptionSet diff call vimade#CheckWindows()
+      endif
       au ColorScheme * call vimade#Redraw()
       au FileChangedShellPost * call vimade#softInvalidateBuffer(expand("<abuf>"))
       if g:vimade.usecursorhold
@@ -618,7 +629,6 @@ function! vimade#UnfadeActive()
     call vimade#CheckWindows()
 endfunction
 
-
 function! vimade#GetNvimHi(id)
   let tid = synIDtrans(a:id)
   if tid > 0
@@ -651,6 +661,29 @@ function! vimade#GetVisibleRows(startRow, endRow)
     let l:rows += 1
   endwhile
   return l:result
+endfunction
+
+function! vimade#GetVisibleRowsV2(startRow, endRow)
+  let l:lookup = winsaveview()
+  let l:leftcol = l:lookup['leftcol']+l:lookup['skipcol']
+  let l:row = a:startRow
+  let l:result = []
+  let l:rows = 0
+  let l:target_rows = a:endRow - a:startRow
+  while l:rows <= l:target_rows
+    let l:fold = foldclosedend(l:row)
+    if l:fold == -1
+      noautocmd call cursor(l:row, 0)
+      call add(l:result, [l:row, l:fold, col('$')-wincol()]) " (using this we can find the total concealed chars -- subtract the full text_ln-wincol() = concealed)
+      let l:row += 1
+    else
+      call add(l:result, [l:row, l:fold, 0])
+      let l:row = l:fold + 1
+    endif
+    let l:rows += 1
+  endwhile
+  noautocmd call winrestview(l:lookup)
+  return [l:leftcol, l:result]
 endfunction
 
 function! vimade#StartTimer()

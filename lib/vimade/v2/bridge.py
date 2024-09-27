@@ -5,7 +5,7 @@ def getInfo():
   pass
 
 def detectTermColors():
-  #  TODO
+  #  TODO: NOT HAPPENING. Remove from v1 as well
   pass
 
 def unfadeAll():
@@ -29,7 +29,7 @@ def softInvalidateSigns():
   pass
 
 def recalculate():
-  #  TODO
+  FADER.recalculate()
   pass
 
 def update():

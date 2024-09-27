@@ -5,6 +5,7 @@ M = sys.modules[__name__]
 from vimade.v2.state import globals as GLOBALS
 from vimade.v2 import colors as COLORS
 from vimade.v2.util import ipc as IPC
+from vimade.v2.util.promise import Promise
 
 M.next_id = 0
 M.free_ids = []
@@ -14,7 +15,19 @@ M.base_id_cache = {}
 M.vimade_id_cache = {}
 M.win_lookup = {}
 
-hi_string = "vimade#GetNvimHi(%d)" if GLOBALS.is_nvim else "vimade#GetHi(%d)"
+HAS_NVIM_GET_HL = int(IPC.eval_and_return('exists("*nvim_get_hl")'))
+def _process_nvim_get_hl(results):
+  return [(int(r.get('ctermfg',-1)),int(r.get('ctermbg', -1)),int(r.get('fg',-1)),int(r.get('bg',-1)), int(r.get('sp',-1))) for r in results]
+_process_hl_results = None
+
+if GLOBALS.is_nvim:
+  if HAS_NVIM_GET_HL:
+    hi_string = "nvim_get_hl(0,{'id':%s,'link':0})"
+    _process_hl_results = _process_nvim_get_hl
+  else:
+    hi_string = "vimade#GetNvimHi(%s)" 
+else:
+    hi_string = "vimade#GetHi(%s)" 
 
 # vim/nvim are limited by 20000 highlights, so we need to be efficient and
 # reuse our created highlights everytime possible.
@@ -25,13 +38,23 @@ def _get_next_id():
   next_id = M.next_id
   return next_id
 
+def get_hl_for_ids(win, ids):
+  ids = _get_hl_ids_for_names(win, ids)
+  promise = IPC.batch_eval_and_return('['+','.join([hi_string % id for id in ids])+']')
+  result = Promise()
+  def next(value):
+    if _process_hl_results:
+      value = _process_hl_results(value)
+    result.resolve(value)
+  promise.then(next)
+  return result
+
 # we monitor which windows are using which highlights. Once is a window is
 # gone, invalidated, or cleared, we might be able to free those highlights.
 def clear_win(win):
   winid = win.winid
-  lookup = win_lookup.get(winid)
-  if lookup != None:
-    highlights = lookup['hi']
+  highlights = win_lookup.get(winid)
+  if highlights != None:
     for hi in highlights.values():
       del hi['windows'][winid]
       if len(hi['windows'].keys()) == 0:
@@ -40,10 +63,15 @@ def clear_win(win):
     del win_lookup[winid]
 
 # clears a base highlight so that it can be re-evaluated.
-def clear_color(win, id):
-  id = _get_hl_ids_for_names(win, [id])[0]
-  if M.base_id_cache.get(id):
-    del M.base_id_cache[id]
+def clear_colors(win, ids):
+  ids = _get_hl_ids_for_names(win, ids)
+  for id in ids:
+    cache_key = str(id)
+    if cache_key in M.base_id_cache:
+      del M.base_id_cache[cache_key]
+
+def clear_base_cache():
+  M.base_id_cache = {}
 
 # create the vimade replacement highlight
 def create_highlight(cache_key, attrs, target, fade):
@@ -56,45 +84,47 @@ def create_highlight(cache_key, attrs, target, fade):
   result = {
     'id': _get_next_id(),
     'cache_key': cache_key,
-    'attrs': [None, None, None, None, None],
+    'attrs': (
+      COLORS.interpolate256(hi_attrs[0], target[0], fade) if (hi_attrs[0] != None and target[0] != None) else 'NONE',
+      COLORS.interpolate256(hi_attrs[1], target[1], fade) if (hi_attrs[1] != None and target[1] != None) else 'NONE',
+      COLORS.interpolate24b(hi_attrs[2], target[2], fade) if (hi_attrs[2] != None and target[2] != None) else 'NONE',
+      COLORS.interpolate24b(hi_attrs[3], target[3], fade) if (hi_attrs[3] != None and target[3] != None) else 'NONE',
+      COLORS.interpolate24b(hi_attrs[4], target[4], fade) if (hi_attrs[4] != None and target[4] != None) else 'NONE'),
     'windows': {},
   }
-  result_attrs = result['attrs']
-  result_attrs[0] = COLORS.interpolate256(ctermfg, target['ctermfg'], fade) if (ctermfg != None and target['ctermfg'] != None) else 'NONE'
-  result_attrs[1] = COLORS.interpolate256(ctermbg, target['ctermbg'], fade) if (ctermbg != None and target['ctermbg'] != None) else 'NONE'
-  result_attrs[2] = COLORS.interpolate24b(guifg, target['fg'], fade) if (guifg != None and target['fg'] != None) else 'NONE'
-  result_attrs[3] = COLORS.interpolate24b(guibg, target['bg'], fade) if (guibg != None and target['bg'] != None) else 'NONE'
-  result_attrs[4] = COLORS.interpolate24b(guisp, target['sp'], fade) if (guisp != None and target['sp'] != None) else 'NONE'
   return result
 
 # ensure we have valid ids for the highlighting process, otherwise
 # get them.
 def _get_hl_ids_for_names(win, to_process):
-  to_process = to_process + []
+  to_process = to_process[0:]
   name_index_map = {}
   id_eval = []
+  names = []
   cnt = 0
+  win_original = win.original_wincolor or 'Normal'
   for i,name in enumerate(to_process):
     if name == 0 or name == '':
-      name = win.original_wincolor or 'Normal'
+      to_process[i] = name = win_original
     if type(name) == str:
       id = M.hl_name_cache.get(name)
       if id == None:
-        name_index_map[cnt] = i
-        id_eval.append('hlID("%s")' % name)
-        cnt += 1
+        if not name in name_index_map:
+          name_index_map[name] = True
+          names.append(name)
+          id_eval.append('hlID("%s")' % name)
       else:
         to_process[i] = id
 
-  if cnt:
+  if len(id_eval):
     ids = IPC.eval_and_return('[' + ','.join(id_eval) + ']')
     for i,id in enumerate(ids):
       id = int(id)
-      index = name_index_map[i]
-      name =  to_process[index]
-      to_process[index] = id
-      if id != 0:
-        M.hl_name_cache[name] = id
+      name = names[i]
+      M.hl_name_cache[name] = id
+      for j, o_id in enumerate(to_process):
+        if o_id == name:
+          to_process[j] = id
 
   return to_process
 
@@ -105,67 +135,78 @@ def create_highlights(win, to_process):
   default_bg = 0x000000 if GLOBALS.is_dark else 0xFFFFFF
   default_ctermbg = 0 if GLOBALS.is_dark else 255
 
-  ids = []
-  attrs_eval = []
 
-  normal_bg = win.wincolorhl[3]
-  normal_ctermbg = win.wincolorhl[1]
-  target = {
-    'bg': normal_bg,
-    'fg': normal_bg,
-    'sp': normal_bg,
-    'ctermfg': normal_ctermbg,
-    'ctermbg': normal_ctermbg,
-  }
+  wincolorhl = win.wincolorhl
+  normal_bg = wincolorhl[3]
+  normal_ctermbg = wincolorhl[1]
 
   if tint != None and (tint.get('bg') != None or tint.get('fg') != None or tint.get('sp') != None):
     tint_out = COLORS.tint(tint, normal_bg, normal_ctermbg)
-    target['fg'] = tint_out.get('fg', target['fg'])
-    target['ctermfg'] = tint_out.get('ctermfg', target['ctermfg'])
-    target['sp'] = tint_out.get('sp', target['sp'])
-    target['bg'] = tint_out.get('bg', target['bg'])
-    target['ctermbg'] = tint_out.get('ctermbg', target['ctermbg'])
+    target = (
+       tint_out.get('ctermfg', normal_ctermbg),
+       tint_out.get('ctermbg', normal_ctermbg),
+       tint_out.get('fg', normal_bg),
+       tint_out.get('bg', normal_bg),
+       tint_out.get('sp', normal_bg))
+  else:
+    target = (
+        normal_ctermbg,
+        normal_ctermbg,
+        normal_bg,
+        normal_bg,
+        normal_bg)
 
   result = []
-  for i, id in enumerate(to_process):
-    if id and M.base_id_cache.get(id) == None:
-      M.base_id_cache[id] = {}
-      ids.append(id)
+  attrs_eval = []
+
+  base_keys = []
+  for id in to_process:
+    if id and not id in M.base_id_cache:
+      cache_key = str(id)
+      M.base_id_cache[cache_key] = {}
+      base_keys.append(cache_key)
       attrs_eval.append(hi_string % id)
 
-  attrs = IPC.eval_and_return('[' + ','.join(attrs_eval) + ']')
+  if len(attrs_eval):
+    # TODO worth batching?
+    attrs = IPC.eval_and_return('[' + ','.join(attrs_eval) + ']')
+    if _process_hl_results:
+      attrs = _process_hl_results(attrs)
 
-  for i, id in enumerate(ids):
-    base = M.base_id_cache[id]
-    base_hi = COLORS.convertHi(attrs[i], win.wincolorhl)
-    base['hi'] = base_hi
-    base['base_key'] = ','.join([str(x) for x in base_hi])
+    for i, id in enumerate(base_keys):
+      base = M.base_id_cache[id]
+      base_hi = COLORS.convertHi(attrs[i], wincolorhl)
+      base['hi'] = base_hi
+      base['base_key'] = ','.join(map(str, base_hi))
 
   to_create = []
+
   for id in to_process:
-    base = M.base_id_cache[id]
-    cache_key = '%s:%s' % (base['base_key'], win.hi_key)
-    if not M.vimade_id_cache.get(cache_key):
-      vimade_hi = M.create_highlight(cache_key, base, target, fade)
-      M.vimade_id_cache[cache_key] = vimade_hi
+    base = M.base_id_cache[str(id)]
+    cache_key = base['base_key'] + ':' + win.hi_key
+    vimade_hi = M.vimade_id_cache.get(cache_key)
+    if not vimade_hi:
+      vimade_hi = M.vimade_id_cache[cache_key] = M.create_highlight(cache_key, base, target, fade)
+      vimade_attrs = vimade_hi['attrs']
       
-      expr = 'noautocmd hi vimade_%s' % vimade_hi['id']
-      expr += ' ctermfg=%s' % vimade_hi['attrs'][0]
-      expr += ' ctermbg=%s' % vimade_hi['attrs'][1]
-      expr += ' guifg=%s' % vimade_hi['attrs'][2]
-      expr += ' guibg=%s' % vimade_hi['attrs'][3]
-      expr += ' guisp=%s' % vimade_hi['attrs'][4]
-      to_create.append(expr)
-    vimade_hi = M.vimade_id_cache[cache_key]
+      to_create.append('noautocmd hi vimade_' + str(vimade_hi['id']) \
+        + ' ctermfg=' + str(vimade_attrs[0]) \
+        + ' ctermbg=' + str(vimade_attrs[1]) \
+        + ' guifg=' + vimade_attrs[2] \
+        + ' guibg=' + vimade_attrs[3] \
+        + ' guisp=' + vimade_attrs[4])
+
     vimade_hi['windows'][win.winid] = True
     result.append(vimade_hi['id'])
-    if not M.win_lookup.get(win.winid):
-      M.win_lookup[win.winid] = {
-          'hi': {}
-      }
-    M.win_lookup[win.winid]['hi'][vimade_hi['id']] = vimade_hi
+
+    lookup = M.win_lookup.get(win.winid)
+    if not lookup:
+      lookup = M.win_lookup[win.winid] = {}
+    lookup[vimade_hi['id']] = vimade_hi
 
   if len(to_create):
-    vim.command('|'.join(to_create))
+    # non-blocking, but must execute before matchaddpos is called for Vim.  This happens naturally
+    # due to the ordering of logic in IPC (command is explicitly called before eval)
+    IPC.batch_command('|'.join(to_create))
 
   return result
