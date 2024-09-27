@@ -19,8 +19,8 @@ TINT.__init(M)
 
 M.READY = 0
 M.ERROR = 1
-M.RECALCULATE = 2
-M.UPDATE = 4
+M.CHANGED = 2
+M.RECALCULATE = 4
 
 M.tick_id = 0
 M.tick_state = M.READY
@@ -112,7 +112,9 @@ local DEFAULTS = {
       buf_vars = nil,
       win_opts = nil,
       win_vars = nil,
-      win_config = nil,
+      win_config = {
+        relative = true
+      },
     },
     -- include_alternative matchers if desired
     -- function(win) end
@@ -171,15 +173,15 @@ M.refresh = function ()
     'vimade_fade_active',
   }, {
     vimade_fade_active = vim.g.vimade_fade_active == 1,
-  }, M, OTHER, M.UPDATE))
+  }, M, OTHER, M.CHANGED))
   M.tick_state = bit.bor(M.tick_state, check_fields({
     'fademode',
-  }, vimade, M, DEFAULTS, M.UPDATE))
+  }, vimade, M, DEFAULTS, M.CHANGED))
   M.tick_state = bit.bor(M.tick_state, check_fields({
     'winid',
     'bufnr',
     'tabnr',
-  }, current, M.current, CURRENT, M.UPDATE))
+  }, current, M.current, CURRENT, M.CHANGED))
 
   if not M.global_ns or not M.nohlcheck or bit.band(M.RECALCULATE, M.tick_state) > 0 then
     M.refresh_global_ns()
@@ -191,9 +193,9 @@ M.refresh = function ()
 
 
   -- will be handled in win_state --
-  M.link = vimade.link or DEFAULTS.link
+  M.link = vimade.link or DEFAULTS.link --TODO this be a one-key merge/replace
   M.basebg = vimade.basebg ~= '' and vimade.basebg or DEFAULTS.basebg
-  M.blocklist = vimade.blocklist or DEFAULTS.blocklist
+  M.blocklist = vimade.blocklist or DEFAULTS.blocklist --TODO this be a one-key merge/replace
   M.groupdiff = TYPE.num_to_bool(vimade.groupdiff, DEFAULTS.groupdiff)
   M.groupscrollbind = TYPE.num_to_bool(vimade.groupscrollbind, DEFAULTS.groupscrollbind)
   M.fademinimap = TYPE.num_to_bool(vimade.fademinimap, DEFAULTS.fademinimap)

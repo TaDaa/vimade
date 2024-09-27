@@ -3,13 +3,14 @@ local GLOBALS = require('vimade.state.globals')
 local NAMESPACE = require('vimade.state.namespace')
 local LINK = require('vimade.config_helpers.link')
 local BLOCKLIST = require('vimade.config_helpers.blocklist')
+local HIGHLIGHTER = require('vimade.highlighter')
 
 M.cache = {}
 M.current = nil
 
-M.READY = 0
-M.ERROR = 1
-M.CHANGED = 2
+M.fading_cache = {
+  tick_id = -1
+}
 
 local _update_state = function (next, current, state)
   local modified = false
@@ -19,7 +20,7 @@ local _update_state = function (next, current, state)
       modified = true
     end
   end
-  return modified and state or M.READY
+  return modified and state or GLOBALS.READY
 end
 
 -- return without updating state
@@ -64,7 +65,7 @@ M.__create = function (winid)
       is_active_buf = nil,
       real_ns = nil,
       ns = nil,
-      modified = M.READY,
+      state = GLOBALS.READY,
       buf_opts = function(self)
         return vim.bo[self.bufnr]
       end,
@@ -83,17 +84,17 @@ M.__create = function (winid)
   return M.cache[winid]
 end
 
-M.from_current = function (wininfo)
-  local win = M.from_other(wininfo, true)
+M.refresh_active = function (wininfo)
+  local win = M.refresh(wininfo, true)
   M.current = win
   return win
 end
 
-M.from_other = function (wininfo, skip_link)
+M.refresh = function (wininfo, skip_link)
   local winid = tonumber(wininfo.winid)
   local win = M.__create(winid)
 
-  win.modified = M.READY
+  win.state = GLOBALS.READY
   win.winid = winid
   win.terminal = wininfo.terminal
   win.winnr = tonumber(wininfo.winnr)
@@ -172,9 +173,9 @@ M.from_other = function (wininfo, skip_link)
     end
   end
 
-  win.modified = bit.bor(win.modified, _update_state({
+  win.state = bit.bor(win.state, _update_state({
     faded = should_fade
-  }, win, M.CHANGED))
+  }, win, GLOBALS.CHANGED))
 
 
   if should_fade == true then
@@ -190,10 +191,10 @@ M.from_other = function (wininfo, skip_link)
     else
       fadelevel = GLOBALS.fadelevel
     end
-    win.modified = bit.bor(win.modified, _update_state({
+    win.state = bit.bor(win.state, _update_state({
       fadelevel = fadelevel,
       tint = tint,
-    }, win, M.CHANGED))
+    }, win, GLOBALS.CHANGED))
 
 
     if not win.ns
@@ -201,13 +202,26 @@ M.from_other = function (wininfo, skip_link)
       or GLOBALS.tick_state >= GLOBALS.RECALCULATE then
       local ns = NAMESPACE.get_replacement(win, real_ns)
       if ns.modified == true then
-        win.modified = bit.bor(M.CHANGED, win.modified)
+        win.state = bit.bor(GLOBALS.CHANGED, win.state)
       end
       win.ns = ns
     end
   end
 
-  -- already checked --
+  if bit.band(bit.bor(GLOBALS.tick_state, win.state), GLOBALS.CHANGED) > 0 then
+    if win.faded then
+      if M.fading_cache.tick_id ~= GLOBALS.tick_id  then
+        M.fading_cache = {tick_id = GLOBALS.tick_id}
+      end
+      if M.fading_cache[win.ns.vimade_ns] == nil then
+        HIGHLIGHTER.set_highlights(win)
+        M.fading_cache[win.ns.vimade_ns] = true
+      end
+      vim.api.nvim_win_set_hl_ns(win.winid, win.ns.vimade_ns)
+    else
+      vim.api.nvim_win_set_hl_ns(win.winid, win.real_ns)
+    end
+  end
 
   return win
 end
