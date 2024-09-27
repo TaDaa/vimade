@@ -7,6 +7,8 @@ from vimade.v2 import colors as COLORS
 from vimade.v2.util import ipc as IPC
 from vimade.v2.util.promise import Promise
 
+is_nvim = GLOBALS.is_nvim
+
 M.next_id = 0
 M.free_ids = []
 
@@ -104,8 +106,6 @@ def _get_hl_ids_for_names(win, to_process):
   cnt = 0
   win_original = win.original_wincolor or 'Normal'
   for i,name in enumerate(to_process):
-    if name == 0 or name == '':
-      to_process[i] = name = win_original
     if type(name) == str:
       id = M.hl_name_cache.get(name)
       if id == None:
@@ -139,6 +139,7 @@ def create_highlights(win, to_process):
   wincolorhl = win.wincolorhl
   normal_bg = wincolorhl[3]
   normal_ctermbg = wincolorhl[1]
+  fg_wincolorhl = [wincolorhl[0], None, wincolorhl[2], None, None]
 
   if tint != None and (tint.get('bg') != None or tint.get('fg') != None or tint.get('sp') != None):
     tint_out = COLORS.tint(tint, normal_bg, normal_ctermbg)
@@ -161,7 +162,8 @@ def create_highlights(win, to_process):
 
   base_keys = []
   for id in to_process:
-    if id and not id in M.base_id_cache:
+    # 0 doesn't work in neovim
+    if (not is_nvim or id) and not id in M.base_id_cache:
       cache_key = str(id)
       M.base_id_cache[cache_key] = {}
       base_keys.append(cache_key)
@@ -175,26 +177,28 @@ def create_highlights(win, to_process):
 
     for i, id in enumerate(base_keys):
       base = M.base_id_cache[id]
-      base_hi = COLORS.convertHi(attrs[i], wincolorhl)
+      base_hi = COLORS.convertHi(attrs[i], fg_wincolorhl)
       base['hi'] = base_hi
       base['base_key'] = ','.join(map(str, base_hi))
 
   to_create = []
 
   for id in to_process:
-    base = M.base_id_cache[str(id)]
-    cache_key = base['base_key'] + ':' + win.hi_key
-    vimade_hi = M.vimade_id_cache.get(cache_key)
-    if not vimade_hi:
-      vimade_hi = M.vimade_id_cache[cache_key] = M.create_highlight(cache_key, base, target, fade)
-      vimade_attrs = vimade_hi['attrs']
-      
-      to_create.append('noautocmd hi vimade_' + str(vimade_hi['id']) \
-        + ' ctermfg=' + str(vimade_attrs[0]) \
-        + ' ctermbg=' + str(vimade_attrs[1]) \
-        + ' guifg=' + vimade_attrs[2] \
-        + ' guibg=' + vimade_attrs[3] \
-        + ' guisp=' + vimade_attrs[4])
+    # 0 doesn't work in neovim
+    if (not is_nvim or id):
+      base = M.base_id_cache[str(id)]
+      cache_key = base['base_key'] + ':' + win.hi_key
+      vimade_hi = M.vimade_id_cache.get(cache_key)
+      if not vimade_hi:
+        vimade_hi = M.vimade_id_cache[cache_key] = M.create_highlight(cache_key, base, target, fade)
+        vimade_attrs = vimade_hi['attrs']
+        
+        to_create.append('noautocmd hi vimade_' + str(vimade_hi['id']) \
+          + ' ctermfg=' + str(vimade_attrs[0]) \
+          + ' ctermbg=' + str(vimade_attrs[1]) \
+          + ' guifg=' + vimade_attrs[2] \
+          + ' guibg=' + vimade_attrs[3] \
+          + ' guisp=' + vimade_attrs[4])
 
     vimade_hi['windows'][win.winid] = True
     result.append(vimade_hi['id'])
