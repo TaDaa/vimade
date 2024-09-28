@@ -36,34 +36,34 @@
 ##### Features
 - [X] Fade inactive buffers
 - [X] Fade/Unfade diffs together
-- [X] Automatically adjust to colorscheme changes
-- [X] Automatically adjust to basebg changes
-- [X] Automatically adjust to fadelevel changes
-- [X] Automatically adjust to &syntax changes
-- [X] React to window resize + scroll changes
 - [X] Apply custom tints (not necessarily your background color to text)
+- [X] Automatically adjust to configuration changes (e.g. colorscheme, syntax, and vimade variables)
+- [X] Automatically adjust to fadelevel changes
+- [X] React to window resize + scroll changes
 - [X] Vim8+
-- [X] Neovim + also plays well with NormalNC
+- [X] Neovim - plays well with NormalNC and treesitter
 - [X] Python3
 - [X] Python2
 - [X] GUI Neovim + GUI Vim
-- [X] 256 color terminal support (Xterm)
+- [X] 256 color terminals
 - [X] Toggle vimade on/off (VimadeEnable, VimadeDisable, VimadeToggle)
-- [X] Supports terminal backgrounds for Vim8(not nvim yet) and iTerm, Tilix, Kitty, Gnome, rxvt
-- [X] Wrapped Text
+- [X] Wrapped Text (only selects and processes the parts of the text that need highlighting)
 - [X] Folded Text (detects folded rows and fades above/below -- see VimadeOverrideFolded for highlight recommendations on hi Folded)
 - [X] :ownsyntax support
-- [X] Sign column support 
+- [X] Sign column support
 - [X] Vim Documentation/Help
-- [ ] Secondary buffer window highlighting
+- [X] Helpers to fade Vim global highlights (e.g VertSplit, Folded, NonText, etc -- will alleviate issues with high contrast in some colorschemes)
 
 ###### Whats coming?
-- [ ] Helpers to fade Vim global highlights (e.g VertSplit, Folded, NonText, etc -- will alleviate issues with high contrast in some colorschemes)
-- [ ] Configurable FadeLevel per buffer
+- [ ] Configurable option to switch between Windows and Buffers
+- [ ] Configurable FadeLevel per Window
+- [ ] Configurable Tint per Window
 - [ ] Conditional interface to determine which windows/buffers get faded/unfaded.
+- [ ] Lua only renderer for Neovim (no python dependency required!).
 - [ ] Performance Improvements
-- [ ] Limelight with syntax highlighting
 - [ ] Improve terminal color rounding for grays
+- [ ] Animations
+- [ ] Limelight but with syntax highlighting!
 - [ ] Code cleanup
 - [ ] Tests
 
