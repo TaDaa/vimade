@@ -88,9 +88,11 @@ def create_highlight(cache_key, attrs, target, fade):
     'cache_key': cache_key,
     'attrs': (
       COLORS.interpolate256(hi_attrs[0], target[0], fade) if (hi_attrs[0] != None and target[0] != None) else 'NONE',
-      COLORS.interpolate256(hi_attrs[1], target[1], fade) if (hi_attrs[1] != None and target[1] != None) else 'NONE',
+      # skip fading background color if its the same as the wincholhl
+      COLORS.interpolate256(hi_attrs[1], target[1], fade) if (hi_attrs[1] != None and target[1] != None and hi_attrs[1] != target[1]) else 'NONE',
       COLORS.interpolate24b(hi_attrs[2], target[2], fade) if (hi_attrs[2] != None and target[2] != None) else 'NONE',
-      COLORS.interpolate24b(hi_attrs[3], target[3], fade) if (hi_attrs[3] != None and target[3] != None) else 'NONE',
+      # skip fading background color if its the same as the wincholhl
+      COLORS.interpolate24b(hi_attrs[3], target[3], fade) if (hi_attrs[3] != None and target[3] != None and hi_attrs[3] != target[3]) else 'NONE',
       COLORS.interpolate24b(hi_attrs[4], target[4], fade) if (hi_attrs[4] != None and target[4] != None) else 'NONE'),
     'windows': {},
   }
@@ -106,6 +108,7 @@ def _get_hl_ids_for_names(win, to_process):
   cnt = 0
   win_original = win.original_wincolor or 'Normal'
   for i,name in enumerate(to_process):
+    name = name or win_original
     if type(name) == str:
       id = M.hl_name_cache.get(name)
       if id == None:
@@ -132,8 +135,6 @@ def create_highlights(win, to_process):
   to_process = _get_hl_ids_for_names(win, to_process)
   fade = win.fadelevel
   tint = win.tint
-  default_bg = 0x000000 if GLOBALS.is_dark else 0xFFFFFF
-  default_ctermbg = 0 if GLOBALS.is_dark else 255
 
 
   wincolorhl = win.wincolorhl
@@ -162,12 +163,10 @@ def create_highlights(win, to_process):
 
   base_keys = []
   for id in to_process:
-    # 0 doesn't work in neovim
-    if (not is_nvim or id) and not id in M.base_id_cache:
-      cache_key = str(id)
-      M.base_id_cache[cache_key] = {}
-      base_keys.append(cache_key)
-      attrs_eval.append(hi_string % id)
+    cache_key = str(id)
+    M.base_id_cache[cache_key] = {}
+    base_keys.append(cache_key)
+    attrs_eval.append(hi_string % id)
 
   if len(attrs_eval):
     # TODO worth batching?
@@ -184,21 +183,19 @@ def create_highlights(win, to_process):
   to_create = []
 
   for id in to_process:
-    # 0 doesn't work in neovim
-    if (not is_nvim or id):
-      base = M.base_id_cache[str(id)]
-      cache_key = base['base_key'] + ':' + win.hi_key
-      vimade_hi = M.vimade_id_cache.get(cache_key)
-      if not vimade_hi:
-        vimade_hi = M.vimade_id_cache[cache_key] = M.create_highlight(cache_key, base, target, fade)
-        vimade_attrs = vimade_hi['attrs']
-        
-        to_create.append('noautocmd hi vimade_' + str(vimade_hi['id']) \
-          + ' ctermfg=' + str(vimade_attrs[0]) \
-          + ' ctermbg=' + str(vimade_attrs[1]) \
-          + ' guifg=' + vimade_attrs[2] \
-          + ' guibg=' + vimade_attrs[3] \
-          + ' guisp=' + vimade_attrs[4])
+    base = M.base_id_cache[str(id)]
+    cache_key = base['base_key'] + ':' + win.hi_key
+    vimade_hi = M.vimade_id_cache.get(cache_key)
+    if not vimade_hi:
+      vimade_hi = M.vimade_id_cache[cache_key] = M.create_highlight(cache_key, base, target, fade)
+      vimade_attrs = vimade_hi['attrs']
+      
+      to_create.append('noautocmd hi vimade_' + str(vimade_hi['id']) \
+        + ' ctermfg=' + str(vimade_attrs[0]) \
+        + ' ctermbg=' + str(vimade_attrs[1]) \
+        + ' guifg=' + vimade_attrs[2] \
+        + ' guibg=' + vimade_attrs[3] \
+        + ' guisp=' + vimade_attrs[4])
 
     vimade_hi['windows'][win.winid] = True
     result.append(vimade_hi['id'])

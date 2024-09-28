@@ -311,12 +311,12 @@ class Namespace:
       # endif enabletreesitter
       # contents changed detection
       for (row, start_col, end_col, text_i) in to_eval:
-        colors = grid[row]
-        if row >= grid_ln or not colors or end_col >= len(colors):
+        if row >= grid_ln or not grid[row] or end_col >= len(grid[row]):
           contents_changed = (row, 0)
           break
         else:
           text = buf[text_i]
+          colors = grid[row]
           for column in range(start_col, end_col+1):
             current = colors[column]
             if current and current['c'] != text[column]:

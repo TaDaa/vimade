@@ -13,6 +13,8 @@ from vimade.v2 import colors as COLORS
 from vimade.v2.util import ipc as IPC
 from vimade.v2.util.promise import Promise,all
 
+IS_NVIM = GLOBALS.is_nvim
+
 class WinDeps(Promise):
   def __init__(self, win, skip_link):
     Promise.__init__(self)
@@ -23,7 +25,7 @@ class WinDeps(Promise):
 
   def _apply_win_color(self):
     win = self.win
-    if GLOBALS.is_nvim:
+    if IS_NVIM:
       self.wincolor = 'Normal' if win.is_active_win else 'NormalNC'
     else:
       def set_wincolor(value):
@@ -273,7 +275,7 @@ class WinState(object):
     self.wincolor = wincolor
 
     if wincolor.startswith('vimade_'):
-      wincolor = self.original_wincolor or 'Normal'
+      wincolor = self.original_wincolor or ('NormalNC' if (IS_NVIM and self.is_active_win) else 'Normal')
     else:
       self.original_wincolor = wincolor
 
@@ -293,7 +295,7 @@ class WinState(object):
     if normalhl[0] == None:
       normalhl[0] = 255 if GLOBALS.is_dark else 0
     if normalhl[1] == None:
-      normalhl[0] = 0 if GLOBALS.is_dark else 255
+      normalhl[1] = 0 if GLOBALS.is_dark else 255
     if normalhl[2] == None:
       normalhl[2] = 0xFFFFFF if GLOBALS.is_dark else 0x0
     if normalhl[3] == None:
