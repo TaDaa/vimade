@@ -9,8 +9,7 @@ def detectTermColors():
   pass
 
 def unfadeAll():
-  #  TODO
-  pass
+  FADER.unfadeAll()
 
 def fadeSigns(bufnr):
   #  TODO

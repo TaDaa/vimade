@@ -94,6 +94,8 @@ class Namespace:
 
   def remove_basegroups(self):
     IPC.eval_and_return('settabwinvar(%s,%s,"&winhl","%s")' % (self.win.tabnr, self.win.winnr, self.win.original_winhl))
+    # TODO this management aspect needs to be controlled within namespace not manipulating external variables
+    self.win.vimade_winhl = None
     # TODO move this line below (required due some bizarre async behavior with how ns sets highlights)
     # essentially the wrong color codes are returned from winhl despite being unset.
     # redraw hack fixes the result, but costs performance so we only want to redraw when absolutely
@@ -101,7 +103,6 @@ class Namespace:
     # This should be moved into fader.py instead, but needs to live here for temporarily.
     if GLOBALS.tick_state & GLOBALS.RECALCULATE:
       vim.command('redraw')
-    self.win.vimade_winhl = None
 
   def invalidate(self):
     self.invalidate_buffer_cache()

@@ -27,6 +27,13 @@ def _update():
   fade_buffers = not fade_windows
   current = GLOBALS.current
   updated_cache = {}
+
+  # if highlights are invalidated at the global level, we need to 
+  if (GLOBALS.RECALCULATE & GLOBALS.tick_state) > 0:
+    HIGHLIGHTER.clear_base_cache()
+    unfadeAll(windows)
+
+
   for wininfo in windows:
     if current['winid'] == int(wininfo['winid']):
       WIN_STATE.refresh_active(wininfo)
@@ -58,12 +65,11 @@ def tick(tick_state = GLOBALS.READY):
   last_ei = vim.options['ei']
   vim.options['ei'] = 'all'
 
-  # if highlights are invalidated at the global level, we need to 
-  if (GLOBALS.RECALCULATE & GLOBALS.tick_state) > 0:
-    HIGHLIGHTER.clear_base_cache()
-
   _update()
   vim.options['ei'] = last_ei
 
-def unfadeAll():
-  print('TODO')
+def unfadeAll(windows = None):
+  if windows == None:
+    windows = IPC.eval_and_return('getwininfo()')
+  for wininfo in windows:
+    WIN_STATE.unfade(int(wininfo['winid']))

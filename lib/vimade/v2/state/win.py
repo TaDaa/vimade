@@ -100,10 +100,12 @@ def cleanup(wininfos):
     if not winid in map:
       cache[winid].cleanup()
 
-def unfade(wininfo):
-  win = M.cache.get(int(wininfo['winid']))
+def unfade(winid):
+  win = M.cache.get(winid)
   if win:
     win.faded = False
+    if win.ns:
+      win.ns.unfade()
 
 def refresh_active(wininfo):
   win = refresh(wininfo, True)
