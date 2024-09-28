@@ -156,14 +156,18 @@ M.refresh = function ()
     tabnr = tonumber(vim.fn.tabpagenr()),
   }
 
-  M.nohlcheck = vimade.nohlcheck or DEFAULTS.nohlcheck
+  if vimade.nohlcheck ~= nil then
+    M.nohlcheck = TYPE.num_to_bool(vimade.nohlcheck)
+  else
+    M.nohlcheck = DEFAULTS.nohlcheck
+  end
 
   M.tick_state = bit.bor(M.tick_state, check_fields({
     'normalid',
     'normalncid',
   }, vimade, M, DEFAULTS, M.RECALCULATE))
   M.tick_state = bit.bor(M.tick_state, check_fields({
-    'dark',
+    'is_dark',
     'colorscheme',
   }, {
     is_dark = vim.go.background == 'dark',

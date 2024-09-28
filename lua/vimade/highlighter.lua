@@ -26,8 +26,8 @@ end
 M.set_highlights = function(win)
   local fade = win.fadelevel
   local tint = win.tint
-  local default_bg = GLOBALS.is_dark and 0 or 0xFFFFFF
-  local default_ctermbg = GLOBALS.is_dark and 0 or 255
+  local default_bg = GLOBALS.is_dark and 0x000000 or 0xFFFFFF
+  local default_ctermbg = GLOBALS.is_dark and 0 or 231
   local highlights = get_highlights(win, {})
   local normal_nc = TYPE.deep_copy(highlights.NormalNC)
   local normal = TYPE.deep_copy(highlights.Normal)
