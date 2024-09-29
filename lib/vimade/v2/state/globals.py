@@ -217,7 +217,7 @@ class Globals(object):
       'colorscheme',
       'termguicolors'
     ], {
-      'is_dark': background == 'dark',
+      'is_dark': background == 'dark', # these settings trigger an initial RECALCULATE on load (this sets things like vimade_0)
       'colorscheme': colorscheme,
       'termguicolors': bool(int(termguicolors))
     }, self, self._OTHER, self.INVALIDATE_HIGHLIGHTS | self.RECALCULATE | self.CHANGED)

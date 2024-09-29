@@ -663,29 +663,6 @@ function! vimade#GetVisibleRows(startRow, endRow)
   return l:result
 endfunction
 
-function! vimade#GetVisibleRowsV2(startRow, endRow)
-  let l:lookup = winsaveview()
-  let l:leftcol = l:lookup['leftcol']+l:lookup['skipcol']
-  let l:row = a:startRow
-  let l:result = []
-  let l:rows = 0
-  let l:target_rows = a:endRow - a:startRow
-  while l:rows <= l:target_rows
-    let l:fold = foldclosedend(l:row)
-    if l:fold == -1
-      noautocmd call cursor(l:row, 0)
-      call add(l:result, [l:row, l:fold, col('$')-wincol()]) " (using this we can find the total concealed chars -- subtract the full text_ln-wincol() = concealed)
-      let l:row += 1
-    else
-      call add(l:result, [l:row, l:fold, 0])
-      let l:row = l:fold + 1
-    endif
-    let l:rows += 1
-  endwhile
-  noautocmd call winrestview(l:lookup)
-  return [l:leftcol, l:result]
-endfunction
-
 function! vimade#StartTimer()
   "timer is disabled when usecursorhold=1
   if !g:vimade.usecursorhold && !exists('g:vimade_timer') && g:vimade_running

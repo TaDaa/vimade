@@ -46,6 +46,20 @@ def get_tint_key(tint):
     ''.join(map(str, fg_rgb)) + str(fg.get('intensity', 1)) if fg_rgb else '',
     ''.join(map(str, bg_rgb)) + str(bg.get('intensity', 1)) if bg_rgb else ''])
 
+def convertWincolorHi(wincolorhl, normalhl):
+  normalhl = convertHi(normalhl)
+  if normalhl[0] == None:
+    normalhl[0] = 255 if GLOBALS.is_dark else 0
+  if normalhl[1] == None:
+    normalhl[1] = 0 if GLOBALS.is_dark else 255
+  if normalhl[2] == None:
+    normalhl[2] = 0xFFFFFF if GLOBALS.is_dark else 0x0
+  if normalhl[3] == None:
+    normalhl[3] = 0x0 if GLOBALS.is_dark else 0xFFFFFF
+  if normalhl[4] == None:
+    normalhl[4] = normalhl[2]
+  return convertHi(wincolorhl, normalhl)
+
 def convertHi(hi, default = [None, None, None, None, None]):
   if GLOBALS.is_nvim:
     hi = [default[i] if int(x) == -1 else int(x) for i, x in enumerate(hi)]

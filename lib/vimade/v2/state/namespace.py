@@ -84,13 +84,14 @@ class Namespace:
 
   def add_basegroups(self):
     basegroups = GLOBALS.basegroups
-    replacement_ids = HIGHLIGHTER.create_highlights(self.win, basegroups)
-    replacement_winhl = ','.join([ basegroups[i]+':vimade_'+str(replacement)
-                                  for i,replacement in enumerate(replacement_ids)])
-    if replacement_winhl != self.win.winhl:
-      IPC.eval_and_return('settabwinvar(%s,%s,"&winhl","%s")' % (self.win.tabnr, self.win.winnr, replacement_winhl))
-      # TODO this management aspect needs to be controlled within namespace not manipulating external variables
-      self.win.vimade_winhl = True
+    def next(replacement_ids):
+      replacement_winhl = ','.join([ basegroups[i]+':vimade_'+str(replacement)
+                                    for i,replacement in enumerate(replacement_ids)])
+      if replacement_winhl != self.win.winhl:
+        IPC.eval_and_return('settabwinvar(%s,%s,"&winhl","%s")' % (self.win.tabnr, self.win.winnr, replacement_winhl))
+        # TODO this management aspect needs to be controlled within namespace not manipulating external variables
+        self.win.vimade_winhl = True
+    HIGHLIGHTER.create_highlights(self.win, basegroups).then(next)
 
   def remove_basegroups(self):
     IPC.eval_and_return('settabwinvar(%s,%s,"&winhl","%s")' % (self.win.tabnr, self.win.winnr, self.win.original_winhl))
@@ -156,11 +157,13 @@ class Namespace:
     self.add_matches()
     # basegroups should occur after adding matches as nvim can create a separate ns
     # when winhl is changed
-    replacement_hl = 'vimade_%s' % HIGHLIGHTER.create_highlights(win, [win.original_wincolor])[0]
-    if not GLOBALS.is_nvim and replacement_hl and win.wincolor != replacement_hl and win.window and 'wincolor' in win.window.options:
-      win.window.options['wincolor'] = replacement_hl
-    elif GLOBALS.enablebasegroups and not win.vimade_winhl:
-      self.add_basegroups()
+    def next(replacement_hl):
+      replacement_hl = 'vimade_%s' % replacement_hl[0]
+      if not GLOBALS.is_nvim and replacement_hl and win.wincolor != replacement_hl and win.window and 'wincolor' in win.window.options:
+        win.window.options['wincolor'] = replacement_hl
+      elif GLOBALS.enablebasegroups and not win.vimade_winhl:
+        self.add_basegroups()
+    HIGHLIGHTER.create_highlights(win, [win.original_wincolor]).then(next)
 
   # the process below is extremely tricky and logic needs to be cached/reduced
   # as much as possible. Matches are added per window. We try to reduce
@@ -188,6 +191,7 @@ class Namespace:
     cursor_row = cursor[0]
     cursor_col = cursor[1]
     wrap = win.wrap
+    conceallevel = win.conceallevel
     shared_state = self.shared_state['coords']
     enabletreesitter = GLOBALS.enabletreesitter
     enablebasegroups = GLOBALS.enablebasegroups
@@ -201,15 +205,19 @@ class Namespace:
     start_row = topline = win.topline
     # add 1 for wrapped rows to handle bottom heavy edge case
     end_row = (win.botline + 1) if wrap else win.botline
-    (start_col, visible_rows) = IPC.eval_and_return('vimade#GetVisibleRowsV2('+str(start_row)+','+str(end_row)+')')
-
-    start_col = int(start_col)
-    _max_col = start_col + width
-
-    if start_row < 1:
-      start_row = 1
-    if start_col < 1:
-      start_col = 1
+    (lookup, visible_rows) = IPC.eval_and_return('[winsaveview(),vimade#GetVisibleRows('+str(start_row)+','+str(end_row)+')]')
+    start_col = int(lookup['leftcol']) + 1 #leftcol is based on index=0
+    max_col = start_col + width
+    if conceallevel > 0:
+      # just assume what is hopefully the worst case here and
+      # precompute additional screen chars.  Unfortunately
+      # all concealed related functions have issues.
+      # synconcealed doesn't return the correct results when
+      # conceallevel=2 (example = help python line 31)
+      # wincol() doesn't return the correct wincol without a
+      # redraw.
+      # every other position related function ignores conceal.
+      max_col *= 2
 
     row = start_row
     if end_row > buf_ln:
@@ -219,10 +227,9 @@ class Namespace:
     buf = buf[int(visible_rows[0][0])-1:int(visible_rows[-1][0])]
     buf = [bytes(b, 'utf-8', 'replace') for b in buf] if IS_V3 else buf
 
-    for (row, fold, concealed) in visible_rows:
+    for (row, fold) in visible_rows:
       row = int(row)
       fold = int(fold)
-      max_col = _max_col
       if row > buf_ln:
         continue
       r = row - start_row
@@ -231,7 +238,6 @@ class Namespace:
         continue
       text = buf[r]
       text_ln = len(text)
-      max_col += int(concealed)
       if text_ln > 0:
         if wrap:
           if text_ln > width * height and row < cursor_row:
@@ -459,7 +465,6 @@ class Namespace:
     if len(gaps):
       if len(syn_eval):
         syn_eval = IPC.eval_and_return('[' + ','.join(syn_eval) + ']')
-
         for i, id in enumerate(syn_eval):
           gap = gaps[syn_indices[i]]
           grid[gap[1]][gap[2]]['s'] = gap[0] = int(id) or 0
@@ -470,7 +475,6 @@ class Namespace:
         fade_row = fade_grid[row]
         if not fade_row.get(column):
           fade_row[column] = True
-
         c = column + 1
         r = row + 1
         if not id in matches:
@@ -484,20 +488,22 @@ class Namespace:
 
       items = matches.items()
       match_keys = [key for key,item in items]
-      replacement_ids = HIGHLIGHTER.create_highlights(self.win, match_keys)
 
-      if len(match_keys):
-        matchadds = []
-        fade_priority = str(self.win.fadepriority)
-        lambda_tup = lambda tup: '[' + ','.join(map(str,tup)) + ']'
-        suffix = fade_priority + ',-1,{"window":'+str(winid)+'})'
-        for i, (id, coords) in enumerate(items):
-          prefix = 'matchaddpos("vimade_' + str(replacement_ids[i]) + '",['
-          matchadds.extend([prefix \
-              +','.join(map(lambda_tup, coords[i:i+8])) + '],' + suffix
-              for i in range(0, len(coords), 8)])
+      def next(replacement_ids):
+        if len(match_keys):
+          matchadds = []
+          fade_priority = str(self.win.fadepriority)
+          lambda_tup = lambda tup: '[' + ','.join(map(str,tup)) + ']'
+          suffix = fade_priority + ',-1,{"window":'+str(winid)+'})'
+          for i, (id, coords) in enumerate(items):
+            prefix = 'matchaddpos("vimade_' + str(replacement_ids[i]) + '",['
+            matchadds.extend([prefix \
+                +','.join(map(lambda_tup, coords[i:i+8])) + '],' + suffix
+                for i in range(0, len(coords), 8)])
 
-        if len(matchadds):
-          def add_matches(matches):
-              self.matches += matches
-          IPC.batch_eval_and_return('['+','.join(matchadds)+']').then(add_matches)
+          if len(matchadds):
+            def add_matches(matches):
+                self.matches += matches
+            IPC.batch_eval_and_return('['+','.join(matchadds)+']').then(add_matches)
+
+      replacement_ids = HIGHLIGHTER.create_highlights(self.win, match_keys).then(next)

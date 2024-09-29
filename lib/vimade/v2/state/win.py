@@ -53,6 +53,7 @@ class WinDeps(Promise):
           'gettabwinvar(%d,%d,"&syntax")' % (tabnr, winnr),
           'gettabwinvar(%d,%d,"&tabstop")' % (tabnr, winnr),
           'gettabwinvar(%d,%d,"&winhl")' % (tabnr, winnr),
+          'gettabwinvar(%d,%d,"&conceallevel")' % (tabnr, winnr),
           'nvim_win_get_config('+str(winid)+')' if HAS_NVIM_WIN_GET_CONFIG else '{}',
         ]) + ']'),
        HIGHLIGHTER.get_hl_for_ids(self.win, [self.wincolor or GLOBALS.normalid, GLOBALS.normalid])\
@@ -152,6 +153,7 @@ class WinState(object):
       'matches': [],
       'cursor': (-1, -1),
       'wrap': False,
+      'conceallevel': 0,
       'tabstop': None,
       'buftype': None,
       'syntax': None,
@@ -256,6 +258,7 @@ class WinState(object):
          buf_syntax,
          tabstop,
          winhl, #(local winhl)
+         conceallevel,
          win_config,
      ),
      (wincolorhl, normalhl),
@@ -293,19 +296,21 @@ class WinState(object):
     is_explorer = 'coc-explorer' in self.buf_name or 'NERD' in self.buf_name
     is_minimap = 'vim-minimap' in self.buf_name or '-MINIMAP-' in self.buf_name
 
-    normalhl = COLORS.convertHi(normalhl)
-    if normalhl[0] == None:
-      normalhl[0] = 255 if GLOBALS.is_dark else 0
-    if normalhl[1] == None:
-      normalhl[1] = 0 if GLOBALS.is_dark else 255
-    if normalhl[2] == None:
-      normalhl[2] = 0xFFFFFF if GLOBALS.is_dark else 0x0
-    if normalhl[3] == None:
-      normalhl[3] = 0x0 if GLOBALS.is_dark else 0xFFFFFF
-    if normalhl[4] == None:
-      normalhl[4] = normalhl[2]
+    # normalhl = COLORS.convertHi(normalhl)
+    # if normalhl[0] == None:
+      # normalhl[0] = 255 if GLOBALS.is_dark else 0
+    # if normalhl[1] == None:
+      # normalhl[1] = 0 if GLOBALS.is_dark else 255
+    # if normalhl[2] == None:
+      # normalhl[2] = 0xFFFFFF if GLOBALS.is_dark else 0x0
+    # if normalhl[3] == None:
+      # normalhl[3] = 0x0 if GLOBALS.is_dark else 0xFFFFFF
+    # if normalhl[4] == None:
+      # normalhl[4] = normalhl[2]
 
-    wincolorhl = COLORS.convertHi(wincolorhl, normalhl)
+    # wincolorhl = COLORS.convertHi(wincolorhl, normalhl)
+    wincolorhl = COLORS.convertWincolorHi(wincolorhl, normalhl)
+
 
     wincolorhl_changed = len(wincolorhl) != len(self.wincolorhl)
     if not wincolorhl_changed:
@@ -325,6 +330,7 @@ class WinState(object):
       'tabstop': int(tabstop),
       'is_explorer': is_explorer,
       'is_minimap': is_minimap,
+      'conceallevel': int(conceallevel),
       'topline': int(wininfo['topline']),
       'botline': int(wininfo['botline']),
       'textoff': int(wininfo['textoff']),

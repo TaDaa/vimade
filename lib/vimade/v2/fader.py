@@ -31,6 +31,7 @@ def _update():
   # if highlights are invalidated at the global level, we need to 
   if (GLOBALS.RECALCULATE & GLOBALS.tick_state) > 0:
     HIGHLIGHTER.clear_base_cache()
+    HIGHLIGHTER.create_vimade_0()
     unfadeAll(windows)
 
 
