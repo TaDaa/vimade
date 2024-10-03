@@ -66,6 +66,9 @@ def _after_promise(val):
 def recalculate():
   tick(GLOBALS.RECALCULATE | GLOBALS.INVALIDATE_HIGHLIGHTS | GLOBALS.CHANGED)
 
+def invalidate():
+  tick(GLOBALS.CHANGED)
+
 def tick(tick_state = GLOBALS.READY):
   GLOBALS.refresh(tick_state)
   last_ei = vim.options['ei']
