@@ -4,6 +4,7 @@ M = sys.modules[__name__]
 
 import vim
 from vimade.v2 import highlighter as HIGHLIGHTER
+from vimade.v2 import signs as SIGNS
 from vimade.v2.state import globals as GLOBALS
 from vimade.v2.state import win as WIN_STATE
 from vimade.v2.util import ipc as IPC
@@ -46,11 +47,15 @@ def _update():
         WIN_STATE.refresh(wininfo)
 
   def next(val):
+    def complete(val):
+      # delta = time.time() - start_time
+      # if delta * 1000 > 3:
+        # print('d', delta*1000)
+      pass
     WIN_STATE.cleanup(windows)
     _return_to_win()
-    # delta = time.time() - start_time
-    # if delta * 1000 > 3:
-      # print('d', delta*1000)
+    # start_time = time.time()
+    SIGNS.flush().then(complete)
 
   IPC.flush_batch().then(next)
 

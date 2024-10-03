@@ -1,11 +1,12 @@
 import sys
 
+import time
 import vim
 from vimade.v2.config_helpers import tint as TINT
 from vimade.v2.util import ipc as IPC
 from vimade.v2.util import matchers as MATCHERS
 
-MAX_TICK_ID = 1000000
+MAX_TICK_ID = 1000000000
 
 _OTHER = {
   'vimade_fade_active': False,
@@ -90,7 +91,7 @@ class Globals(object):
       'INVALIDATE_BUFFER_CACHE': 8,
       'RECALCULATE': 16,
       'SIGNS': 32,
-
+      'features': features,
       'tick_id': 1000,
       'tick_state': 0,
       'vimade_fade_active': False,
@@ -132,8 +133,10 @@ class Globals(object):
       'winwidth': 20,
       'require_treesitter': False,
       'termguicolors': None,
+      'now': None,
     }
     self.vim = vim
+    self.time = time
     self.TINT = TINT
     self.IPC = IPC
     self.MATCHERS = MATCHERS
@@ -181,6 +184,7 @@ class Globals(object):
   def refresh(self, tick_state = 0):
     self.tick_id = self._next_tick_id()
     self.tick_state = tick_state
+    self.now = self.time.time()
     (background,
       colorscheme,
       termguicolors,

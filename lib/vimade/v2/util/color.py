@@ -42,7 +42,7 @@ def toRgb(color, is256 = False):
       r = (color & 0xFF0000) >> 16
       g = (color & 0x00FF00) >> 8
       b = (color & 0x0000FF)
-  if type(color) == list:
+  if type(color) in (list, tuple):
     r = color[0]
     g = color[1]
     b = color[2]

@@ -88,8 +88,11 @@ function M.get_to_eval (bufnr, to_eval)
                     if hl_is_string == true then
                         hl = vim.api.nvim_get_hl_id_by_name(hl)
                     end
-                    rgb = vim.api.nvim_get_hl_by_id(hl, 1)
-                else
+                    if type(hl) == 'number' then
+                      rgb = vim.api.nvim_get_hl_by_id(hl, 1)
+                    end
+                end
+                if rgb == nil then
                     rgb = {}
                 end
                 if hl and capture ~= 0 and (rgb['background'] ~= nil or rgb['foreground'] ~= nil) then

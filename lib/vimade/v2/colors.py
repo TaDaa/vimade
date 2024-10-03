@@ -78,7 +78,7 @@ def tint(tint, bg24, bg256):
   ctermbg = COLOR_UTIL.to24b(bg256, True)
 
   result['bg'] = _tint24b(bg, bg24) if bg else None
-  result['ctermbg'] = _tint256(bg, bg24) if bg else None
+  result['ctermbg'] = _tint256(bg, ctermbg) if bg else None
   result['fg'] = _tint24b(fg, bg24) if fg else result['bg']
   result['ctermfg'] = _tint256(fg, ctermbg) if fg else result['ctermbg']
   result['sp'] = _tint24b(sp, bg24) if sp else result['fg']
@@ -142,9 +142,9 @@ def interpolate256(source, target, fade, prefer_color = False):
     thres = 25
     dir = -1 if (dir > thres) else 1
     if dir < 0:
-      r = r + dir
-      g = g + dir
-      b = b + dir
+      r += dir
+      g += dir
+      b += dir
     if r == g and g == b and r == b:
       if (r0 >= g0 or r0 >= b0) and (r0 <= g0 or r0 <= b0):
         if g0 - thres > r0: g = rgb_result[1]+dir

@@ -45,9 +45,9 @@ M.get_tint_key = function(tint)
     bg_rgb = COLOR_UTIL.toRgb(bg.rgb)
   end
 
-  return (sp and (sp_rgb[1]..sp_rgb[2]..sp_rgb[3]..(sp.intensity or 1)) or '')
-   ..(fg and (fg_rgb[1]..fg_rgb[2]..fg_rgb[3]..(fg.intensity or 1)) or '')
-   ..(bg and (bg_rgb[1]..bg_rgb[2]..bg_rgb[3]..(bg.intensity or 1)) or '')
+  return (sp_rgb and (sp_rgb[1]..sp_rgb[2]..sp_rgb[3]..(sp.intensity or 1)) or '')
+   ..(fg_rgb and (fg_rgb[1]..fg_rgb[2]..fg_rgb[3]..(fg.intensity or 1)) or '')
+   ..(bg_rgb and (bg_rgb[1]..bg_rgb[2]..bg_rgb[3]..(bg.intensity or 1)) or '')
 end
 
 M.tint = function (tint, bg24, bg256)

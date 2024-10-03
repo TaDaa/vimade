@@ -92,7 +92,7 @@ def flush_batch():
   M._batch_cmd_promises = []
 
   if len(cmd):
-    vim.command('|'.join(cmd))
+    vim.command('\n'.join(cmd))
     for i, p in enumerate(cmd_promises):
       p.resolve(None)
 

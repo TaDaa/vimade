@@ -11,13 +11,12 @@ IS_NVIM = GLOBALS.is_nvim
 
 M.next_id = 0
 M.free_ids = []
-
 M.hl_name_cache = {}
 M.base_id_cache = {}
 M.vimade_id_cache = {}
 M.win_lookup = {}
 
-HAS_NVIM_GET_HL = int(IPC.eval_and_return('exists("*nvim_get_hl")'))
+HAS_NVIM_GET_HL = bool(int(GLOBALS.features['has_nvim_get_hl']))
 def _process_nvim_get_hl(results):
   return [(int(r.get('ctermfg',-1)),int(r.get('ctermbg', -1)),int(r.get('fg',-1)),int(r.get('bg',-1)), int(r.get('sp',-1))) for r in results]
 _process_hl_results = None

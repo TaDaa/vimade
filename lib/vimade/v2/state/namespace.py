@@ -10,6 +10,7 @@ IS_V3 = False
 if (sys.version_info > (3, 0)):
     IS_V3 = True
 
+from vimade.v2 import signs as SIGNS
 from vimade.v2.util import ipc as IPC
 from vimade.v2.state import globals as GLOBALS
 from vimade.v2 import highlighter as HIGHLIGHTER
@@ -18,7 +19,6 @@ tab = bytes('\t', 'utf-8', 'replace')[0] if IS_V3 else '\t'
 sp = bytes(' ', 'utf-8', 'replace')[0] if IS_V3 else ' '
 tab_v3_nr = bytes('\t', 'utf-8') if IS_V3 else '\t'
 sp_v3_nr = bytes(' ', 'utf-8') if IS_V3 else ' '
-HAS_NVIM_COMMAND_OUTPUT = True if hasattr(vim, 'funcs') and hasattr(vim.funcs, 'nvim_command_output') else False
 
 M.buf_shared_lookup = {}
 M._changed_win = False
@@ -45,7 +45,7 @@ class Namespace:
     self.fade_grid = {}
     self.basegroups = []
     self.shared_state = None
-    self.visible_area = None
+    self.visible_rows = None
 
   # the internal state needs to be checked to ensure no bufswaps
   def refresh(self):
@@ -70,6 +70,7 @@ class Namespace:
   def cleanup(self):
     # should be called when the window is destroyed
     HIGHLIGHTER.clear_win(self.win)
+    SIGNS.clear_win(self.win)
     self.unfade(True) # try to unfade
 
     if self.shared_state:
@@ -83,27 +84,29 @@ class Namespace:
 
 
   def add_basegroups(self):
-    basegroups = GLOBALS.basegroups
-    def next(replacement_ids):
-      replacement_winhl = ','.join([ basegroups[i]+':vimade_'+str(replacement)
-                                    for i,replacement in enumerate(replacement_ids)])
-      if replacement_winhl != self.win.winhl:
-        IPC.eval_and_return('settabwinvar(%s,%s,"&winhl","%s")' % (self.win.tabnr, self.win.winnr, replacement_winhl))
-        # TODO this management aspect needs to be controlled within namespace not manipulating external variables
-        self.win.vimade_winhl = True
-    HIGHLIGHTER.create_highlights(self.win, basegroups).then(next)
+    if GLOBALS.enablebasegroups and not self.win.vimade_winhl:
+      basegroups = GLOBALS.basegroups
+      def next(replacement_ids):
+        replacement_winhl = ','.join([ basegroups[i]+':vimade_'+str(replacement)
+                                      for i,replacement in enumerate(replacement_ids)])
+        if replacement_winhl != self.win.winhl:
+          IPC.eval_and_return('settabwinvar(%s,%s,"&winhl","%s")' % (self.win.tabnr, self.win.winnr, replacement_winhl))
+          # TODO this management aspect needs to be controlled within namespace not manipulating external variables
+          self.win.vimade_winhl = True
+      HIGHLIGHTER.create_highlights(self.win, basegroups).then(next)
 
   def remove_basegroups(self):
-    IPC.eval_and_return('settabwinvar(%s,%s,"&winhl","%s")' % (self.win.tabnr, self.win.winnr, self.win.original_winhl))
-    # TODO this management aspect needs to be controlled within namespace not manipulating external variables
-    self.win.vimade_winhl = None
-    # TODO move this line below (required due some bizarre async behavior with how ns sets highlights)
-    # essentially the wrong color codes are returned from winhl despite being unset.
-    # redraw hack fixes the result, but costs performance so we only want to redraw when absolutely
-    # necessary.
-    # This should be moved into fader.py instead, but needs to live here for temporarily.
-    if GLOBALS.tick_state & GLOBALS.RECALCULATE:
-      vim.command('redraw')
+    if GLOBALS.enablebasegroups and self.win.vimade_winhl:
+      IPC.eval_and_return('settabwinvar(%s,%s,"&winhl","%s")' % (self.win.tabnr, self.win.winnr, self.win.original_winhl))
+      # TODO this management aspect needs to be controlled within namespace not manipulating external variables
+      self.win.vimade_winhl = None
+      # TODO move this line below (required due some bizarre async behavior with how ns sets highlights)
+      # essentially the wrong color codes are returned from winhl despite being unset.
+      # redraw hack fixes the result, but costs performance so we only want to redraw when absolutely
+      # necessary.
+      # This should be moved into fader.py instead, but needs to live here for temporarily.
+      if GLOBALS.tick_state & GLOBALS.RECALCULATE:
+        vim.command('redraw')
 
   def invalidate(self):
     self.invalidate_buffer_cache()
@@ -121,21 +124,21 @@ class Namespace:
     # this needs to happen before unfading
     HIGHLIGHTER.clear_colors(self.win, [self.win.original_wincolor])
     HIGHLIGHTER.clear_win(self.win)
+    SIGNS.clear_win(self.win)
 
     self.unfade()
 
 
   def unfade(self, cleanup = False):
-
     win = self.win
     if not cleanup:
       if not GLOBALS.is_nvim and win.window and 'wincolor' in win.window.options:
         win.window.options['wincolor'] = win.original_wincolor
-    if GLOBALS.enablebasegroups and win.vimade_winhl:
-      self.remove_basegroups()
+    self.remove_basegroups()
 
     # after basegroups due to ns change
     self.remove_matches()
+    self.remove_signs()
 
 
   def remove_matches(self):
@@ -155,15 +158,24 @@ class Namespace:
     win = self.win
 
     self.add_matches()
+    self.add_signs()
+
     # basegroups should occur after adding matches as nvim can create a separate ns
     # when winhl is changed
     def next(replacement_hl):
       replacement_hl = 'vimade_%s' % replacement_hl[0]
       if not GLOBALS.is_nvim and replacement_hl and win.wincolor != replacement_hl and win.window and 'wincolor' in win.window.options:
         win.window.options['wincolor'] = replacement_hl
-      elif GLOBALS.enablebasegroups and not win.vimade_winhl:
-        self.add_basegroups()
+      self.add_basegroups()
     HIGHLIGHTER.create_highlights(win, [win.original_wincolor]).then(next)
+
+  def add_signs(self):
+    if GLOBALS.enablesigns and self.win.bufnr != None and self.visible_rows:
+      SIGNS.fade_signs(self.win, self.visible_rows)
+
+  def remove_signs(self):
+    if GLOBALS.enablesigns and self.win.bufnr != None:
+      SIGNS.unfade_signs(self.win)
 
   # the process below is extremely tricky and logic needs to be cached/reduced
   # as much as possible. Matches are added per window. We try to reduce
@@ -206,6 +218,7 @@ class Namespace:
     # add 1 for wrapped rows to handle bottom heavy edge case
     end_row = (win.botline + 1) if wrap else win.botline
     (lookup, visible_rows) = IPC.eval_and_return('[winsaveview(),vimade#GetVisibleRows('+str(start_row)+','+str(end_row)+')]')
+    self.visible_rows = visible_rows
     start_col = int(lookup['leftcol']) + 1 #leftcol is based on index=0
     max_col = start_col + width
     if conceallevel > 0:
@@ -270,14 +283,13 @@ class Namespace:
     treesitter_eval = None
 
     # shrink to_eval based on what's already been checked if fade_mode=windows or fade_active
-    # TODO use the buf_faded cond
-    # TODO(+timize)
     tick_id = GLOBALS.tick_id
 
     if not coords:
       coords = shared_state[coords_key] = {
         'grid': [None] * buf_ln,
         'tick_id': tick_id,
+        'now': GLOBALS.now
       }
       if enabletreesitter:
         treesitter_eval = to_eval
@@ -287,6 +299,14 @@ class Namespace:
     # TODO: This could be further improved by monitoring an 'active' field
     # per coords key, but likely to only benefit edge cases by 1 or 2 ms.
     else:
+      # If a highly improbable tick_id conflict occurred, state update would
+      # be skipped for shared views. We can guarentee avoidence of this issue
+      # by pre-checking the conflict and then setting the tick_id to an
+      # impossible value.
+      if coords['tick_id'] == tick_id and coords['now'] != GLOBALS.now:
+        tick_id = 1
+        coords['now'] = GLOBALS.now
+
       grid = coords['grid']
       grid_ln = len(grid)
       if enabletreesitter:
@@ -338,6 +358,7 @@ class Namespace:
         self.remove_matches()
       if contents_changed:
         coords['tick_id'] = tick_id
+        coords['now'] = GLOBALS.now
         first_row = contents_changed[0]
         row = first_row
         # zero out the invalid rows
@@ -385,8 +406,9 @@ class Namespace:
     gaps = []
     needs_redraw = [False]
     if enabletreesitter and treesitter_eval and len(treesitter_eval):
+      # disable try catch to surface errors.  TODO: consider re-enable
       # try:
-      ts_results = vim.lua._vimade_legacy_treesitter.get_to_eval(bufnr, treesitter_eval)
+        ts_results = vim.lua._vimade_legacy_treesitter.get_to_eval(bufnr, treesitter_eval)
       # except:
         # ts_results = None
     else:
@@ -430,11 +452,15 @@ class Namespace:
               syn_eval.clear()
               syn_indices.clear()
               self.tick_id = coords['tick_id'] = tick_id
+              coords['now'] = GLOBALS.now
               self.remove_matches()
               return process_treesitter(to_eval)
             gaps.append((s, row, column))
           elif color['s'] != None and not fade_row.get(column):
             gaps.append((color['s'], row, column))
+          # tick_id here is used to skip changes that have already been processed during this run
+          # this is completely safe and even if a conflict was encountered, which is highly improbable
+          # this would self resolve on next tick.
           color['t'] = tick_id
 
     def process_syn(to_eval):

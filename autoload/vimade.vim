@@ -55,6 +55,9 @@ function! vimade#GetFeatures()
     endtry
     let g:vimade_features.has_python3 = has('python3')
     let g:vimade_features.has_gui_version = !has('nvim') && (execute('version')=~"GUI version")
+    let g:vimade_features.has_sign_getplaced = exists('*sign_getplaced')
+    let g:vimade_features.has_nvim_get_hl = exists('*nvim_get_hl')
+
     "sign group/priority test
     if !g:vimade_lua_renderer
       try
