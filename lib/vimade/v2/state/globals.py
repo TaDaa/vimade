@@ -68,6 +68,7 @@ _DEFAULTS = {
   'signsid': 13100,
   'signspriority': 31,
   'signsretentionperiod': 4000,
+  'disablebatch': False,
 }
 
 class Globals(object):
@@ -133,6 +134,7 @@ class Globals(object):
       'winwidth': 20,
       'require_treesitter': False,
       'termguicolors': None,
+      'disablebatch': False,
       'now': None,
     }
     self.vim = vim
@@ -180,6 +182,17 @@ class Globals(object):
     if tick_id > self.MAX_TICK_ID:
       tick_id = 1000
     return tick_id
+
+  def getInfo(self):
+    info = self.__internal
+    result = {'renderer': 'python-v2'}
+    exclude = ['vim', 'time', 'TINT', 'IPC', '_OTHER', '_CURRENT', '_DEFAULTS']
+    for name in info.keys():
+      if name[:2] != '__' and not name in exclude:
+        item = info[name]
+        if item == None or isinstance(item, bool) or isinstance(item, int) or isinstance(item, float) or isinstance(item, str) or isinstance(item, dict) or isinstance(item, list):
+          result[name] = item
+    return result
 
   def refresh(self, tick_state = 0):
     self.tick_id = self._next_tick_id()
@@ -278,6 +291,7 @@ class Globals(object):
     self.fademinimap = bool(int(vimade.get('fademinimap', self._DEFAULTS['fademinimap'])))
     self.tint = vimade.get('tint', self._DEFAULTS['tint'])
     self.fadelevel = float(vimade.get('fadelevel', self._DEFAULTS['fadelevel']))
+    self.disablebatch = bool(int(vimade.get('disablebatch', self._DEFAULTS['disablebatch'])))
     if 'fadeconditions' in vimade:
       if type(vimade.fadeconditions) == dict or type(vimade.fadeconditions) == list:
         self.fadeconditions = vimade.fadeconditions
@@ -292,3 +306,4 @@ class Globals(object):
 
 M = Globals()
 M.TINT.__init(M)
+M.IPC.__init(M)

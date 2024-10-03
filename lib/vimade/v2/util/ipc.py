@@ -1,11 +1,16 @@
 import sys
 from vimade.v2.util.promise import Promise
 M = sys.modules[__name__]
-
 import vim
+
+GLOBALS = None
 IS_V3 = False
 if (sys.version_info > (3, 0)):
     IS_V3 = True
+
+def __init(globals):
+  global GLOBALS
+  GLOBALS = globals
 
 IS_NVIM = int(vim.eval('has("nvim")')) == 1
 
@@ -68,12 +73,17 @@ M._batch_eval = []
 M._batch_eval_promises = []
 
 def batch_command(statement):
+  if GLOBALS.disablebatch:
+    vim.command(statement)
+    return Promise().resolve(None)
   promise = Promise()
   M._batch_cmd.append(statement)
   M._batch_cmd_promises.append(promise)
   return promise
 
 def batch_eval_and_return(statement):
+  if GLOBALS.disablebatch:
+    return Promise().resolve(eval_and_return(statement))
   promise = Promise()
   M._batch_eval.append(statement)
   M._batch_eval_promises.append(promise)

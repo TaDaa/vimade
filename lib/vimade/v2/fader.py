@@ -63,6 +63,9 @@ def _update():
 def _after_promise(val):
   _return_to_win()
 
+def getInfo():
+  return GLOBALS.getInfo()
+
 def recalculate():
   tick(GLOBALS.RECALCULATE | GLOBALS.INVALIDATE_HIGHLIGHTS | GLOBALS.CHANGED)
 
