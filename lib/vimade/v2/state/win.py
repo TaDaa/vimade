@@ -136,6 +136,7 @@ class WinState(object):
       'blocked': False,
       'faded': False,
       'fadelevel': None,
+      'faded_time': None,
       'fadepriority': -1,
       'tint': None,
       'is_active_win': None,
@@ -296,19 +297,6 @@ class WinState(object):
     is_explorer = 'coc-explorer' in self.buf_name or 'NERD' in self.buf_name
     is_minimap = 'vim-minimap' in self.buf_name or '-MINIMAP-' in self.buf_name
 
-    # normalhl = COLORS.convertHi(normalhl)
-    # if normalhl[0] == None:
-      # normalhl[0] = 255 if GLOBALS.is_dark else 0
-    # if normalhl[1] == None:
-      # normalhl[1] = 0 if GLOBALS.is_dark else 255
-    # if normalhl[2] == None:
-      # normalhl[2] = 0xFFFFFF if GLOBALS.is_dark else 0x0
-    # if normalhl[3] == None:
-      # normalhl[3] = 0x0 if GLOBALS.is_dark else 0xFFFFFF
-    # if normalhl[4] == None:
-      # normalhl[4] = normalhl[2]
-
-    # wincolorhl = COLORS.convertHi(wincolorhl, normalhl)
     wincolorhl = COLORS.convertWincolorHi(wincolorhl, normalhl)
 
 
@@ -382,6 +370,9 @@ class WinState(object):
           should_fade = override
           break
 
+    if should_fade and not self.faded:
+      self.faded_time = GLOBALS.now
+
     self.state |= _update_state({
       'faded': should_fade == True,
     }, self, GLOBALS.CHANGED)
@@ -397,9 +388,10 @@ class WinState(object):
         fadelevel = GLOBALS.fadelevel(self, current)
       else:
         fadelevel = GLOBALS.fadelevel
-
       self.tint = tint
       self.fadelevel = float(fadelevel)
+      if (GLOBALS.signsretentionperiod or 0) > 0 and (GLOBALS.now - self.faded_time) * 1000 < GLOBALS.signsretentionperiod:
+        self.state |= GLOBALS.CHANGED
 
     # hi_key is used by the highlighter for replacement highlights.  These are
     # calculated based on a number of window criteria such as fadelevel, tint
@@ -425,6 +417,7 @@ class WinState(object):
       'coords_key': coords_key,
       'syntax': syntax,
     }, self, GLOBALS.INVALIDATE_BUFFER_CACHE | GLOBALS.INVALIDATE_HIGHLIGHTS | GLOBALS.CHANGED)
+
 
     # force the window to refresh if fademode='windows' -- caching mostly handles performance here
     # if self.is_active_buf and self.faded and (self.state & GLOBALS.CHANGED) == 0:
