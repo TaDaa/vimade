@@ -173,7 +173,7 @@ def _do_create(bufnr, win, names):
           j += 1
         if numhl and numhl != 'NONE':
           numhl_id = replacements[j]
-          definition2 += ' numhl=vimade_' + str(replacements[j])
+          definition += ' numhl=vimade_' + str(replacements[j])
           j += 1
         definition += ' texthl=vimade_' + str(texthl_id)
         definitions.append(definition)
