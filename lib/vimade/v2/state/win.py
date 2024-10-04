@@ -59,13 +59,13 @@ class WinDeps(Promise):
        HIGHLIGHTER.get_hl_for_ids(self.win, [self.wincolor or GLOBALS.normalid, GLOBALS.normalid])\
      ]).then(next)
   def get(self):
-    def next():
+    def next(val):
       self._apply_remaining_config()
     result = self._apply_win_color()
     if type(result) == Promise:
       result.then(next)
     else:
-      next()
+      next(None)
     return self
 
 
@@ -280,10 +280,12 @@ class WinState(object):
 
     self.wincolor = wincolor
 
+    was_vimade_wincolor = False
     if wincolor.startswith('vimade_'):
       wincolor = self.original_wincolor or ('NormalNC' if (IS_NVIM and self.is_active_win) else 'Normal')
+      was_vimade_wincolor = True
     else:
-      self.original_wincolor = wincolor
+      self.original_wincolor = wincolor or ('NormalNC' if (IS_NVIM and self.is_active_win) else 'Normal')
 
     if not 'vimade_' in winhl:
       self.state |= _update_state({
@@ -300,13 +302,16 @@ class WinState(object):
     wincolorhl = COLORS.convertWincolorHi(wincolorhl, normalhl)
 
 
-    wincolorhl_changed = len(wincolorhl) != len(self.wincolorhl)
-    if not wincolorhl_changed:
-      for i, hl in enumerate(wincolorhl):
-        if self.wincolorhl[i] != hl:
-          wincolorhl_changed = True
-          break
-    self.wincolorhl = wincolorhl
+    wincolorhl_changed = False
+    # we need to ensure that wincolorhl for the original_wincolor doesn't get borked
+    if not was_vimade_wincolor:
+      wincolorhl_changed = len(wincolorhl) != len(self.wincolorhl)
+      if not wincolorhl_changed:
+        for i, hl in enumerate(wincolorhl):
+          if self.wincolorhl[i] != hl:
+            wincolorhl_changed = True
+            break
+      self.wincolorhl = wincolorhl
 
 
     # requires additional potentially more fading
@@ -420,6 +425,7 @@ class WinState(object):
 
 
     # force the window to refresh if fademode='windows' -- caching mostly handles performance here
-    # if self.is_active_buf and self.faded and (self.state & GLOBALS.CHANGED) == 0:
-    if self.is_active_buf and self.faded:
+    # We also fade linked status when fade_windows is activated.  This handles scenarios where the user
+    # is on the diff side, against a buffer shared amongst multiple windows.
+    if self.faded and (self.is_active_buf or (self.linked and GLOBALS.fade_windows)):
       self.state |= GLOBALS.CHANGED

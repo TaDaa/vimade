@@ -160,7 +160,7 @@ def create_vimade_0():
     .then(next)
  
 
-def create_highlights(win, to_process):
+def create_highlights(win, to_process, skip_transpose = False):
   promise = Promise()
   def next(to_process):
     fade = win['fadelevel']
@@ -168,7 +168,8 @@ def create_highlights(win, to_process):
     wincolorhl = win['wincolorhl']
     normal_bg = wincolorhl[3]
     normal_ctermbg = wincolorhl[1]
-    fg_wincolorhl = [wincolorhl[0], None, wincolorhl[2], None, None]
+    fg_wincolorhl = [wincolorhl[0], None, wincolorhl[2], None, None] if not skip_transpose else [None, None, None, None, None]
+    base_key_suffix = 'c' if skip_transpose else ''
 
     if tint != None and (tint.get('bg') != None or tint.get('fg') != None or tint.get('sp') != None):
       tint_out = COLORS.tint(tint, normal_bg, normal_ctermbg)
@@ -191,7 +192,7 @@ def create_highlights(win, to_process):
 
     base_keys = []
     for id in to_process:
-      cache_key = str(id)
+      cache_key = str(id) + base_key_suffix
       M.base_id_cache[cache_key] = {}
       base_keys.append(cache_key)
       attrs_eval.append(hi_string % id)
@@ -202,8 +203,8 @@ def create_highlights(win, to_process):
       if _process_hl_results:
         attrs = _process_hl_results(attrs)
 
-      for i, id in enumerate(base_keys):
-        base = M.base_id_cache[id]
+      for i, cache_key in enumerate(base_keys):
+        base = M.base_id_cache[cache_key]
         base_hi = COLORS.convertHi(attrs[i], fg_wincolorhl)
         base['hi'] = base_hi
         base['base_key'] = ','.join(map(str, base_hi))
@@ -211,7 +212,7 @@ def create_highlights(win, to_process):
     to_create = []
 
     for id in to_process:
-      base = M.base_id_cache[str(id)]
+      base = M.base_id_cache[str(id) + base_key_suffix]
       cache_key = base['base_key'] + ':' + win['hi_key']
       vimade_hi = M.vimade_id_cache.get(cache_key)
       if not vimade_hi:

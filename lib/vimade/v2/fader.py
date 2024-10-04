@@ -22,7 +22,7 @@ def _return_to_win():
     vim.command('noautocmd call win_gotoid(%d)' % (start_winid))
 
 def _update():
-  # start_time = time.time()
+  #  start_time = time.time()
   windows = IPC.eval_and_return('getwininfo()')
   fade_windows = GLOBALS.fade_windows
   fade_buffers = not fade_windows
@@ -48,9 +48,9 @@ def _update():
 
   def next(val):
     def complete(val):
-      # delta = time.time() - start_time
-      # if delta * 1000 > 3:
-        # print('d', delta*1000)
+      #  delta = time.time() - start_time
+      #  if delta * 1000 > 3:
+        #  print('d', delta*1000)
       pass
     WIN_STATE.cleanup(windows)
     _return_to_win()
@@ -85,3 +85,4 @@ def unfadeAll(windows = None):
     windows = IPC.eval_and_return('getwininfo()')
   for wininfo in windows:
     WIN_STATE.unfade(int(wininfo['winid']))
+  SIGNS.flush()

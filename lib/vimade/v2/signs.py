@@ -13,8 +13,6 @@ HAS_SIGN_PRIORITY = bool(int(GLOBALS.features['has_sign_priority']))
 HAS_SIGN_GET_PLACED = bool(int(GLOBALS.features['has_sign_getplaced']))
 HAS_SIGN_GET_PLACED_AND_GROUPS = HAS_SIGN_GROUP and HAS_SIGN_GET_PLACED
 IS_NVIM = GLOBALS.is_nvim
-# TODO cleanup
-# - add signs retention period
 
 
 VIMADE_GROUP_TEXT = ' group=vimade' if HAS_SIGN_GROUP else ''
@@ -62,7 +60,6 @@ def clear_win(win):
     buf['owner_win'] = None
 
   def next(signs):
-    # Unfade here is batched async. Unfade removes the signs from the buffer.
     undefine_eval = []
     if lookup:
       _do_unfade(bufnr, signs, win)
@@ -79,9 +76,9 @@ def clear_win(win):
 
   # This logic can be batched, its just difficult to understand and not really maintainable.
   # Safer to get the signs and remove them immediately.
-  next(IPC.eval_and_return(
+  IPC.batch_eval_and_return(
     'bufexists('+str(bufnr)+') ? get(sign_getplaced('+str(bufnr)+',{"group": "*"})[0], "signs", []) : []' if HAS_SIGN_GET_PLACED_AND_GROUPS else \
-    'bufexists('+str(bufnr)+') ? get(getbufinfo('+str(bufnr)+')[0], "signs", []) : []'))
+            'bufexists('+str(bufnr)+') ? get(getbufinfo('+str(bufnr)+')[0], "signs", []) : []').then(next)
 
 # For now we just say the last window wins. This ensures our signs are associated with
 # highlights that are used on a window for that buffer. There isn't really a solution
@@ -130,6 +127,7 @@ def _do_create(bufnr, win, names):
   names = list(set(names))
   def create_highlights(results):
     highlights = []
+    skip_transpose_highlights = []
     for i, result in enumerate(results):
       item = _parse_get_signs_parts(result)
       results[i] = item
@@ -139,28 +137,29 @@ def _do_create(bufnr, win, names):
       if texthl and texthl != 'NONE':
         highlights.append(texthl)
       if linehl and linehl !='NONE':
-        highlights.append(linehl)
+        skip_transpose_highlights.append(linehl)
       if numhl and numhl != 'NONE':
-        highlights.append(numhl)
+        skip_transpose_highlights.append(numhl)
     if len(highlights) == 0:
       promise.resolve(None)
       return
-    def create_definitions(replacements):
+    def create_definitions(input):
+      (replacements, skip_transpose_replacements) = input
       j = 0
+      k = 0
       definitions = []
       normalid = GLOBALS.normalid
       normalncid = GLOBALS.normalncid
       for i, item in enumerate(results):
         # create another sign that links to either Normal (for vim)
         # and NormalNC for Neovim (to be used if basegroups enabled)
-        name1 = 'vimade_' + names[i][0]
-        name2 = 'vimade_wc_' + names[i][0] # wc for wincolor
+        name = 'vimade_' + names[i][0]
         text = item.get('text', '')
         icon = item.get('icon', '')
         texthl = item.get('texthl', '')
         linehl = item.get('linehl', '')
         numhl = item.get('numhl', '')
-        definition = 'sign define ' + name1 + \
+        definition = 'sign define ' + name + \
             (' text=' + text) if text else '' + \
             (' icon=' + icon) if icon else ''
         if texthl and texthl != 'NONE':
@@ -169,12 +168,11 @@ def _do_create(bufnr, win, names):
         else:
           texthl_id = normalncid if IS_NVIM else normalid
         if linehl and linehl !='NONE':
-          definition += ' linehl=vimade_' + str(replacements[j])
-          j += 1
+          definition += ' linehl=vimade_' + str(skip_transpose_replacements[k])
+          k += 1
         if numhl and numhl != 'NONE':
-          numhl_id = replacements[j]
-          definition += ' numhl=vimade_' + str(replacements[j])
-          j += 1
+          definition += ' numhl=vimade_' + str(skip_transpose_replacements[k])
+          k += 1
         definition += ' texthl=vimade_' + str(texthl_id)
         definitions.append(definition)
       if len(definitions) == 0:
@@ -184,7 +182,10 @@ def _do_create(bufnr, win, names):
     # Associated with a single win. This means when a win is cleared, signs owned by that win also need to be cleared.
     # TODO we should event drive the window logic and let HIGHLIGHTER and SIGNS clear off event. For now this only
     # happens in namespace.py so should be fine in the short term.
-    HIGHLIGHTER.create_highlights(win, highlights).then(create_definitions)
+    all([
+        HIGHLIGHTER.create_highlights(win, highlights),
+        HIGHLIGHTER.create_highlights(win, skip_transpose_highlights, True)
+    ]).then(create_definitions)
   if len(names):
     IPC.batch_eval_and_return('[' + ','.join(['execute("sign list ' + name[1] +'")' for name in names]) + ']')\
         .then(create_highlights)
@@ -202,6 +203,9 @@ def _do_fade(bufnr, visible_rows, signs, win):
     if lnum == None or (not lnum in visible_rows):
       continue
     name = sign['name']
+    # Can result due to undefine process, these needs to removed / skipped
+    if name == '[Deleted]':
+      continue
     sign['priority'] = priority = int(sign.get('priority', 0))
     is_vimade = name[0:7] == 'vimade_'
     if is_vimade:
@@ -266,6 +270,7 @@ def flush():
   bufs = list(M._buffer_cache.values())
   M._buffer_cache = {}
   promise = Promise()
+
   def next(infos):
     changes = []
     names = []
