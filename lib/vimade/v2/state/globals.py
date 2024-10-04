@@ -220,7 +220,7 @@ class Globals(object):
     # we need the actual converted object here for config. This coercion is
     # required for consistency between nvim and vim.
     # some versions of vim return bytes instead of str
-    vimade = IPC.coerceTypes(self.vim.vars['vimade'])
+    vimade = self.IPC.coerceTypes(self.vim.vars['vimade'])
     
 
     current = {

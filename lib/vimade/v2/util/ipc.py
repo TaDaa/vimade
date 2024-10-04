@@ -13,8 +13,8 @@ def __init(globals):
   GLOBALS = globals
 
 IS_NVIM = int(vim.eval('has("nvim")')) == 1
-DICTIONARY= (dict, vim.Dictionary) if hasattr(vim, 'Dictionary') else dict
-LIST= (list, vim.List) if hasattr(vim, 'List') else list
+DICTIONARY = (dict, vim.Dictionary) if hasattr(vim, 'Dictionary') else dict
+LIST = (list, vim.List) if hasattr(vim, 'List') else list
 
 def py2_coerceTypes (input):
   if isinstance(input, (bytes, bytearray)):
