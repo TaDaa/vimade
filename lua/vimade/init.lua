@@ -14,11 +14,11 @@ M.unfadeAll = function ()
 end
 
 M.fadeSigns = function ()
-  -- no plans for implementation at this time
+  -- no plans for implementation at this time (not needed)
 end
 
 M.unfadeSigns = function ()
-  -- no plans for implementation at this time
+  -- no plans for implementation at this time (not needed)
 end
 
 M.recalculate = function ()
@@ -30,11 +30,11 @@ M.update = function ()
 end
 
 M.softInvalidateBuffer = function ()
-  -- no plans for implementation at this time
+  -- no plans for implementation at this time (not needed)
 end
 
 M.softInvalidateSigns = function ()
-  -- no plans for implementation at this time
+  -- no plans for implementation at this time (not needed)
 end
 
 return M

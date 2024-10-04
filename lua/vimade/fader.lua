@@ -31,6 +31,10 @@ end
 
 -- external --
 
+M.getInfo = function ()
+  return GLOBALS.getInfo()
+end
+
 M.recalculate = function ()
   local windows = vim.fn.getwininfo()
   local current = GLOBALS.current

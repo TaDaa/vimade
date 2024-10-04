@@ -136,6 +136,18 @@ local check_fields = function (fields, next, current, defaults, return_state)
   return modified and return_state or M.READY
 end
 
+M.getInfo = function ()
+  result = {renderer = 'lua', [vim.type_idx]=vim.types.dictionary}
+  for key, value in pairs(M) do
+    if type(value) ~= 'function'
+      and key ~= 'global_ns'
+      and key ~= 'global_highlights' then
+      result[key] = value
+    end
+  end
+  return result
+end
+
 M.refresh_global_ns = function ()
   if M.global_ns == nil then
     M.global_ns = NAMESPACE.get_replacement({winid= 'g'}, 0)

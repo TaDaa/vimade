@@ -443,19 +443,18 @@ endfunction
 function! vimade#GetInfo()
   "get debug info
   if g:vimade_lua_renderer
-    " TODO lua require('vimade').getInfo()
-    " Currently unimplemented
+    lua vim.g.vimade_renderer_info = require('vimade').getInfo()
   else
     exec g:vimade_py_cmd join([
         \ g:vimade_py_v2_renderer ? "from vimade.v2 import bridge" : "from vimade import bridge",
         \ "import vim",
-        \ "vim.vars['vimade_python_info'] = bridge.getInfo()",
+        \ "vim.vars['vimade_renderer_info'] = bridge.getInfo()",
     \ ], "\n")
   endif
   return {
       \ 'version': '0.0.5',
       \ 'config': g:vimade,
-      \ 'python': g:vimade_python_info,
+      \ 'renderer': g:vimade_renderer_info,
       \ 'features': g:vimade_features, 
       \ 'other': {
         \ 'normal_id': g:vimade.normalid,
@@ -463,7 +462,7 @@ function! vimade#GetInfo()
         \ 'syntax': &syntax,
         \ 'colorscheme': execute(':colorscheme'),
         \ 'background': &background,
-        \ 'vimade_py_cmd': g:vimade_py_cmd,
+        \ 'vimade_py_cmd': (exists('g:vimade_py_cmd') ? g:vimade_py_cmd: 0),
         \ 'vimade_running': g:vimade_running,
         \ 'vimade_paused': g:vimade_paused,
         \ 'vimade_error_count': g:vimade_error_count,
