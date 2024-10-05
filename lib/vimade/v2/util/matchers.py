@@ -2,9 +2,21 @@ import sys
 import vim
 M = sys.modules[__name__]
 
+IS_V3 = False
+if (sys.version_info > (3, 0)):
+    IS_V3 = True
 TYPE_VARS = type(vim.vars) # handle vim and nvim remote objects
 TYPE_OPTS = type(vim.options) # handle vim and nvim remote objects
 DICTIONARY_LIKE_TYPES = (list, dict, TYPE_VARS, TYPE_OPTS)
+def _bytes_str_v3(value):
+  if type(value) == bytes:
+    return str(value, 'utf-8')
+  return value
+def _bytes_str_v2(value):
+  if type(value) == bytes:
+    return str(value)
+  return value
+SAFE_BYTES_STR = _bytes_str_v3 if IS_V3 else _bytes_str_v2
 
 def _safe_get(value, key):
   if type(value) == list:
@@ -37,8 +49,10 @@ def match_contains_any(target, value):
 
 def match_table_any(target, value):
   for target_key, target_value in _pairs(target):
+    target_key = SAFE_BYTES_STR(target_key)
     if type(target_key) == int:
       for real_key, real_value in _pairs(value):
+        real_key = SAFE_BYTES_STR(real_key)
         if M.match_contains_any(target_value, real_value):
           return True
     else:
@@ -56,6 +70,7 @@ def each_match_contains_any(target, values):
 
 def _each_match_contains_any(target, value, counts, counts_ln, i):
   for key, t in _pairs(target):
+    key = SAFE_BYTES_STR(key)
     counts[key] = counts.get(key, {'count': 0})
     found = False
     if type(key) == int:
@@ -97,12 +112,14 @@ def match_contains_all(target, value):
 
 def match_table_all(target, value):
   for target_key, target_value in _pairs(target):
+    target_key = SAFE_BYTES_STR(target_key)
     found = False
     if type(target_key) == int:
       # numbers are skipped as this is listy
       # we assume things can be out of order here, so every
       # item must be checked
       for real_key, real_value in _pairs(value):
+        real_key = SAFE_BYTES_STR(real_key)
         if callable(target_value):
           found = target_value(real_value)
         elif type(target_value) in DICTIONARY_LIKE_TYPES and type(real_value) in DICTIONARY_LIKE_TYPES:
@@ -143,6 +160,9 @@ def each_match_contains_all(target, values):
       return False
 
 def match_primitive(target, value):
+  target = SAFE_BYTES_STR(target)
+  value = SAFE_BYTES_STR(value)
+
   if callable(target):
     return target(value)
   elif type(target) == bool:
@@ -168,7 +188,7 @@ def match_contains_string(target, value):
   elif callable(target):
     return target(value)
   # target is a string, we do the comparison
-  elif type(target) == str:
+  elif type(target) in (str, bytes):
     return M.match_string(target, value)
   # target is a table, we need to see if value is within the table
   elif type(target) == list or type(target) == dict:
@@ -178,6 +198,8 @@ def match_contains_string(target, value):
   return False
 
 def match_string(target, value):
+  target = SAFE_BYTES_STR(target)
+  value = SAFE_BYTES_STR(value)
   return (value+'').lower() in (target+'').lower()
 
 def ContainsString(target):
@@ -224,7 +246,7 @@ def StringMatcher(target):
   def _StringMatcher(value):
     if type(target) in DICTIONARY_LIKE_TYPES:
       return M.match_contains_string(target, value)
-    elif type(target) == str:
+    elif type(target) in (str, bytes):
       return M.match_string(target, value)
     return False
   return _StringMatcher
