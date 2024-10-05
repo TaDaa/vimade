@@ -89,7 +89,7 @@ local DEFAULTS = {
     -- this is set to an empty object to enforce the default condition
     -- for legacy conditions
     default = {
-      buf_names = nil,
+      buf_name = nil,
       buf_opts = nil,
       buf_vars = nil,
       win_opts = nil,
@@ -107,11 +107,13 @@ local DEFAULTS = {
     -- this is set to an empty object to enforce the default condition
     -- for legacy conditions
     default = {
-      buf_names = nil,
-      buf_opts = nil,
+      buf_name = nil,
+      -- terminal is temporarily disabled until proper fading is added
+      buf_opts = {buftype = {'prompt', 'terminal'}},
       buf_vars = nil,
       win_opts = nil,
       win_vars = nil,
+      win_type = true,
       win_config = {
         relative = true
       },

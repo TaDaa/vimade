@@ -191,7 +191,7 @@ def match_contains_string(target, value):
   elif type(target) in (str, bytes):
     return M.match_string(target, value)
   # target is a table, we need to see if value is within the table
-  elif type(target) == list or type(target) == dict:
+  elif type(target) in (list, dict):
     for i,v in _pairs(target):
       if M.match_contains_string(v, value):
         return True
@@ -200,10 +200,12 @@ def match_contains_string(target, value):
 def match_string(target, value):
   target = SAFE_BYTES_STR(target)
   value = SAFE_BYTES_STR(value)
-  return (value+'').lower() in (target+'').lower()
+  if type(target) == str:
+    return value != '' and ((value+'').lower() in (target+'').lower())
+  return target == True and value != ''
 
 def ContainsString(target):
-  if type(target) == dict:
+  if type(target) in (list, dict):
     def _ContainsString(value):
       return M.match_contains_string(target, value)
     return _ContainsString

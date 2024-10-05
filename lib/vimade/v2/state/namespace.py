@@ -22,9 +22,14 @@ sp_v3_nr = bytes(' ', 'utf-8') if IS_V3 else ' '
 
 M.buf_shared_lookup = {}
 M._changed_win = False
+IS_NVIM = GLOBALS.is_nvim
+
+# patch 620 increased to unlimited
+# https://github.com/vim/vim/issues/11248
+UNLIMITED_MATCHADDPOS = bool(int(vim.eval('has("patch-9.0.0620") || has("nvim-0.9.5")')))
 
 def _goto_win(winid):
-  vim.command('noautocmd call win_gotoid('+str(winid)+')')
+  vim.command('silent! noautocmd call win_gotoid('+str(winid)+')')
 
 
 # Namespaces manages both config per window, shared across multiple windows, and partially attached
@@ -437,7 +442,6 @@ class Namespace:
               gaps.append([None, row, column])
           elif enablebasegroups == False:
             s = 0
-
           if not color:
             colors[column] = color = {'c': ch, 's': s}
             if s != None:
@@ -523,13 +527,14 @@ class Namespace:
           suffix = fade_priority + ',-1,{"window":'+str(winid)+'})'
           for i, (id, coords) in enumerate(items):
             prefix = 'matchaddpos("vimade_' + str(replacement_ids[i]) + '",['
+            move = len(coords) - 1 if UNLIMITED_MATCHADDPOS else 8
             matchadds.extend([prefix \
-                +','.join(map(lambda_tup, coords[i:i+8])) + '],' + suffix
-                for i in range(0, len(coords), 8)])
+                +','.join(map(lambda_tup, coords[i:i+move])) + '],' + suffix
+                for i in range(0, len(coords), move)])
 
           if len(matchadds):
             def add_matches(matches):
-                self.matches += matches
+              self.matches += matches
             IPC.batch_eval_and_return('['+','.join(matchadds)+']').then(add_matches)
 
       replacement_ids = HIGHLIGHTER.create_highlights(self.win, match_keys).then(next)

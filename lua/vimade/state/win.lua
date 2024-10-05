@@ -102,6 +102,7 @@ M.refresh = function (wininfo, skip_link)
   win.tabnr = tonumber(wininfo.tabnr)
 
   win.buf_name = vim.api.nvim_buf_get_name(win.bufnr)
+  win.win_type = vim.fn.win_gettype(win.winid)
   win.win_config = vim.api.nvim_win_get_config(win.winid)
 
   win.is_active_win = win.winid == GLOBALS.current.winid

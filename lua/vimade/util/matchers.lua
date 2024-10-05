@@ -229,7 +229,10 @@ M.match_contains_string = function(target, value)
 end
 
 M.match_string = function(target, value)
-  return string.find(string.lower(value), string.lower(target)) ~= nil
+  if type(target) == 'string' then
+    return string.find(string.lower(value), string.lower(target)) ~= nil
+  end
+  return target == true and value ~= ''
 end
 
 M.ContainsString = function(target)

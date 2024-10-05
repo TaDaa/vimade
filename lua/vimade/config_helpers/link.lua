@@ -12,7 +12,8 @@ M.DEFAULT = function(win, active, config)
   end
   return 
     legacy
-    or (config.buf_names and MATCHERS.ContainsString(config.buf_names)(win.buf_name) and MATCHERS.ContainsString(config.buf_names)(active.buf_name))
+    or (config.buf_name and MATCHERS.ContainsString(config.buf_name)(win.buf_name) and MATCHERS.ContainsString(config.buf_name)(active.buf_name))
+    or (config.win_type and MATCHERS.ContainsString(config.win_type)(win.win_type) and MATCHERS.ContainsString(config.win_type)(active.win_type))
     or (config.buf_opts and MATCHERS.EachContainsAny(config.buf_opts)({active:buf_opts(), win:buf_opts()}))
     or (config.buf_vars and MATCHERS.EachContainsAny(config.buf_vars)({active:buf_vars(), win:buf_vars()}))
     or (config.win_opts and MATCHERS.EachContainsAny(config.win_opts)({active:win_opts(), win:win_opts()}))

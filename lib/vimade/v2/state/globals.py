@@ -33,7 +33,7 @@ _DEFAULTS = {
   # functions are passed (Win, ActiveWin, value)
   'link': {
     'default': {
-      'buf_names': None,
+      'buf_name': None,
       'buf_opts': None,
       'buf_vars': None,
       'win_opts': None,
@@ -47,11 +47,14 @@ _DEFAULTS = {
   # functions are passed (Win, ActiveWin, value)
   'blocklist': {
     'default': {
-      'buf_names': None,
-      'buf_opts': None,
+      'buf_name': None,
+      'buf_opts': {
+        'buftype': ['popup', 'prompt']
+      },
       'buf_vars': None,
       'win_opts': None,
       'win_vars': None,
+      'win_type': True,
       'win_config': {
         'relative': True #block all floating windows # TODO we can make this more customized soon
        },

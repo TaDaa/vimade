@@ -55,6 +55,7 @@ class WinDeps(Promise):
           'gettabwinvar(%d,%d,"&winhl")' % (tabnr, winnr),
           'gettabwinvar(%d,%d,"&conceallevel")' % (tabnr, winnr),
           'nvim_win_get_config('+str(winid)+')' if HAS_NVIM_WIN_GET_CONFIG else '{}',
+          'win_gettype('+str(winid)+')' if HAS_WIN_GETTYPE else '""',
         ]) + ']'),
        HIGHLIGHTER.get_hl_for_ids(self.win, [self.wincolor or GLOBALS.normalid, GLOBALS.normalid])\
      ]).then(next)
@@ -69,8 +70,10 @@ class WinDeps(Promise):
     return self
 
 
+# TODO move these into features
 HAS_NVIM_WIN_GET_CONFIG = True if int(IPC.eval_and_return('exists("*nvim_win_get_config")')) else False
 HAS_NVIM_GET_HL_NS = True if int(IPC.eval_and_return('exists("*nvim_get_hl_ns")')) else False
+HAS_WIN_GETTYPE = True if int(vim.eval('exists("*win_gettype")')) else False
 
 M.cache = {}
 M.current = None
@@ -131,6 +134,7 @@ class WinState(object):
       'tabnr': None,
       'buf_name': None,
       'win_config': None,
+      'win_type': None,
       'basebg': None,
       'linked': False,
       'blocked': False,
@@ -247,6 +251,12 @@ class WinState(object):
             self.ns.fade()
           else:
             self.ns.unfade()
+        # elif here because we don't need to trigger SIGNS if CHANGED already occurred
+        elif (GLOBALS.SIGNS & state) > 0:
+          if self.faded:
+            self.ns.add_signs()
+          else:
+            self.ns.remove_signs()
 
     WinDeps(self, skip_link).then(next)
 
@@ -261,6 +271,7 @@ class WinState(object):
          winhl, #(local winhl)
          conceallevel,
          win_config,
+         win_type,
      ),
      (wincolorhl, normalhl),
      wincolor
@@ -273,6 +284,7 @@ class WinState(object):
     syntax = win_syntax if win_syntax else buf_syntax
 
     self.win_config = win_config
+    self.win_type = win_type
     self.buf_vars = self.buffer.vars
     self.buf_opts = self.buffer.options
     self.win_vars = self.window.vars
@@ -288,10 +300,11 @@ class WinState(object):
       self.original_wincolor = wincolor or ('NormalNC' if (IS_NVIM and self.is_active_win) else 'Normal')
 
     if not 'vimade_' in winhl:
-      self.state |= _update_state({
-        'original_winhl': winhl
-      }, self, GLOBALS.CHANGED |  GLOBALS.INVALIDATE_HIGHLIGHTS)
-      self.vimade_winhl = None
+      if self.original_winhl != winhl:
+        self.state |= _update_state({
+          'original_winhl': winhl
+        }, self, GLOBALS.CHANGED |  GLOBALS.INVALIDATE_HIGHLIGHTS)
+        self.vimade_winhl = None
     else:
       self.vimade_winhl = winhl
     self.winhl = winhl
@@ -312,6 +325,8 @@ class WinState(object):
             wincolorhl_changed = True
             break
       self.wincolorhl = wincolorhl
+    else:
+      wincolorhl = self.wincolorhl
 
 
     # requires additional potentially more fading
@@ -395,8 +410,8 @@ class WinState(object):
         fadelevel = GLOBALS.fadelevel
       self.tint = tint
       self.fadelevel = float(fadelevel)
-      if (GLOBALS.signsretentionperiod or 0) > 0 and (GLOBALS.now - self.faded_time) * 1000 < GLOBALS.signsretentionperiod:
-        self.state |= GLOBALS.CHANGED
+      if GLOBALS.enablesigns and (GLOBALS.signsretentionperiod or 0) > 0 and (GLOBALS.now - self.faded_time) * 1000 < GLOBALS.signsretentionperiod:
+        self.state |= GLOBALS.SIGNS
 
     # hi_key is used by the highlighter for replacement highlights.  These are
     # calculated based on a number of window criteria such as fadelevel, tint
@@ -422,7 +437,6 @@ class WinState(object):
       'coords_key': coords_key,
       'syntax': syntax,
     }, self, GLOBALS.INVALIDATE_BUFFER_CACHE | GLOBALS.INVALIDATE_HIGHLIGHTS | GLOBALS.CHANGED)
-
 
     # force the window to refresh if fademode='windows' -- caching mostly handles performance here
     # We also fade linked status when fade_windows is activated.  This handles scenarios where the user
