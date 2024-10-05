@@ -527,7 +527,7 @@ class Namespace:
           suffix = fade_priority + ',-1,{"window":'+str(winid)+'})'
           for i, (id, coords) in enumerate(items):
             prefix = 'matchaddpos("vimade_' + str(replacement_ids[i]) + '",['
-            move = len(coords) - 1 if UNLIMITED_MATCHADDPOS else 8
+            move = len(coords) if UNLIMITED_MATCHADDPOS else 8
             matchadds.extend([prefix \
                 +','.join(map(lambda_tup, coords[i:i+move])) + '],' + suffix
                 for i in range(0, len(coords), move)])
