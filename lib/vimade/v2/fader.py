@@ -63,6 +63,9 @@ def _update():
 def _after_promise(val):
   _return_to_win()
 
+def setup(config):
+  return GLOBALS.setup(config)
+
 def getInfo():
   return GLOBALS.getInfo()
 

@@ -31,6 +31,10 @@ end
 
 -- external --
 
+M.setup = function (config)
+  return GLOBALS.setup(config)
+end
+
 M.getInfo = function ()
   return GLOBALS.getInfo()
 end

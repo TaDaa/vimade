@@ -1,5 +1,8 @@
 from vimade.v2 import fader as FADER
 
+def setup(config):
+  return FADER.setup(config)
+
 def getInfo():
   return FADER.getInfo()
 

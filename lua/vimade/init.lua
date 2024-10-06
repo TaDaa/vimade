@@ -5,6 +5,10 @@ if vim == nil or vim.api == nil then
     return
 end
 
+M.setup = function(config)
+  return FADER.setup(config)
+end
+
 M.getInfo = function ()
   return FADER.getInfo()
 end

@@ -3,7 +3,7 @@ local TINT = require('vimade.config_helpers.tint')
 local COLOR_UTIL = require('vimade.util.color')
 
 local tint24b = function (tint, bg24)
-  if tint.type == TINT.MIX then
+  if not tint.type or tint.type == TINT.MIX then
     return COLOR_UTIL.to24b(M.interpolate24b(COLOR_UTIL.to24b(tint.rgb), bg24, tint.intensity or 1))
   elseif tint.type == TINT.REPLACE then
     return COLOR_UTIL.to24b(tint.rgb)

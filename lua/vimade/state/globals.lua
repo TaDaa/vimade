@@ -22,6 +22,8 @@ M.ERROR = 1
 M.CHANGED = 2
 M.RECALCULATE = 4
 
+M.vimade_lua = {}
+
 M.tick_id = 0
 M.tick_state = M.READY
 M.global_ns = nil-- used to cache namespace 0 at the global level
@@ -139,6 +141,10 @@ local check_fields = function (fields, next, current, defaults, return_state)
   return modified and return_state or M.READY
 end
 
+M.setup = function (config)
+  vimade_lua = TYPE.deep_copy(config)
+end
+
 M.getInfo = function ()
   result = {renderer = 'lua', [vim.type_idx]=vim.types.dictionary}
   for key, value in pairs(M) do
@@ -164,7 +170,8 @@ end
 M.refresh = function ()
   M.tick_id = next_tick_id()
   M.tick_state = M.READY
-  local vimade = vim.g.vimade
+  -- no reason to re-copy vimade_lua we aren't going to change it
+  local vimade = TYPE.shallow_extend(TYPE.deep_copy(vim.g.vimade), vimade_lua)
   local current = {
     winid = tonumber(vim.api.nvim_get_current_win()),
     bufnr = tonumber(vim.api.nvim_get_current_buf()),

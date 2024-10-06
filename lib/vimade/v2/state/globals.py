@@ -1,10 +1,10 @@
 import sys
-
 import time
 import vim
 from vimade.v2.config_helpers import tint as TINT
 from vimade.v2.util import ipc as IPC
 from vimade.v2.util import matchers as MATCHERS
+from vimade.v2.util import type as TYPE
 
 MAX_TICK_ID = 1000000000
 
@@ -96,6 +96,7 @@ class Globals(object):
       'RECALCULATE': 16,
       'SIGNS': 32,
       'features': features,
+      'vimade_py': {},
       'tick_id': 1000,
       'tick_state': 0,
       'vimade_fade_active': False,
@@ -186,6 +187,9 @@ class Globals(object):
       tick_id = 1000
     return tick_id
 
+  def setup(self, config):
+    self.vimade_py = TYPE.deep_copy(config)
+
   def getInfo(self):
     info = self.__internal
     result = {'renderer': 'python-v2'}
@@ -223,7 +227,8 @@ class Globals(object):
     # we need the actual converted object here for config. This coercion is
     # required for consistency between nvim and vim.
     # some versions of vim return bytes instead of str
-    vimade = self.IPC.coerceTypes(self.vim.vars['vimade'])
+    # output of coerceTypes is essentially already a deep copy
+    vimade = TYPE.shallow_extend(self.IPC.coerceTypes(self.vim.vars['vimade']), self.vimade_py)
     
 
     current = {
