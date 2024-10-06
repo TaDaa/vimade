@@ -39,6 +39,7 @@ M.groupdiff = true
 M.groupscrollbind = false
 M.nohlcheck = false
 M.colorscheme = nil
+M.termguicolors = nil
 M.is_dark = false
 M.current = {
   winid = -1,
@@ -183,9 +184,11 @@ M.refresh = function ()
   M.tick_state = bit.bor(M.tick_state, check_fields({
     'is_dark',
     'colorscheme',
+    'termguicolors',
   }, {
     is_dark = vim.go.background == 'dark',
     colorscheme = vim.g.colors_name,
+    termguicolors = vim.go.termguicolors,
   }, M, OTHER, M.RECALCULATE))
   M.tick_state = bit.bor(M.tick_state, check_fields({
     'vimade_fade_active',
