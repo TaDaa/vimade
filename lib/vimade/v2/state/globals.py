@@ -147,6 +147,7 @@ class Globals(object):
     self.IPC = IPC
     self.MATCHERS = MATCHERS
     self.MAX_TICK_ID = MAX_TICK_ID
+    self.TYPE = TYPE
     self._OTHER = _OTHER
     self._CURRENT = _CURRENT
     self._DEFAULTS = _DEFAULTS
@@ -228,7 +229,7 @@ class Globals(object):
     # required for consistency between nvim and vim.
     # some versions of vim return bytes instead of str
     # output of coerceTypes is essentially already a deep copy
-    vimade = TYPE.shallow_extend(self.IPC.coerceTypes(self.vim.vars['vimade']), self.vimade_py)
+    vimade = self.TYPE.shallow_extend(self.IPC.coerceTypes(self.vim.vars['vimade']), self.vimade_py)
     
 
     current = {
