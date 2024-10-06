@@ -29,8 +29,8 @@ M.set_highlights = function(win)
   local default_bg = GLOBALS.is_dark and 0x000000 or 0xFFFFFF
   local default_ctermbg = GLOBALS.is_dark and 0 or 231
   local highlights = get_highlights(win, {})
-  local normal_nc = TYPE.deep_copy(highlights.NormalNC)
-  local normal = TYPE.deep_copy(highlights.Normal)
+  local normal_nc = TYPE.deep_copy(highlights.NormalNC or {})
+  local normal = TYPE.deep_copy(highlights.Normal or {})
 
   if win.is_active_win then
     --pass

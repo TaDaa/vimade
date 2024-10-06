@@ -1,6 +1,7 @@
 local M = {}
 local COLORS = require('vimade.colors')
 local TYPE = require('vimade.util.type')
+local COMPAT = require('vimade.util.compat')
 local GLOBALS
 
 M.__init = function (globals)
@@ -53,7 +54,7 @@ end
 M.check_ns_modified = function(ns)
   if ns.tick_id ~= GLOBALS.tick_id then
     ns.tick_id = GLOBALS.tick_id
-    local highlights = vim.api.nvim_get_hl(ns.real_ns, {})
+    local highlights = COMPAT.nvim_get_hl(ns.real_ns, {})
     if TYPE.deep_compare(ns.real_highlights, highlights) == false then
       ns.modified = true
     else

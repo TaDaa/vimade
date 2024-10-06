@@ -1,14 +1,11 @@
-let g:vimade_eval_ret = []
-
 function! vimade#Empty()
 endfunction
 
 function! vimade#CreateGlobals()
-  let g:vimade_lua_renderer = exists('g:vimade') && get(g:vimade, 'renderer') =~ 'lua'
-  let g:vimade_py_v2_renderer = exists('g:vimade') && get(g:vimade, 'renderer') =~ 'python-v2'
+  "let g:vimade_lua_renderer = exists('g:vimade') && get(g:vimade, 'renderer') =~ 'lua'
+  "let g:vimade_py_v2_renderer = exists('g:vimade') && get(g:vimade, 'renderer') =~ 'python-v2'
 
   if !exists('g:vimade_running')
-
     ""@setting vimade_running
     "This flag is used to control whether or not vimade should be running.  This can be useful to toggle vimade during startup.  Alternatively, you may as also use VimadeDisable, VimadeEnable, call vimade#Disable, call vimade#Enable respectively
 
@@ -20,27 +17,57 @@ function! vimade#CreateGlobals()
   if !exists('g:vimade')
     let g:vimade = {}
   endif
+endfunction
 
-  if !g:vimade_lua_renderer
-    if !exists('g:vimade_py_cmd')
-      if has('python3')
-        let g:vimade_py_cmd = "py3"
-      elseif has('python')
-        let g:vimade_py_cmd = "py"
-      elseif has('nvim') 
-        " default to lua renderer if python not found and the user is using
-        " neovim. Currently experimental
-        let g:vimade_lua_renderer = 1
-        return
-      endif
+function! vimade#SetupRenderer()
+  let l:next_renderer = g:vimade_active_renderer.name
+  if (g:vimade.renderer == 'auto' && g:vimade_features.supports_lua_renderer) || g:vimade.renderer == 'lua'
+    let l:next_renderer = 'lua'
+  else
+    if g:vimade_python_setup == 0
+      call vimade#SetupPython()
     endif
-
-    exec g:vimade_py_cmd  join([
-        \ "import vim",
-        \ "sys.path.append(vim.eval('g:vimade_plugin_current_directory'))",
-    \ ], "\n")
+    if g:vimade.renderer == 'auto'
+      let l:next_renderer = 'python'
+    elseif g:vimade.renderer == 'python' || g:vimade.renderer == 'python-legacy'
+      let l:next_renderer = g:vimade.renderer
+    endif
+  endif
+  if l:next_renderer != g:vimade_active_renderer.name
+    try
+      call vimade#UnfadeAll()
+    catch
+    endtry
+    if l:next_renderer == 'lua'
+      let g:vimade_active_renderer = s:lua_renderer
+    elseif l:next_renderer == 'python'
+      let g:vimade_active_renderer = s:python_renderer
+    elseif l:next_renderer == 'python-legacy'
+      let g:vimade_active_renderer = s:python_legacy_renderer
+    else
+      let g:vimade_active_renderer = s:empty_renderer
+    endif
   endif
 endfunction
+
+function! vimade#SetupPython()
+  let g:vimade_python_setup = 1
+  " find proper command
+  if !exists('g:vimade_py_cmd')
+    if has('python3')
+      let g:vimade_py_cmd = "py3"
+    elseif has('python')
+      let g:vimade_py_cmd = "py"
+    else
+      return
+    endif
+    exec g:vimade_py_cmd  join([
+          \ "import vim",
+          \ "sys.path.append(vim.eval('g:vimade_plugin_current_directory'))",
+          \ ], "\n")
+  endif
+endfunction
+
 function! vimade#GetFeatures()
   if !exists('g:vimade_features')
     let g:vimade_features = {}
@@ -56,21 +83,39 @@ function! vimade#GetFeatures()
     let g:vimade_features.has_python3 = has('python3')
     let g:vimade_features.has_gui_version = !has('nvim') && (execute('version')=~"GUI version")
     let g:vimade_features.has_sign_getplaced = exists('*sign_getplaced')
-    let g:vimade_features.has_nvim_get_hl = exists('*nvim_get_hl')
 
-    "sign group/priority test
-    if !g:vimade_lua_renderer
-      try
-        sign define Vimade_Test text=1
-        sign place 1 group=vimade line=1 name=Vimade_Test priority=100
-        sign unplace 1 group=vimade
-        let g:vimade_features.has_sign_group = 1
-        let g:vimade_features.has_sign_priority = 1
-      catch
-        let g:vimade_features.has_sign_group = 0
-        let g:vimade_features.has_sign_priority = 0
-      endtry
-    endif
+    " Below are for lua renderer
+
+    " Required:
+    " Required: nvim_win_set_hl_ns
+    let g:vimade_features.has_nvim_win_set_hl_ns = exists('*nvim_win_set_hl_ns')
+    " Required:
+    " Either (preferred) nvim_get_hl
+    let g:vimade_features.has_nvim_get_hl = exists('*nvim_get_hl')
+    " Or (fallback) nvim__get_hl_defs + nvim_get_hl_by_name (assume supported)
+    let g:vimade_features.has__nvim_get_hl_defs = exists('*nvim__get_hl_defs')
+    
+    "Optional:
+    " preferred but not required nvim_get_hl_ns
+    " fallback is try and manually track (probably will have conflicts with some plugins)
+    let g:vimade_features.has_nvim_get_hl_ns = exists('*nvim_get_hl_ns')
+
+    let g:vimade_features.supports_lua_renderer = (g:vimade_features.has_nvim_get_hl || g:vimade_features.has__nvim_get_hl_defs) && g:vimade_features.has_nvim_win_set_hl_ns
+
+    let g:vimade_features.has_python3 = has('python3')
+    let g:vimade_features.has_python = has('python')
+    let g:vimade_features.supports_python_renderer = g:vimade_features.has_python3 || g:vimade_features.has_python
+
+    try
+      sign define Vimade_Test text=1
+      sign place 1 group=vimade line=1 name=Vimade_Test priority=100
+      sign unplace 1 group=vimade
+      let g:vimade_features.has_sign_group = 1
+      let g:vimade_features.has_sign_priority = 1
+    catch
+      let g:vimade_features.has_sign_group = 0
+      let g:vimade_features.has_sign_priority = 0
+    endtry
   endif
   return g:vimade_features
 endfunction
@@ -83,6 +128,15 @@ function! vimade#GetDefaults()
     
     let g:vimade_defaults = {'$extended': 1}
 
+    ""@setting vimade.renderer
+    "If not specificed, defaults to ['python-legacy']. This default value will soon change to ['auto']. This is an array to allow renderer combinations (not yet supported) .
+    "Current options are:
+    "  - 'auto' - Uses lua renderer if supported on your Neovim version
+    "  - 'python' - Uses a new high performance renderer compatible with Vim and Neovim
+    "  - 'python-legacy' - Uses the legacy and stable python renderer that Vimade has relied on for the last 6 years. This will be removed once all bugs have been fixed in new renderers.
+
+    let g:vimade_defaults.renderer = 'python-legacy'
+
     ""@setting vimade.normalid
     "If not specified, the normalid is determined when vimade is first loaded.  normalid provides the id of the "Normal" highlight which is used to calculate fading.  You can override this config with another highlight group.
 
@@ -94,6 +148,7 @@ function! vimade#GetDefaults()
     let g:vimade_defaults.normalncid = ''
 
     ""@setting vimade.basefg
+    " *python-legacy only*: Serves no purpose on lua renderer.
     "basefg can either be six digit hexidecimal color, rgb array [0-255,0-255,0-255], or cterm code (in terminal).  Basefg is only used to calculate the default fading that should be applied to Normal text.  By default basefg is calculated as the "Normal" highlight guifg or ctermfg.
 
     let g:vimade_defaults.basefg = ''
@@ -115,11 +170,13 @@ function! vimade#GetDefaults()
     let g:vimade_defaults.fademode = 'buffers'
    
     ""@setting vimade.colbufsize
+    " *python-legacy only*: Serves no purpose on the newer renderers.
     "The number of cols left and right of the determined scroll area that should be precalculated. Reduce this value to improve performance. Default is 15 for gui vim and 5 for terminals/gvim.
    
     let g:vimade_defaults.colbufsize = g:vimade_features.has_gui_running && !(g:vimade_features.has_gui_version) ? 15 : 5
 
     ""@setting vimade.rowbufsize
+    " *python-legacy only*: Serves no purpose on the newer renderers.
     "The number of rows above and below of the determined scroll area that should be precalculated. Reduce this value to improve performance Default is 15 for gui vim and 0 for terminals/gvim.
 
     let g:vimade_defaults.rowbufsize = g:vimade_features.has_gui_running && !(g:vimade_features.has_gui_version) ? 15 : 0
@@ -135,24 +192,28 @@ function! vimade#GetDefaults()
     let g:vimade_defaults.usecursorhold = g:vimade_features.has_gui_running && !g:vimade_features.has_nvim && g:vimade_features.has_gui_version
 
     ""@setting vimade.detecttermcolors
+    " *python-legacy only*: Serves no purpose on the newer renderers.
     "Detect the terminal background and foreground colors.  This will work for Vim8 + iTerm, Tilix, Kitty, Gnome, Rxvt, and other editors that support the following query (```\033]11;?\007``` or ```\033]11;?\033\\```).  Default is 0.  This feature can cause unwanted side effects during startup and should be enabled at your own risk
 
     let g:vimade_defaults.detecttermcolors = 0
 
     ""@setting vimade.enablescroll
+    " *python-legacy only*: Serves no purpose on the newer renderers.
     "Enables fading while scrolling inactive windows.  This is only useful in gui vim and does have a performance cost.  By default this setting is enabled in gui vim and disabled for terminals.
 
-    let g:vimade_defaults.enablescroll = g:vimade_lua_renderer || ((g:vimade_features.has_gui_running || g:vimade_features.has_vimr) && !(g:vimade_features.has_gui_version))
+    let g:vimade_defaults.enablescroll = ((g:vimade_features.has_gui_running || g:vimade_features.has_vimr) && !(g:vimade_features.has_gui_version))
 
     ""@setting vimade.enablesigns
+    " *python & python-legacy only*: Serves no purpose on lua renderer.
     "Enabled by default for vim/nvim versions that support sign priority and causes signs to be faded when switching buffers.
     "Only visible signs are faded. This feature can cause performance issues
     "on older nvim/vim versions that don't support sign priority. 
     "Use signsretentionperiod to control the duration that vimade checks for sign updates after switching buffers.
 
-    let g:vimade_defaults.enablesigns = g:vimade_lua_renderer || g:vimade_features.has_sign_priority
+    let g:vimade_defaults.enablesigns = g:vimade_features.has_sign_priority
 
     ""@setting vimade.signsid
+    " *python & python-legacy only*: Serves no purpose on lua renderer.
     "The starting id that Vimade should use when creating new signs. By
     "default Vim requires numeric values to create signs and its possible that
     "collisions may occur between plugins.  If you need to override this value for
@@ -161,6 +222,7 @@ function! vimade#GetDefaults()
     let g:vimade_defaults.signsid = 13100
 
     ""@setting vimade.signsretentionperiod
+    " *python & python-legacy only*: Serves no purpose on lua renderer.
     "Amount of time in milliseconds that faded buffers should be tracked for sign changes.  Default value is 4000.
 
     let g:vimade_defaults.signsretentionperiod = 4000
@@ -172,6 +234,7 @@ function! vimade#GetDefaults()
     let g:vimade_defaults.fademinimap = 1
 
     ""@setting vimade.fadepriority
+    " *python & python-legacy only*: Serves no purpose on lua renderer.
     "Controls the highlighting priority.
     "You may want to tweak this value to make Vimade play nicely with other highlighting plugins and behaviors.
     "For example, if you want hlsearch to show results on all buffers, you may want to lower this value to 0.
@@ -180,6 +243,7 @@ function! vimade#GetDefaults()
     let g:vimade_defaults.fadepriority = 10
 
     ""@setting vimade.signspriority
+    " *python & python-legacy only*: Serves no purpose on lua renderer.
     "Controls the signs fade priority.
     "You may need to change this value if you find that not all signs are fading properly.
     "Please also open a defect if you need to tweak this value as Vimade strives to minimize manual configuration where possible.
@@ -216,17 +280,20 @@ function! vimade#GetDefaults()
 
 
     ""@setting vimade.basegroups
+    " *python & python-legacy only*: Serves no purpose on lua renderer.
     "Neovim only setting that specifies the basegroups/built-in highlight groups that will be faded using winhl when switching windows
 
     let g:vimade_defaults.basegroups = ['Folded', 'Search', 'SignColumn', 'LineNr', 'CursorLine', 'CursorLineNr', 'DiffAdd', 'DiffChange', 'DiffDelete', 'DiffText', 'FoldColumn', 'Whitespace', 'NonText', 'SpecialKey', 'Conceal', 'EndOfBuffer']
 
     ""@setting vimade.enablebasegroups
+    " *python & python-legacy only*: Serves no purpose on lua renderer.
     "Neovim only setting.  Enabled by default and allows basegroups/built-in highlight fading using winhl.  This allows fading of built-in highlights such as Folded, Search, etc.
 
     let g:vimade_defaults.enablebasegroups = 1
 
 
     ""@setting vimade.enabletreesitter
+    " *python & python-legacy only*: Serves no purpose on lua renderer.
     "EXPERIMENTAL FEATURE Neovim only setting.  Disabled by
     "default and hooks vimade into the internals of treesitter.
 
@@ -285,24 +352,18 @@ function! vimade#Disable()
   "disable vimade
   let g:vimade_running = 0
   call vimade#StopTimer()
+  call g:vimade_active_renderer.unfadeAll()
+endfunction
 
-  if g:vimade_lua_renderer
-    lua require('vimade').unfadeAll()
-  elseif exists('g:vimade_py_cmd')
-    exec g:vimade_py_cmd join([
-        \ g:vimade_py_v2_renderer ? "from vimade.v2 import bridge" : "from vimade import bridge",
-        \ "bridge.unfadeAll()",
-    \ ], "\n")
+function! vimade#UnfadeAll()
+  if winnr() == 0
+    return
   endif
+  call g:vimade_active_renderer.unfadeAll()
 endfunction
 
 function! vimade#DetectTermColors()
-  if !g:vimade_lua_renderer
-    exec g:vimade_py_cmd join([
-        \ g:vimade_py_v2_renderer ? "from vimade.v2 import bridge" : "from vimade import bridge",
-        \ "bridge.detectTermColors()",
-    \ ], "\n")
-  endif
+  call g:vimade_active_renderer.detectTermColors()
 endfunction
 
 function! vimade#Toggle()
@@ -335,10 +396,8 @@ function! vimade#OverrideVertSplit()
 endfunction
 
 function! vimade#OverrideEndOfBuffer()
-  if !g:vimade_lua_renderer
-    hi! clear EndOfBuffer
-    hi! link EndOfBuffer vimade_0
-  endif
+  hi! clear EndOfBuffer
+  hi! link EndOfBuffer vimade_0
 endfunction
 
 function! vimade#OverrideNonText()
@@ -364,6 +423,7 @@ function! vimade#Unpause()
 endfunction
 
 function! vimade#FocusGained()
+  call vimade#UpdateState()
   call vimade#Unpause()
   call vimade#InvalidateSigns()
   if g:vimade.enablefocusfading
@@ -384,28 +444,14 @@ function! vimade#InvalidateSigns()
     return
   endif
   if g:vimade_running && g:vimade_paused == 0
-    if g:vimade_lua_renderer
-      lua require('vimade').softInvalidateSigns()
-    else
-      exec g:vimade_py_cmd join([
-          \ g:vimade_py_v2_renderer ? "from vimade.v2 import bridge" : "from vimade import bridge",
-          \ "bridge.softInvalidateSigns()",
-      \ ], "\n")
-      call vimade#CheckWindows()
-    endif
+    call g:vimade_active_renderer.softInvalidateSigns()
+    call vimade#CheckWindows()
   endif
 endfunction
 
 function! vimade#Recalculate()
   if g:vimade_running && g:vimade_paused == 0
-    if g:vimade_lua_renderer
-      lua require('vimade').recalculate()
-    else
-      exec g:vimade_py_cmd join([
-          \ g:vimade_py_v2_renderer ? "from vimade.v2 import bridge" : "from vimade import bridge",
-          \ "bridge.recalculate()",
-      \ ], "\n")
-    endif
+    call g:vimade_active_renderer.recalculate()
   endif
 endfunction
 
@@ -415,16 +461,7 @@ function! vimade#Redraw()
     return
   endif
   if g:vimade_running && g:vimade_paused == 0
-    if g:vimade_lua_renderer
-      lua require('vimade').recalculate()
-    else
-      exec g:vimade_py_cmd join([
-          \ g:vimade_py_v2_renderer ? "from vimade.v2 import bridge" : "from vimade import bridge",
-          \ "bridge.unfadeAll()",
-          \ "bridge.recalculate()",
-      \ ], "\n")
-      call vimade#CheckWindows()
-    endif
+    call g:vimade_active_renderer.redraw()
   endif
 endfunction
 
@@ -442,17 +479,9 @@ endfunction
 
 function! vimade#GetInfo()
   "get debug info
-  if g:vimade_lua_renderer
-    lua vim.g.vimade_renderer_info = require('vimade').getInfo()
-  else
-    exec g:vimade_py_cmd join([
-        \ g:vimade_py_v2_renderer ? "from vimade.v2 import bridge" : "from vimade import bridge",
-        \ "import vim",
-        \ "vim.vars['vimade_renderer_info'] = bridge.getInfo()",
-    \ ], "\n")
-  endif
+  call g:vimade_active_renderer.getInfo()
   return {
-      \ 'version': '0.0.5',
+      \ 'version': '0.1.0',
       \ 'config': g:vimade,
       \ 'renderer': g:vimade_renderer_info,
       \ 'features': g:vimade_features, 
@@ -496,19 +525,7 @@ function! vimade#CheckWindows()
     return
   endif
   if g:vimade_running && g:vimade_paused == 0 && getcmdwintype() == ''
-    if g:vimade_lua_renderer
-      lua require('vimade').update()
-    elseif g:vimade_py_v2_renderer
-      exec g:vimade_py_cmd join([
-          \ "from vimade.v2 import bridge",
-          \ "bridge.update()",
-      \ ], "\n")
-    else
-      exec g:vimade_py_cmd join([
-          \ "from vimade import bridge",
-          \ "bridge.update({'activeBuffer': str(vim.current.buffer.number), 'activeTab': '".tabpagenr()."', 'activeWindow': '".win_getid(winnr())."'})",
-      \ ], "\n")
-    endif
+    call g:vimade_active_renderer.update()
   endif
 endfunction
 
@@ -519,14 +536,7 @@ function! vimade#softInvalidateBuffer(bufnr)
   endif
   "Don't check paused condition because the application may have not been regained and triggered FocusGained event
   if g:vimade_running
-    if g:vimade_lua_renderer
-      lua require('vimade').softInvalidateBuffer()
-    else
-      exec g:vimade_py_cmd join([
-          \ g:vimade_py_v2_renderer ? "from vimade.v2 import bridge" : "from vimade import bridge",
-          \ "bridge.softInvalidateBuffer('".a:bufnr."')",
-      \ ], "\n")
-    endif
+    call g:vimade_active_renderer.softInvalidateBuffer()
   endif
   call vimade#DeferredCheckWindows()
 endfunction
@@ -601,6 +611,7 @@ function! vimade#UpdateState()
   let g:vimade.__background = &background
   let g:vimade.__colorscheme = exists('g:colors_name') ? g:colors_name : ""
   let g:vimade.__termguicolors = &termguicolors
+  call vimade#SetupRenderer()
 endfunction
 
 function! vimade#Tick(num)
@@ -713,5 +724,144 @@ function! vimade#Init()
     endtry
   endif
 endfunction
+
+" Variables
+let g:vimade_eval_ret = []
+let g:vimade_active_renderer = 0
+let g:vimade_python_setup = 0
+
+"Empty Renderer START
+let s:empty_renderer = {
+    \ 'name': 'empty',
+    \ 'detectTermColors': function('vimade#Empty'),
+    \ 'getInfo': function('vimade#Empty'),
+    \ 'recalculate': function('vimade#Empty'),
+    \ 'redraw': function('vimade#Empty'),
+    \ 'unfadeAll': function('vimade#Empty'),
+    \ 'update': function('vimade#Empty'),
+    \ 'softInvalidateBuffer': function('vimade#Empty'),
+    \ 'softInvalidateSigns': function('vimade#Empty'),
+    \ }
+"Empty Renderer END
+"
+let g:vimade_active_renderer = s:empty_renderer 
+
+
+" Lua Renderer START
+function! s:DetectTermColors_Lua()
+  " empty
+endfunction
+function! s:Recalculate_Lua()
+  lua require('vimade').recalculate()
+endfunction
+function! s:Redraw_Lua()
+  lua require('vimade').recalculate()
+endfunction
+function! s:UnfadeAll_Lua()
+  lua require('vimade').unfadeAll()
+endfunction
+function! s:Update_Lua()
+  lua require('vimade').update()
+endfunction
+function! s:SoftInvalidateBuffer_Lua()
+  lua require('vimade').softInvalidateBuffer()
+endfunction
+function! s:SoftInvalidateSigns_Lua()
+  " empty
+endfunction
+function! s:GetInfo_Lua()
+  lua vim.g.vimade_renderer_info = require('vimade').getInfo()
+endfunction
+let s:lua_renderer = {
+  \ 'name': 'lua',
+  \ 'detectTermColors': function('s:DetectTermColors_Lua'),
+  \ 'getInfo': function('s:GetInfo_Lua'),
+  \ 'recalculate': function('s:Recalculate_Lua'),
+  \ 'redraw': function('s:Redraw_Lua'),
+  \ 'unfadeAll': function('s:UnfadeAll_Lua'),
+  \ 'update': function('s:Update_Lua'),
+  \ 'softInvalidateBuffer': function('s:SoftInvalidateBuffer_Lua'),
+  \ 'softInvalidateSigns': function('s:SoftInvalidateSigns_Lua'),
+  \ }
+" Lua Renderer END
+
+" Python Renderer START
+function! s:DetectTermColors_Python()
+  " empty
+endfunction
+function! s:GetInfo_Python()
+  exec g:vimade_py_cmd "from vimade.v2 import bridge; import vim; vim.vars['vimade_renderer_info'] = bridge.getInfo()"
+endfunction
+function! s:Recalculate_Python()
+  exec g:vimade_py_cmd "from vimade.v2 import bridge; bridge.recalculate()"
+endfunction
+function! s:Redraw_Python()
+  exec g:vimade_py_cmd "from vimade.v2 import bridge; bridge.unfadeAll(); bridge.recalculate()"
+  call vimade#CheckWindows()
+endfunction
+function! s:UnfadeAll_Python()
+  exec g:vimade_py_cmd "from vimade.v2 import bridge; bridge.unfadeAll()"
+endfunction
+function! s:Update_Python()
+  exec g:vimade_py_cmd "from vimade.v2 import bridge; bridge.update()"
+endfunction
+function! s:SoftInvalidateBuffer_Python()
+  exec g:vimade_py_cmd "from vimade.v2 import bridge; bridge.invalidate()"
+endfunction
+function! s:SoftInvalidateSigns_Python()
+  exec g:vimade_py_cmd "from vimade.v2 import bridge; bridge.invalidate()"
+endfunction
+let s:python_renderer = {
+  \ 'name': 'python',
+  \ 'detectTermColors': function('s:DetectTermColors_Python'),
+  \ 'getInfo': function('s:GetInfo_Python'),
+  \ 'recalculate': function('s:Recalculate_Python'),
+  \ 'redraw': function('s:Redraw_Python'),
+  \ 'unfadeAll': function('s:UnfadeAll_Python'),
+  \ 'update': function('s:Update_Python'),
+  \ 'softInvalidateBuffer': function('s:SoftInvalidateBuffer_Python'),
+  \ 'softInvalidateSigns': function('s:SoftInvalidateSigns_Python'),
+  \ }
+" Python Renderer END
+
+" PythonLegacy Renderer START
+function! s:DetectTermColors_PythonLegacy()
+  exec g:vimade_py_cmd "from vimade import bridge; bridge.detectTermColors()"
+endfunction
+function! s:GetInfo_PythonLegacy()
+  exec g:vimade_py_cmd "from vimade import bridge; import vim; vim.vars['vimade_renderer_info'] = bridge.getInfo()"
+endfunction
+function! s:Recalculate_PythonLegacy()
+  exec g:vimade_py_cmd "from vimade import bridge; bridge.recalculate()"
+endfunction
+function! s:Redraw_PythonLegacy()
+  exec g:vimade_py_cmd "from vimade import bridge; bridge.unfadeAll(); bridge.recalculate()"
+  call vimade#CheckWindows()
+endfunction
+function! s:UnfadeAll_PythonLegacy()
+  exec g:vimade_py_cmd "from vimade import bridge; bridge.unfadeAll()"
+endfunction
+function! s:Update_PythonLegacy()
+  exec g:vimade_py_cmd "from vimade import bridge; bridge.update({'activeBuffer': str(vim.current.buffer.number), 'activeTab': '".tabpagenr()."', 'activeWindow': '".win_getid(winnr())."'})"
+endfunction
+function! s:SoftInvalidateBuffer_PythonLegacy()
+  exec g:vimade_py_cmd "from vimade import bridge; bridge.softInvalidateBuffer('".a:bufnr."')"
+endfunction
+function! s:SoftInvalidateSigns_PythonLegacy()
+  exec g:vimade_py_cmd "from vimade import bridge; bridge.softInvalidateSigns()"
+endfunction
+let s:python_legacy_renderer = {
+  \ 'name': 'python_legacy',
+  \ 'detectTermColors': function('s:DetectTermColors_PythonLegacy'),
+  \ 'getInfo': function('s:GetInfo_PythonLegacy'),
+  \ 'recalculate': function('s:Recalculate_PythonLegacy'),
+  \ 'redraw': function('s:Redraw_PythonLegacy'),
+  \ 'unfadeAll': function('s:UnfadeAll_PythonLegacy'),
+  \ 'update': function('s:Update_PythonLegacy'),
+  \ 'softInvalidateBuffer': function('s:SoftInvalidateBuffer_PythonLegacy'),
+  \ 'softInvalidateSigns': function('s:SoftInvalidateSigns_PythonLegacy'),
+  \ }
+" PythonLegacy Renderer END
+
 
 call vimade#Init()

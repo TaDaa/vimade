@@ -10,13 +10,8 @@ def detectTermColors():
 def unfadeAll():
   FADER.unfadeAll()
 
-def softInvalidateBuffer(bufnr):
-  # distinction between buffer and signs is not needed, this basically just mean
-  # recheck the screen.
-  FADER.invalidate()
-
-def softInvalidateSigns():
-  # distinction between buffer and signs is not needed, this basically just mean
+def invalidate():
+  # distinction between buffer and signs invalidation is not needed, this basically just mean
   # recheck the screen.
   FADER.invalidate()
 

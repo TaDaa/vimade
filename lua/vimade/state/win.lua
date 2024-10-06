@@ -4,6 +4,7 @@ local NAMESPACE = require('vimade.state.namespace')
 local LINK = require('vimade.config_helpers.link')
 local BLOCKLIST = require('vimade.config_helpers.blocklist')
 local HIGHLIGHTER = require('vimade.highlighter')
+local COMPAT = require('vimade.util.compat')
 
 M.cache = {}
 M.current = nil
@@ -153,7 +154,7 @@ M.refresh = function (wininfo, skip_link)
   win.linked = linked
 
   -- check namespaces
-  local ns = vim.api.nvim_get_hl_ns({winid = win.winid})
+  local ns = COMPAT.nvim_get_hl_ns({winid = win.winid})
   local real_ns
   if NAMESPACE.is_vimade_ns(ns) == true then
     real_ns = vim.w[win.winid]._vimade_real_ns or 0
@@ -218,9 +219,9 @@ M.refresh = function (wininfo, skip_link)
         HIGHLIGHTER.set_highlights(win)
         M.fading_cache[win.ns.vimade_ns] = true
       end
-      vim.api.nvim_win_set_hl_ns(win.winid, win.ns.vimade_ns)
+      COMPAT.nvim_win_set_hl_ns(win.winid, win.ns.vimade_ns)
     else
-      vim.api.nvim_win_set_hl_ns(win.winid, win.real_ns)
+      COMPAT.nvim_win_set_hl_ns(win.winid, win.real_ns)
     end
   end
 

@@ -138,7 +138,7 @@ class Namespace:
     win = self.win
     if not cleanup:
       if not GLOBALS.is_nvim and win.window and 'wincolor' in win.window.options:
-        win.window.options['wincolor'] = win.original_wincolor
+        win.window.options['wincolor'] = win.original_wincolor or ''
     self.remove_basegroups()
 
     # after basegroups due to ns change
