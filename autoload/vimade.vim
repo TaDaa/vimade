@@ -83,6 +83,7 @@ function! vimade#GetFeatures()
     endtry
     let g:vimade_features.has_python3 = has('python3')
     let g:vimade_features.has_gui_version = !has('nvim') && (execute('version')=~"GUI version")
+    let g:vimade_features.has_timer_start = exists('*timer_start')
     let g:vimade_features.has_sign_getplaced = exists('*sign_getplaced')
 
     " Below are for lua renderer
@@ -391,32 +392,32 @@ function! vimade#Enable()
   if !exists('g:vimade_init')
     call vimade#Init()
   endif
-  call vimade#CheckWindows()
+  call vimade#DeferredCheckWindows()
   call vimade#StartTimer()
 endfunction
 
 function! vimade#WinEnable()
   if exists('w:vimade_disabled')
     unlet w:vimade_disabled
-    call vimade#CheckWindows()
+    call vimade#DeferredCheckWindows()
   endif
 endfunction
 
 function! vimade#WinDisable()
   let w:vimade_disabled=1
-  call vimade#CheckWindows()
+  call vimade#DeferredCheckWindows()
 endfunction
 
 function! vimade#BufEnable()
   if exists('b:vimade_disabled')
     unlet b:vimade_disabled
-    call vimade#CheckWindows()
+    call vimade#DeferredCheckWindows()
   endif
 endfunction
 
 function! vimade#BufDisable()
   let b:vimade_disabled=1
-  call vimade#CheckWindows()
+  call vimade#DeferredCheckWindows()
 endfunction
 
 function! vimade#Disable()
@@ -519,7 +520,7 @@ function! vimade#InvalidateSigns()
   endif
   if g:vimade_running && g:vimade_paused == 0
     call g:vimade_active_renderer.softInvalidateSigns()
-    call vimade#CheckWindows()
+    call vimade#DeferredCheckWindows()
   endif
 endfunction
 
@@ -578,16 +579,28 @@ endfunction
 
 function! vimade#FadeLevel(level)
   let g:vimade.fadelevel = a:level
-  call vimade#CheckWindows()
+  call vimade#DeferredCheckWindows()
 endfunction
 
 function! vimade#FadePriority(priority)
   let g:vimade.fadepriority = a:priority
-  call vimade#CheckWindows()
+  call vimade#DeferredCheckWindows()
 endfunction
 
 function! vimade#DeferredCheckWindows()
-  call timer_start(0, 'vimade#Tick')
+  if g:vimade_features.has_timer_start
+    if exists('g:vimade_deferred_timer')
+      return
+    endif
+    let g:vimade_deferred_timer = timer_start(0, 'vimade#DeferredTick')
+  else
+    return vimade#CheckWindows()
+  endif
+endfunction
+
+function! vimade#DeferredTick(num)
+  unlet g:vimade_deferred_timer
+  call vimade#Tick(0)
 endfunction
 
 function! vimade#CheckWindows()
@@ -625,13 +638,8 @@ function! vimade#UpdateEvents()
       " executed properly when called directly off and autoevent. This is
       " easily reproduceable when using netrw...
       " Using async here should work fine even in legacy.
-      if has('nvim')
-        au WinEnter,BufEnter * call vimade#DeferredCheckWindows()
-        au OptionSet diff call vimade#DeferredCheckWindows()
-      else
-        au WinEnter,BufEnter * call vimade#CheckWindows()
-        au OptionSet diff call vimade#CheckWindows()
-      endif
+      au WinEnter,BufEnter * call vimade#DeferredCheckWindows()
+      au OptionSet diff call vimade#DeferredCheckWindows()
       au ColorScheme * call vimade#Redraw()
       au FileChangedShellPost * call vimade#softInvalidateBuffer(expand("<abuf>"))
       if g:vimade.usecursorhold
@@ -708,12 +716,12 @@ endfunction
 function! vimade#FadeActive()
     "immediately fade current buffer
     let g:vimade_fade_active=1
-    call vimade#CheckWindows()
+    call vimade#DeferredCheckWindows()
 endfunction
 
 function! vimade#UnfadeActive()
     let g:vimade_fade_active=0
-    call vimade#CheckWindows()
+    call vimade#DeferredCheckWindows()
 endfunction
 
 function! vimade#GetNvimHi(id)
@@ -783,7 +791,7 @@ function! vimade#Init()
 
   "check immediately
   if l:already_running == 0
-    call vimade#CheckWindows()
+    call vimade#DeferredCheckWindows()
   else
     call vimade#Redraw()
   endif
