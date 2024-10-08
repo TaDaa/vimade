@@ -370,7 +370,7 @@ class Namespace:
         for row in range(first_row, grid_ln):
           grid[row] = None
         if grid_ln < buf_ln:
-          coords['grid'] += grid + [None]*(buf_ln-grid_ln)
+          coords['grid'] = grid + [None]*(buf_ln-grid_ln)
         if grid_ln > buf_ln:
           coords['grid'] = grid[0:buf_ln]
 
