@@ -29,6 +29,7 @@ function dump(t,i)
 end
 
 function M.get_to_eval (bufnr, to_eval)
+    bufnr = tonumber(bufnr)
     if vim.treesitter.highlighter.active[bufnr] == nil then
         return
     end
@@ -60,14 +61,11 @@ function M.get_to_eval (bufnr, to_eval)
         end
         rows[row] = {col,end_col}
     end
-    endRow = endRow + 1
 
     highlighter.tree:for_each_tree(function (tstree, tree)
         if not tstree then return end
         local root_node = tstree:root()
         local root_start_row, _, root_end_row, _ = root_node:range()
-
-        if root_start_row > startRow or root_end_row < startRow then return end
 
         local highlighter_query = highlighter:get_query(tree:lang())
 
@@ -77,7 +75,7 @@ function M.get_to_eval (bufnr, to_eval)
         for capture, node in matches do
             if capture == nil then
                 -- pass
-            end
+            else
                 local capture_name = query.captures[capture]
                 local hl = highlighter_query.hl_cache[capture]
                 local rgb= nil
@@ -118,7 +116,7 @@ function M.get_to_eval (bufnr, to_eval)
                         end
                     end
                 end
-                ::next::
+            end
         end
     end)
     return result

@@ -63,6 +63,10 @@ M.deep_copy = function (value)
   return result
 end
 
+M.shallow_copy = function (value)
+  return M.shallow_extend({}, value)
+end
+
 M.shallow_extend = function (base, target)
   if target ~= nil then
     for key, value in pairs(target) do

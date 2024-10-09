@@ -8,7 +8,6 @@ local COMPAT = require('vimade.util.compat')
 
 M.cache = {}
 M.current = nil
-
 M.fading_cache = {
   tick_id = -1
 }
@@ -62,11 +61,15 @@ M.__create = function (winid)
       linked = false,
       blocked = false,
       faded = false,
+      hi_key = '',
       is_active_win = nil,
       is_active_buf = nil,
       real_ns = nil,
       ns = nil,
       state = GLOBALS.READY,
+      modifiers = {},
+      -- raw global modifiers that were used to build this win
+      _global_modifiers = {},
       buf_opts = function(self)
         return vim.bo[self.bufnr]
       end,
@@ -180,33 +183,43 @@ M.refresh = function (wininfo, skip_link)
   }, win, GLOBALS.CHANGED))
 
 
+  local rerun_modifiers = false
   if should_fade == true then
-    local tint
-    local fadelevel
-    if type(GLOBALS.tint) == 'function' then
-      tint = GLOBALS.tint(win, M.current)
+    if #win._global_modifiers ~= #GLOBALS.modifiers then
+      rerun_modifiers = true
     else
-      tint = GLOBALS.tint
+      for i, mod in ipairs(GLOBALS.modifiers) do
+        if win._global_modifiers[i] ~= mod then
+          rerun_modifiers = true
+          break
+        end
+      end
     end
-    if type(GLOBALS.fadelevel) == 'function' then
-      fadelevel = GLOBALS.fadelevel(win, M.current)
-    else
-      fadelevel = GLOBALS.fadelevel
+    if rerun_modifiers == true then
+      win.modifiers = {}
+      win._global_modifiers = {}
+      for i, mod in ipairs(GLOBALS.modifiers) do
+        win._global_modifiers[i] = mod
+        win.modifiers[i] = mod(win)
+      end
     end
-    win.state = bit.bor(win.state, _update_state({
-      fadelevel = fadelevel,
-      tint = tint,
-    }, win, GLOBALS.CHANGED))
 
+    local hi_key = ''
+    for i, mod in ipairs(win.modifiers) do
+      mod.before()
+      hi_key = hi_key .. '#' .. mod.key(i)
+    end
 
     if not win.ns
       or not GLOBALS.nohlcheck
+      or win.hi_key ~= hi_key
       or GLOBALS.tick_state >= GLOBALS.RECALCULATE then
-      local ns = NAMESPACE.get_replacement(win, real_ns)
+      local ns = NAMESPACE.get_replacement(win, real_ns, hi_key)
       if ns.modified == true then
         win.state = bit.bor(GLOBALS.CHANGED, win.state)
       end
       win.ns = ns
+      win.hi_key = hi_key
     end
   end
 

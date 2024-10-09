@@ -56,4 +56,127 @@ M.toRgb = function (color, is256)
   return {r,g,b}
 end
 
+M.interpolate24b = function(source, target, fade)
+  local target_r = bit.rshift(bit.band(target, 0xFF0000), 16)
+  local target_g = bit.rshift(bit.band(target, 0x00FF00), 8)
+  local target_b = bit.band(target, 0x0000FF)
+  local r = M.interpolateLinear(bit.rshift(bit.band(source, 0XFF0000), 16), target_r, fade)
+  local g = M.interpolateLinear(bit.rshift(bit.band(source, 0X00FF00), 8), target_g, fade)
+  local b = M.interpolateLinear(bit.band(source, 0X0000FF), target_b, fade)
+  return bit.lshift(r, 16) + bit.lshift(g, 8) + b
+end
+
+M.interpolateLinear = function(source, target, fade)
+  return math.floor(target + (source - target) * fade)
+end
+
+M.interpolate256 = function(source, target, fade, prefer_color)
+  prefer_color = prefer_color or false
+  local source = type(source) == 'table' and source or M.RGB_256[source+1]
+  local to = type(target) == 'table' and target or M.RGB_256[target+1]
+  local r = 0
+  local g = 0
+  local b = 0
+  if source == to then
+    r = source[1]
+    g = source[2]
+    b = source[3]
+  else
+    local target = {math.floor(to[1]+(source[1]-to[1])*fade), math.floor(to[2]+(source[2]-to[2])*fade), math.floor(to[3]+(source[3]-to[3])*fade)}
+    local dir = (to[1]+to[2]+to[3]) / 3 - (source[1]+source[2]+source[3]) / 3
+    local i = 0
+    local rgb_result = {0,0,0}
+    local grey_result = {0,0,0}
+    for k, v in ipairs(target) do
+        i = i + 1
+        local j = 2
+        while j <= M.RGB_THRESHOLDS.length do
+          if v > M.RGB_THRESHOLDS[j] then
+            j = j + 1
+          else
+            if v <= (M.RGB_THRESHOLDS[j]/2.5 + M.RGB_THRESHOLDS[j-1]/2) then
+              rgb_result[i] = j - 1 
+            else
+              rgb_result[i] = j
+            end
+            break
+          end
+        end
+        j = 2
+        while j <= M.GREY_THRESHOLDS.length do
+          if v > M.GREY_THRESHOLDS[j] then
+            j = j+1
+          else
+            if v < (M.GREY_THRESHOLDS[j]/2.5 + M.GREY_THRESHOLDS[j-1]/2) then
+              grey_result[i] = j - 1 
+            else
+              grey_result[i] = j
+            end
+            break
+          end
+        end
+    end
+    r = rgb_result[1]
+    g = rgb_result[2]
+    b = rgb_result[3]
+    local r0 = target[1]
+    local g0 = target[2]
+    local b0 = target[3]
+    local thres = 25
+    dir = (dir > thres) and -1 or 1
+    if dir < 0 then
+      r = r + dir
+      g = g + dir
+      b = b + dir
+    end
+    if r == g and g == b and r == b then
+      if (r0 >= g0 or r0 >= b0) and (r0 <= g0 or r0 <= b0) then
+        if g0 - thres > r0 then g = rgb_result[2]+dir end
+        if b0 - thres > r0 then b = rgb_result[3]+dir end
+        if g0 + thres < r0 then g = rgb_result[2]-dir end
+        if b0 + thres < r0 then b = rgb_result[3]-dir end
+      elseif (g0 >= r0 or g0 >= b0) and (g0 <= r0 or g0 <= b0) then
+        if r0 - thres > g0 then r = rgb_result[1]+dir end
+        if b0 - thres > g0 then b = rgb_result[3]+dir end
+        if r0 + thres < g0 then r = rgb_result[1]-dir end
+        if b0 + thres < g0 then b = rgb_result[3]-dir end
+      elseif (b0 >= g0 or b0 >= r0) and (b0 <= g0 or b0 <= r0) then
+        if g0 - thres > b0 then g = rgb_result[2]+dir end
+        if r0 - thres > b0 then r = rgb_result[1]+dir end
+        if g0 + thres < b0 then g = rgb_result[2]-dir end
+        if r0 + thres < b0 then r = rgb_result[1]-dir end
+      end
+    end
+    if r < 2 or g < 2 or b < 2 then
+      r = r + 1
+      g = g + 1
+      b = b + 1
+    end
+    if r == 8 or g == 8 or b == 8 then
+      r = r - 1
+      g = g - 1
+      b = b - 1
+    end
+    r = math.min(math.max(r, 2), 7)
+    g = math.min(math.max(g, 2), 7)
+    b = math.min(math.max(b, 2), 7)
+    r = M.RGB_THRESHOLDS[r]
+    g = M.RGB_THRESHOLDS[g]
+    b = M.RGB_THRESHOLDS[b]
+
+
+    local grey = math.max(grey_result[1], grey_result[2], grey_result[3])
+    grey = math.min(math.max(grey, 2), M.GREY_THRESHOLDS.length - 1)
+    grey = M.GREY_THRESHOLDS[grey]
+
+    if math.abs(grey-r0) + math.abs(grey - g0) + math.abs(grey - b0)
+      < (math.abs(r-r0) + math.abs(g - g0) + math.abs(b - b0)) / (prefer_color == true and 100 or 1.2) then
+      r = grey
+      g = grey
+      b = grey
+    end
+  end
+  return M.LOOKUP_256_RGB[r .. '-' .. g .. '-' .. b]
+end
+
 return M

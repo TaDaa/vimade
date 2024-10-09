@@ -1,5 +1,4 @@
 local M = {}
-local COLORS = require('vimade.colors')
 local TYPE = require('vimade.util.type')
 local COMPAT = require('vimade.util.compat')
 local GLOBALS
@@ -10,8 +9,9 @@ end
 
 M.key_lookup = {}
 M.real_ns_lookup = {}
-M.vimade_ns_lookup = {}
+M.vimade_active_ns_lookup = {}
 M.winid_lookup = {}
+M.used_ns = {}
 M.free_ns = {}
 
 local ids = 0
@@ -20,8 +20,9 @@ local get_next_id = function ()
   return ids
 end
 
-M.get_replacement = function (win, real_ns, skip_create)
-  local key = real_ns .. ':' .. (win.fadelevel or '') .. ':' .. COLORS.get_tint_key(win.tint) or ''
+M.get_replacement = function (win, real_ns, hi_key, skip_create)
+  local key = real_ns .. ':' .. hi_key
+
   local ns = M.key_lookup[key]
   if ns == nil then
     if skip_create then
@@ -34,7 +35,8 @@ M.get_replacement = function (win, real_ns, skip_create)
       windows = {},
     }
     M.key_lookup[key] = ns
-    M.vimade_ns_lookup[ns.vimade_ns] = ns
+    M.vimade_active_ns_lookup[ns.vimade_ns] = ns
+    M.used_ns[ns.vimade_ns] = true
   end
 
   local current_win_ns = M.winid_lookup[win.winid]
@@ -65,7 +67,7 @@ M.check_ns_modified = function(ns)
 end
 
 M.is_vimade_ns = function (vimade_ns)
-  return M.vimade_ns_lookup[vimade_ns] ~= nil
+  return M.used_ns[vimade_ns] ~= nil
 end
 
 M.from_winid = function (winid)
@@ -79,7 +81,7 @@ M.clear_winid = function (winid)
     current_win_ns.windows[winid] = nil
     if not next(current_win_ns.windows) then
       M.key_lookup[current_win_ns.key] = nil
-      M.vimade_ns_lookup[current_win_ns.vimade_ns] = nil
+      M.vimade_active_ns_lookup[current_win_ns.vimade_ns] = nil
       table.insert(M.free_ns, current_win_ns.vimade_ns)
     end
   end

@@ -1,5 +1,6 @@
 local M = {}
-local TINT = require('vimade.config_helpers.tint')
+local FADE = require('vimade.modifiers.fade')
+local TINT = require('vimade.modifiers.tint')
 local TYPE = require('vimade.util.type')
 local MATCHERS = require('vimade.util.matchers')
 local NAMESPACE = require('vimade.state.namespace')
@@ -15,6 +16,7 @@ local next_tick_id = function ()
 end
 
 NAMESPACE.__init(M)
+FADE.__init(M)
 TINT.__init(M)
 
 M.READY = 0
@@ -34,7 +36,6 @@ M.normalncid = 0
 M.fademode = 'buffers'
 M.fade_windows = false
 M.fade_buffers = false
-M.tint = nil
 M.fadelevel = 0
 M.fademinimap = false
 M.groupdiff = true
@@ -65,21 +66,33 @@ local OTHER = {
 local DEFAULTS = {
   basebg = nil,
   fademode = 'buffers',
-  -- todo what should the default be?
+  -- disabled for absolute peformance
+  -- can be enabled to re-check highlights each tick
   nohlcheck = true,
-  tint = TINT.DEFAULT,
-  --tint = function()
+  -- TODO update this doc
+  -- tint must be an object where the values tinting functions ()
+  -- object is also accepted and passed to the DEFAULT tinter
+  -- tinters are executed in order (from index=0 first), the previous value is passed as highlight
+  -- to the next tinter
+  --
+  -- example:
+  -- {
+    -- id = function() end -- not required by default your function will use the object key as the id.  However if you want your tint to be recalculated based on an external change the id needs to return a different value (think of it as a cache_key)
+    -- interpolate = function (name, highlight, target, optional_win) end
+    --   retur
+    -- }
+  --
+  -- 
+  --tint = {TINT.DEFAULT},
+  --tint = {function(win)
     --return {
       --bg = {
         --rgb = {math.random(0,255), math.random(0,255), math.random(0,255)},
         --intensity = math.random()
       --}
-    --}
+    --}}
   --end,
-  fadelevel = 0.4,
-  --fadelevel = function ()
-    --return math.random()
-  --end,
+  fadelevel = 0.4, --or function(win) -> value
   fademinimap = nil,
   groupdiff = true,
   groupscrollbind = false,
@@ -121,8 +134,10 @@ local DEFAULTS = {
         relative = true
       },
     },
-    -- include_alternative matchers if desired
-    -- function(win) end
+  },
+  modifiers = {
+    TINT.DEFAULT,
+    FADE.DEFAULT,
   }
 }
 
@@ -159,7 +174,7 @@ end
 
 M.refresh_global_ns = function ()
   if M.global_ns == nil then
-    M.global_ns = NAMESPACE.get_replacement({winid= 'g'}, 0)
+    M.global_ns = NAMESPACE.get_replacement({winid= 'g'}, 0, 0)
   end
     NAMESPACE.check_ns_modified(M.global_ns)
   if M.global_ns.modified == true then
@@ -229,6 +244,7 @@ M.refresh = function ()
   M.fademinimap = TYPE.num_to_bool(vimade.fademinimap, DEFAULTS.fademinimap)
   M.tint = vimade.tint or DEFAULTS.tint
   M.fadelevel = vimade.fadelevel or DEFAULTS.fadelevel
+  M.modifiers = vimade.modifiers or DEFAULTS.modifiers
   if type(vimade.fadeconditions) == 'table' then
     M.fadeconditions = vimade.fadeconditions
   elseif type(vimade.fadeconditions) == 'function' then

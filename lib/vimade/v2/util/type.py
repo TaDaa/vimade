@@ -10,6 +10,9 @@ def deep_copy(obj):
   else:
     return obj
 
+def shallow_copy(obj):
+  return shallow_extend({}, obj)
+
 def shallow_extend(base, target):
   if type(target) == dict: 
     for key, value in target.items():

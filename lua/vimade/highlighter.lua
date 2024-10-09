@@ -1,5 +1,4 @@
 local M = {}
-local COLORS = require('vimade.colors')
 local GLOBALS = require('vimade.state.globals')
 local TYPE = require('vimade.util.type')
 
@@ -26,7 +25,10 @@ end
 M.set_highlights = function(win)
   local fade = win.fadelevel
   local tint = win.tint
+  local default_fg = GLOBALS.is_dark and 0xFFFFFF or 0x000000
   local default_bg = GLOBALS.is_dark and 0x000000 or 0xFFFFFF
+  local default_sp = default_fg
+  local default_ctermfg = GLOBALS.is_dark and 231 or 0
   local default_ctermbg = GLOBALS.is_dark and 0 or 231
   local highlights = get_highlights(win, {})
   local normal_nc = TYPE.deep_copy(highlights.NormalNC or {})
@@ -43,73 +45,41 @@ M.set_highlights = function(win)
     end
   end
 
+  local normal_fg = normal.fg or default_fg
   local normal_bg = normal.bg or default_bg
+  local normal_sp = normal.sp or default_sp
+  local normal_ctermfg = normal.ctermfg or default_ctermfg
   local normal_ctermbg = normal.ctermbg or default_ctermbg
 
-  local target = {
+  local normal_target = {
+    fg = normal_fg,
     bg = normal_bg,
-    fg = normal_bg,
-    sp = normal_bg,
-    ctermfg = normal_ctermbg,
+    sp = normal_sp,
+    ctermfg = normal_ctermfg,
     ctermbg = normal_ctermbg,
   }
 
 
-  if tint and (tint.bg or tint.fg or tint.sp) then
-    local tint_out = COLORS.tint(tint, normal_bg, normal_ctermbg)
-    if tint_out.fg ~= nil then
-      target.fg = tint_out.fg
-    end
-    if tint_out.ctermfg ~= nil then
-      target.ctermfg = tint_out.ctermfg
-    end
-    if tint_out.sp ~= nil then
-      target.sp = tint_out.sp
-    end
-    if tint_out.bg ~= nil then
-      target.bg = tint_out.bg
-    end
-    if tint_out.ctermbg ~= nil then
-      target.ctermbg = tint_out.ctermbg
-    end
-  end
-
+  modifiers = win.modifiers
   for name, highlight in pairs(highlights) do
     if name == 'NormalNC' or name =='Normal' then
       --pass
     else
-      local hi = M.create_highlight(highlight, target, fade)
+      -- copies area required here as user mutations are expected
+      local hi = TYPE.shallow_copy(highlight)
+      local hi_target = TYPE.shallow_copy(normal_target)
+      for i, mod in ipairs(modifiers) do
+        mod.modify(hi, hi_target)
+      end
+
       vim.api.nvim_set_hl(win.ns.vimade_ns, name, hi)
     end
   end
-  normal = M.create_highlight(normal, target, fade)
+  for i, mod in ipairs(modifiers) do
+    mod.modify(normal, normal_target)
+  end
   vim.api.nvim_set_hl(win.ns.vimade_ns, 'NormalNC' , normal)
   vim.api.nvim_set_hl(win.ns.vimade_ns, 'Normal' , normal)
   vim.api.nvim_set_hl(win.ns.vimade_ns, 'vimade_0' , normal)
 end
-
-M.create_highlight = function(highlight, target, fade)
-  local result = TYPE.deep_copy(highlight)
-  if result.fg ~= nil then
-    result.fg = COLORS.interpolate24b(highlight.fg, target.fg, fade)
-  end
-  if result.bg ~= nil then
-    result.bg = COLORS.interpolate24b(highlight.bg, target.bg, fade)
-  end
-  if result.sp ~= nil then
-    result.sp = COLORS.interpolate24b(highlight.sp, target.sp, fade)
-  end
-  if result.blend ~= nil then
-    --always assume blend is 100
-    result.blend = COLORS.interpolateLinear(highlight.blend, 100, fade)
-  end
-  if result.ctermfg ~= nil then
-    result.ctermfg = COLORS.interpolate256(highlight.ctermfg, target.ctermfg, fade)
-  end
-  if result.ctermbg ~= nil then
-    result.ctermbg = COLORS.interpolate256(highlight.ctermbg, target.ctermbg, fade)
-  end
-  return result
-end
-
 return M

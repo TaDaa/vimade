@@ -9,7 +9,6 @@ from vimade.v2.state import globals as GLOBALS
 from vimade.v2.state import namespace as NAMESPACE
 from vimade.v2.config_helpers import link as LINK
 from vimade.v2.config_helpers import blocklist as BLOCKLIST
-from vimade.v2 import colors as COLORS
 from vimade.v2.util import ipc as IPC
 from vimade.v2.util.promise import Promise,all
 
@@ -146,7 +145,8 @@ class WinState(object):
       'is_active_win': None,
       'is_active_buf': None,
       'state': GLOBALS.READY,
-
+      'modifiers': [],
+      '_global_modifiers': [],
       # python-only (needed to due to difference in renderes)
       'window': None,
       'buffer': None,
@@ -171,7 +171,7 @@ class WinState(object):
       'botline': -1,
       'textoff': -1,
       'wincolor': None,
-      'wincolorhl': [],
+      'wincolorhl': {'ctermfg': None, 'ctermbg': None, 'fg': None, 'bg': None, 'sp': None},
       'winhl': '',
       'original_wincolor': '',
       'original_winhl': '',
@@ -312,16 +312,15 @@ class WinState(object):
     is_explorer = 'coc-explorer' in self.buf_name or 'NERD' in self.buf_name
     is_minimap = 'vim-minimap' in self.buf_name or '-MINIMAP-' in self.buf_name
 
-    wincolorhl = COLORS.convertWincolorHi(wincolorhl, normalhl)
+    wincolorhl = HIGHLIGHTER.defaultWincolorHi(wincolorhl, normalhl)
 
 
     wincolorhl_changed = False
     # we need to ensure that wincolorhl for the original_wincolor doesn't get borked
     if not was_vimade_wincolor:
-      wincolorhl_changed = len(wincolorhl) != len(self.wincolorhl)
       if not wincolorhl_changed:
-        for i, hl in enumerate(wincolorhl):
-          if self.wincolorhl[i] != hl:
+        for key, hl in wincolorhl.items():
+          if self.wincolorhl[key] != hl:
             wincolorhl_changed = True
             break
       self.wincolorhl = wincolorhl
@@ -397,19 +396,31 @@ class WinState(object):
       'faded': should_fade == True,
     }, self, GLOBALS.CHANGED)
 
+
+    rerun_modifiers = False
+    modifiers = self.modifiers
+    global_modifiers = GLOBALS.modifiers
+    _global_modifiers = self._global_modifiers
+    if len(_global_modifiers) != len(global_modifiers):
+      rerun_modifiers = True
+    else:
+      for i, mod in enumerate(global_modifiers):
+        if _global_modifiers[i] != mod:
+          rerun_modifiers = True
+          break
+    if rerun_modifiers == True:
+      self.modifiers = modifiers = []
+      self._global_modifiers = _global_modifiers =  []
+      for mod in global_modifiers:
+        _global_modifiers.append(mod)
+        modifiers.append(mod(self))
+    hi_key = ''
+    for i, mod in enumerate(modifiers):
+      mod['before']()
+      hi_key = hi_key + '#' + mod['key'](i)
+
     if should_fade == True:
-      tint = None
-      fadelevel = None
-      if callable(GLOBALS.tint):
-        tint = GLOBALS.tint(self, current)
-      else:
-        tint = GLOBALS.tint
-      if callable(GLOBALS.fadelevel):
-        fadelevel = GLOBALS.fadelevel(self, current)
-      else:
-        fadelevel = GLOBALS.fadelevel
-      self.tint = tint
-      self.fadelevel = float(fadelevel)
+
       if GLOBALS.enablesigns and (GLOBALS.signsretentionperiod or 0) > 0 and (GLOBALS.now - self.faded_time) * 1000 < GLOBALS.signsretentionperiod:
         self.state |= GLOBALS.SIGNS
 
@@ -417,7 +428,7 @@ class WinState(object):
     # calculated based on a number of window criteria such as fadelevel, tint
     # wincolor.
 
-    hi_key = '-'.join([str(x if x != None else 'N') for x in wincolorhl]) + ':' + str(self.fadelevel) + ':' + COLORS.get_tint_key(self.tint)
+    hi_key = '-'.join([str(x if x != None else 'N') for x in wincolorhl]) + ':' + hi_key
 
     # INVALIDATE matches to be readded, free highlights, and get new synID
     self.state |= _update_state({
