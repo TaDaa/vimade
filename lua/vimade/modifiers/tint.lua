@@ -86,6 +86,15 @@ end
 M.DEFAULT = M.TINT(function (win)
   if type(GLOBALS.tint) == 'function' then
     return GLOBALS.tint(win)
+  elseif type(GLOBALS.tint) == 'table' then
+    return GLOBALS.tint
+  elseif GLOBALS.basebg then
+    return {
+      fg = {
+        rgb = COLOR_UTIL.toRgb(GLOBALS.basebg),
+        intensity = 0.5
+      }
+    }
   end
   return GLOBALS.tint
 end)

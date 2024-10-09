@@ -12,11 +12,11 @@ M.__init = __init
 def _tint_or_basebg(tint):
   if type(tint) == 'dict':
     return tint
-  elif GLOBALS.basebg and type(GLOBALS.basebg) == str:
+  elif GLOBALS.basebg:
     return {
       'fg': {
         'rgb': COLOR_UTIL.toRgb(GLOBALS.basebg),
-        'intensity': 0.75
+        'intensity': 0.5
       }
     }
 
