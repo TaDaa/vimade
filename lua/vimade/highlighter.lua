@@ -34,7 +34,8 @@ local resolve_link = function(hi, highlights)
       end
       hi = highlights[hi.link]
     else
-      -- we already visited the node, someone has 
+      -- we already visited the node, someone has an infinite recursive links.  Yes this
+      -- is a real scenario
       return highlights.NormalNC
     end
   end
