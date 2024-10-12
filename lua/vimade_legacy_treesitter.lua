@@ -69,7 +69,7 @@ function M.get_to_eval (bufnr, to_eval)
 
         local highlighter_query = highlighter:get_query(tree:lang())
 
-        local q = highlighter_query:query():iter_captures(root_node, bufnr, startRow, endRow)
+        local q = highlighter_query:query():iter_captures(root_node, bufnr, startRow, endRow + 1)
         local matches = q
         local next_row = 0
         for capture, node in matches do
