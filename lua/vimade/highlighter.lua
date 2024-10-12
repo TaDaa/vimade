@@ -22,6 +22,25 @@ local get_highlights = function (win, config)
   end
 end
 
+local resolve_link = function(hi, highlights)
+  local visited = {}
+  while hi.link do
+    if not visited[hi.link] then
+      visited[hi.link] = true
+      if not highlights[hi.link] then
+        -- when the link doesn't exist, we return the current node
+        -- broken links result in the last actual highlight as the user visible colors
+        return hi
+      end
+      hi = highlights[hi.link]
+    else
+      -- we already visited the node, someone has 
+      return highlights.NormalNC
+    end
+  end
+  return hi
+end
+
 M.set_highlights = function(win)
   local fade = win.fadelevel
   local tint = win.tint
@@ -33,6 +52,15 @@ M.set_highlights = function(win)
   local highlights = get_highlights(win, {})
   local normal_nc = TYPE.deep_copy(highlights.NormalNC or {})
   local normal = TYPE.deep_copy(highlights.Normal or {})
+  -- normal links shouldn't do anything anyways.  Behavior seems very undefined
+  -- although possible.
+  -- if the normal_nc is linked we need to try and resolve it. Some plugins
+  -- have infinite links defined so we need to track visited nodes.
+  normal.link = nil
+  if normal_nc.link then
+    normal_nc = resolve_link(normal_nc, highlights)
+    normal_nc.link = nil
+  end
 
   if win.is_active_win then
     --pass
@@ -40,8 +68,17 @@ M.set_highlights = function(win)
     if normal_nc.ctermbg ~= nil then
       normal.ctermbg = normal_nc.ctermbg
     end
+    if normal_nc.ctermfg ~= nil then
+      normal.ctermfg = normal_nc.ctermfg
+    end
     if normal_nc.bg ~= nil then
       normal.bg = normal_nc.bg
+    end
+    if normal_nc.fg ~= nil then
+      normal.fg = normal_nc.fg
+    end
+    if normal_nc.sp ~= nil then
+      normal.sp = normal_nc.sp
     end
   end
 
@@ -75,7 +112,6 @@ M.set_highlights = function(win)
       end
       -- name needs to be unset before call nvim_set_hl
       hi.name = nil
-
       vim.api.nvim_set_hl(win.ns.vimade_ns, name, hi)
     end
   end
