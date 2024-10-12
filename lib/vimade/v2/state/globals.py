@@ -1,8 +1,11 @@
 import sys
 import time
 import vim
-from vimade.v2.modifiers import fade as FADE
-from vimade.v2.modifiers import tint as TINT
+from vimade.v2.style import animate as ANIMATE
+from vimade.v2.style import exclude as EXCLUDE
+from vimade.v2.style import include as INCLUDE
+from vimade.v2.style import fade as FADE
+from vimade.v2.style import tint as TINT
 from vimade.v2.util import ipc as IPC
 from vimade.v2.util import matchers as MATCHERS
 from vimade.v2.util import type as TYPE
@@ -61,7 +64,23 @@ _DEFAULTS = {
        },
     }
   },
-  'modifiers': [TINT.DEFAULT, FADE.DEFAULT],
+  # TODO create minimalist animated mode
+  # See below for a cool use-case
+  # 'style': [EXCLUDE.Exclude({
+    # 'names': ['WinSeparator', 'LineNr', 'NonText', 'LineNrBelow', 'LineNrAbove'],
+    # 'style': [TINT.DEFAULT, FADE.DEFAULT],
+  # })],
+  # 'style': [INCLUDE.Include({
+     # 'names': ['WinSeparator', 'LineNr', 'NonText', 'LineNrBelow', 'LineNrAbove'],
+     # 'style': [TINT.DEFAULT, FADE.DEFAULT],
+   # })],
+  'style': [TINT.DEFAULT, FADE.DEFAULT],
+  # 'style': [TINT.DEFAULT, ANIMATE.Animate({
+     # 'from': 1,
+     # 'duration': 300,
+     # 'style': FADE.DEFAULT,
+   # })],
+   # })['start'](1)['duration'](1000)],
   # python only config
   'enabletreesitter': False,
   'enablebasegroups': False,
@@ -141,11 +160,14 @@ class Globals(object):
       'require_treesitter': False,
       'termguicolors': None,
       'disablebatch': False,
-      'modifiers': [],
+      'style': [],
       'now': None,
     }
     self.vim = vim
     self.time = time
+    self.ANIMATE = ANIMATE
+    self.EXCLUDE = EXCLUDE
+    self.INCLUDE = INCLUDE
     self.FADE = FADE
     self.TINT = TINT
     self.IPC = IPC
@@ -262,6 +284,9 @@ class Globals(object):
       vimade['enabletreesitter'] = 0
       vimade['enablebasegroups'] = 0
 
+    # coerce int here due to vim+python long issue
+    vimade['normalid'] = int(vimade['normalid'])
+    vimade['normalncid'] =  int(vimade['normalncid']) if vimade['normalncid'] != '' else None
     self.tick_state |= self._check_fields([
       'normalid',
       'normalncid',
@@ -293,7 +318,7 @@ class Globals(object):
     ], vimade, self, self._DEFAULTS, self.SIGNS)
 
     ## handled in win state
-    self.modifiers = vimade.get('modifiers', self._DEFAULTS['modifiers'])
+    self.style = vimade.get('style', self._DEFAULTS['style'])
     self.basegroups = vimade.get('basegroups', self._DEFAULTS['basegroups'])
     self.signsid = int(vimade.get('signsid', self._DEFAULTS['signsid']))
     self.signspriority = int(vimade.get('signspriority', self._DEFAULTS['signspriority']))
@@ -320,6 +345,9 @@ class Globals(object):
     self.fade_buffers = not self.fade_windows
 
 M = Globals()
+M.ANIMATE.__init(M)
 M.FADE.__init(M)
 M.TINT.__init(M)
+M.EXCLUDE.__init(M)
+M.INCLUDE.__init(M)
 M.IPC.__init(M)

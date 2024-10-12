@@ -23,3 +23,6 @@ def recalculate():
 
 def update():
   FADER.tick()
+
+def animate():
+  FADER.animate()

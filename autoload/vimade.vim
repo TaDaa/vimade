@@ -256,7 +256,7 @@ function! vimade#GetDefaults()
     "lua uses namespaces and doesn't require this setting.
     "Neovim only setting that specifies the basegroups/built-in highlight groups that will be faded using winhl when switching windows
 
-    let g:vimade_defaults.basegroups = ['Folded', 'Search', 'SignColumn', 'LineNr', 'CursorLine', 'CursorLineNr', 'DiffAdd', 'DiffChange', 'DiffDelete', 'DiffText', 'FoldColumn', 'Whitespace', 'NonText', 'SpecialKey', 'Conceal', 'EndOfBuffer']
+    let g:vimade_defaults.basegroups = ['Folded', 'Search', 'SignColumn', 'CursorLine', 'CursorLineNr', 'DiffAdd', 'DiffChange', 'DiffDelete', 'DiffText', 'FoldColumn', 'Whitespace', 'NonText', 'SpecialKey', 'Conceal', 'EndOfBuffer', 'WinSeparator', 'LineNr', 'LineNrAbove', 'LineNrBelow']
 
     ""@setting vimade.enablebasegroups
     "Supported:     python, python-legacy
@@ -616,6 +616,22 @@ function! vimade#CheckWindows()
   endif
 endfunction
 
+function! vimade#StartAnimationTimer()
+  if !exists('g:vimade_animation_timer') && g:vimade_features.has_timer_start
+    let g:vimade_animation_timer = timer_start(16, 'vimade#DoAnimations', {'repeat': -1})
+  else
+    " unpause timer
+    call timer_pause(g:vimade_animation_timer, 0)
+  endif
+endfunction
+
+function! vimade#DoAnimations(val)
+  if g:vimade_running && g:vimade_paused == 0 && getcmdwintype() == ''
+    call timer_pause(g:vimade_animation_timer, 1)
+    call g:vimade_active_renderer.animate()
+  endif
+endfunction
+
 function! vimade#softInvalidateBuffer(bufnr)
   "prevent if inside popup window
   if winnr() == 0
@@ -714,14 +730,14 @@ function! vimade#Tick(num)
 endfunction
 
 function! vimade#FadeActive()
-    "immediately fade current buffer
-    let g:vimade_fade_active=1
-    call vimade#DeferredCheckWindows()
+  "immediately fade current buffer
+  let g:vimade_fade_active=1
+  call vimade#DeferredCheckWindows()
 endfunction
 
 function! vimade#UnfadeActive()
-    let g:vimade_fade_active=0
-    call vimade#DeferredCheckWindows()
+  let g:vimade_fade_active=0
+  call vimade#DeferredCheckWindows()
 endfunction
 
 function! vimade#GetNvimHi(id)
@@ -845,6 +861,9 @@ endfunction
 function! s:Update_Lua()
   lua require('vimade').update()
 endfunction
+function! s:Animate_Lua()
+  lua require('vimade').animate()
+endfunction
 function! s:SoftInvalidateBuffer_Lua()
   lua require('vimade').softInvalidateBuffer()
 endfunction
@@ -856,6 +875,7 @@ function! s:GetInfo_Lua()
 endfunction
 let s:lua_renderer = {
   \ 'name': 'lua',
+  \ 'animate': function('s:Animate_Lua'),
   \ 'detectTermColors': function('s:DetectTermColors_Lua'),
   \ 'getInfo': function('s:GetInfo_Lua'),
   \ 'recalculate': function('s:Recalculate_Lua'),
@@ -887,6 +907,9 @@ endfunction
 function! s:Update_Python()
   exec g:vimade_py_cmd "from vimade.v2 import bridge; bridge.update()"
 endfunction
+function! s:Animate_Python()
+  exec g:vimade_py_cmd "from vimade.v2 import bridge; bridge.animate()"
+endfunction
 function! s:SoftInvalidateBuffer_Python()
   exec g:vimade_py_cmd "from vimade.v2 import bridge; bridge.invalidate()"
 endfunction
@@ -895,6 +918,7 @@ function! s:SoftInvalidateSigns_Python()
 endfunction
 let s:python_renderer = {
   \ 'name': 'python',
+  \ 'animate': function('s:Animate_Python'),
   \ 'detectTermColors': function('s:DetectTermColors_Python'),
   \ 'getInfo': function('s:GetInfo_Python'),
   \ 'recalculate': function('s:Recalculate_Python'),
@@ -934,6 +958,7 @@ function! s:SoftInvalidateSigns_PythonLegacy()
 endfunction
 let s:python_legacy_renderer = {
   \ 'name': 'python_legacy',
+  \ 'animate': function('vimade#Empty'),
   \ 'detectTermColors': function('s:DetectTermColors_PythonLegacy'),
   \ 'getInfo': function('s:GetInfo_PythonLegacy'),
   \ 'recalculate': function('s:Recalculate_PythonLegacy'),

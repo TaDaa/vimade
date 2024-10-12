@@ -139,14 +139,14 @@ class WinState(object):
       'blocked': False,
       'faded': False,
       'fadelevel': None,
-      'faded_time': None,
+      'faded_time': 0,
       'fadepriority': -1,
       'tint': None,
       'is_active_win': None,
       'is_active_buf': None,
       'state': GLOBALS.READY,
-      'modifiers': [],
-      '_global_modifiers': [],
+      'style': [],
+      '_global_style': [],
       # python-only (needed to due to difference in renderes)
       'window': None,
       'buffer': None,
@@ -164,14 +164,13 @@ class WinState(object):
       'syntax': None,
       'size_changed': False,
       'cursor_changed': False,
-      'wincolorhl_changed': False,
       'is_explorer': False,
       'is_minimap': False,
       'topline': -1,
       'botline': -1,
       'textoff': -1,
       'wincolor': None,
-      'wincolorhl': {'ctermfg': None, 'ctermbg': None, 'fg': None, 'bg': None, 'sp': None},
+      'wincolorhl': {'id':-1, 'name': '', 'ctermfg': None, 'ctermbg': None, 'fg': None, 'bg': None, 'sp': None},
       'winhl': '',
       'original_wincolor': '',
       'original_winhl': '',
@@ -315,14 +314,7 @@ class WinState(object):
     wincolorhl = HIGHLIGHTER.defaultWincolorHi(wincolorhl, normalhl)
 
 
-    wincolorhl_changed = False
-    # we need to ensure that wincolorhl for the original_wincolor doesn't get borked
     if not was_vimade_wincolor:
-      if not wincolorhl_changed:
-        for key, hl in wincolorhl.items():
-          if self.wincolorhl[key] != hl:
-            wincolorhl_changed = True
-            break
       self.wincolorhl = wincolorhl
     else:
       wincolorhl = self.wincolorhl
@@ -389,7 +381,7 @@ class WinState(object):
           should_fade = override
           break
 
-    if should_fade and not self.faded:
+    if (should_fade and not self.faded) or (not should_fade and self.faded):
       self.faded_time = GLOBALS.now
 
     self.state |= _update_state({
@@ -397,27 +389,27 @@ class WinState(object):
     }, self, GLOBALS.CHANGED)
 
 
-    rerun_modifiers = False
-    modifiers = self.modifiers
-    global_modifiers = GLOBALS.modifiers
-    _global_modifiers = self._global_modifiers
-    if len(_global_modifiers) != len(global_modifiers):
-      rerun_modifiers = True
+    rerun_style = False
+    style = self.style
+    global_style = GLOBALS.style
+    _global_style = self._global_style
+    if len(_global_style) != len(global_style):
+      rerun_style = True
     else:
-      for i, mod in enumerate(global_modifiers):
-        if _global_modifiers[i] != mod:
-          rerun_modifiers = True
+      for i, s in enumerate(global_style):
+        if _global_style[i] != s:
+          rerun_style = True
           break
-    if rerun_modifiers == True:
-      self.modifiers = modifiers = []
-      self._global_modifiers = _global_modifiers =  []
-      for mod in global_modifiers:
-        _global_modifiers.append(mod)
-        modifiers.append(mod(self))
+    if rerun_style == True:
+      self.style = style = []
+      self._global_style = _global_style =  []
+      for s in global_style:
+        _global_style.append(s)
+        style.append(s.attach(self))
     hi_key = ''
-    for i, mod in enumerate(modifiers):
-      mod['before']()
-      hi_key = hi_key + '#' + mod['key'](i)
+    for i, s in enumerate(style):
+      s.before()
+      hi_key = hi_key + '#' + s.key(i)
 
     if should_fade == True:
 
@@ -428,13 +420,12 @@ class WinState(object):
     # calculated based on a number of window criteria such as fadelevel, tint
     # wincolor.
 
-    hi_key = '-'.join([str(x if x != None else 'N') for x in wincolorhl]) + ':' + hi_key
+    hi_key = '-'.join([str(x if x != None else 'N') for x in wincolorhl.values()]) + ':' + hi_key
 
     # INVALIDATE matches to be readded, free highlights, and get new synID
     self.state |= _update_state({
       'hi_key': hi_key,
       'fadepriority': 9 if is_minimap else int(GLOBALS.fadepriority),
-      'wincolorhl_changed': wincolorhl_changed,
     }, self, GLOBALS.INVALIDATE_HIGHLIGHTS | GLOBALS.CHANGED)
 
     # buffers manage the collected synID()'s so that we don't need to reprocess
@@ -454,3 +445,5 @@ class WinState(object):
     # is on the diff side, against a buffer shared amongst multiple windows.
     if self.faded and (self.is_active_buf or (self.linked and GLOBALS.fade_windows)):
       self.state |= GLOBALS.CHANGED
+
+HIGHLIGHTER.__initWinState(WinState)

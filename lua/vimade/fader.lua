@@ -1,11 +1,12 @@
 local M = {}
 local NAMESPACE = require('vimade.state.namespace')
 local GLOBALS = require('vimade.state.globals')
+local ANIMATOR = require('vimade.animator')
 local HIGHLIGHTER = require('vimade.highlighter')
 local WIN_STATE = require('vimade.state.win')
 
 -- internal only
-local update = function ()
+local update = function (only_these_windows)
   local windows = vim.fn.getwininfo()
   local fade_windows = GLOBALS.fademode == 'windows'
   local fade_buffers = not fade_windows
@@ -13,6 +14,8 @@ local update = function ()
   local updated_cache = {}
 
   for i, wininfo in pairs(windows) do
+    -- we skip only_these_windows here because we need to know who the active window is
+    -- for linking and other ops
     if current.winid == wininfo.winid then
       -- current needs to be processed head-of-time see win_state.lua
       -- this is necessary to determine linked behavior
@@ -22,7 +25,8 @@ local update = function ()
   end
 
   for i, wininfo in pairs(windows) do
-    if current.tabnr == wininfo.tabnr and current.winid ~= wininfo.winid then
+    if current.tabnr == wininfo.tabnr and current.winid ~= wininfo.winid
+      and (not only_these_windows or only_these_windows[wininfo.winid]) then
       WIN_STATE.refresh(wininfo)
     end
   end
@@ -30,7 +34,6 @@ local update = function ()
 end
 
 -- external --
-
 M.setup = function (config)
   return GLOBALS.setup(config)
 end
@@ -59,8 +62,7 @@ M.recalculate = function ()
   end
 end
 
-
-M.tick = function ()
+M.tick = function (only_these_windows)
   GLOBALS.refresh()
   local last_ei = vim.go.ei
 
@@ -68,7 +70,13 @@ M.tick = function ()
     M.recalculate()
   end
 
-  update()
+  -- if the tick_state changed during an animation, we need to use that frame
+  -- to sync the windows
+  if GLOBALS.tick_state > 0 and only_these_windows then
+    only_these_windows = nil
+  end
+
+  update(only_these_windows)
 
   vim.go.ei = last_ei
 end
@@ -85,6 +93,11 @@ M.unfadeAll = function ()
         WIN_STATE.unfade(winid)
     end
   end
+end
+
+M.animate = function ()
+  local only_these_windows = ANIMATOR.refresh()
+  M.tick(only_these_windows)
 end
 
 return M

@@ -60,6 +60,7 @@ M.__create = function (winid)
       height = -1,
       linked = false,
       blocked = false,
+      faded_time = 0,
       faded = false,
       hi_key = '',
       is_active_win = nil,
@@ -67,9 +68,9 @@ M.__create = function (winid)
       real_ns = nil,
       ns = nil,
       state = GLOBALS.READY,
-      modifiers = {},
-      -- raw global modifiers that were used to build this win
-      _global_modifiers = {},
+      style = {},
+      -- raw global styles that were used to build this win
+      _global_style = {},
       buf_opts = function(self)
         return vim.bo[self.bufnr]
       end,
@@ -178,36 +179,40 @@ M.refresh = function (wininfo, skip_link)
     end
   end
 
+  if (should_fade and not win.faded) or (not should_fade and win.faded) then
+    win.faded_time = vim.loop.now()
+  end
+
   win.state = bit.bor(win.state, _update_state({
     faded = should_fade
   }, win, GLOBALS.CHANGED))
 
+  local rerun_style = false
 
-  local rerun_modifiers = false
   if should_fade == true then
-    if #win._global_modifiers ~= #GLOBALS.modifiers then
-      rerun_modifiers = true
+    if #win._global_style ~= #GLOBALS.style then
+      rerun_style = true
     else
-      for i, mod in ipairs(GLOBALS.modifiers) do
-        if win._global_modifiers[i] ~= mod then
-          rerun_modifiers = true
+      for i, s in ipairs(GLOBALS.style) do
+        if win._global_style[i] ~= s then
+          rerun_style = true
           break
         end
       end
     end
-    if rerun_modifiers == true then
-      win.modifiers = {}
-      win._global_modifiers = {}
-      for i, mod in ipairs(GLOBALS.modifiers) do
-        win._global_modifiers[i] = mod
-        win.modifiers[i] = mod(win)
+    if rerun_style == true then
+      win.style = {}
+      win._global_style = {}
+      for i, s in ipairs(GLOBALS.style) do
+        win._global_style[i] = s
+        win.style[i] = s.attach(win)
       end
     end
 
     local hi_key = ''
-    for i, mod in ipairs(win.modifiers) do
-      mod.before()
-      hi_key = hi_key .. '#' .. mod.key(i)
+    for i, s in ipairs(win.style) do
+      s.before()
+      hi_key = hi_key .. '#' .. s.key(i)
     end
 
     if not win.ns
@@ -215,7 +220,7 @@ M.refresh = function (wininfo, skip_link)
       or win.hi_key ~= hi_key
       or GLOBALS.tick_state >= GLOBALS.RECALCULATE then
       local ns = NAMESPACE.get_replacement(win, real_ns, hi_key)
-      if ns.modified == true then
+      if ns.modified == true or win.hi_key ~= hi_key then
         win.state = bit.bor(GLOBALS.CHANGED, win.state)
       end
       win.ns = ns

@@ -6,7 +6,8 @@ M.__init = function (globals)
 end
 
 M.TINT = function(initial_tint)
-  return function(win)
+  local result = {}
+  result.attach = function(win)
     local tint = initial_tint
     local create_to_hl = function (tint)
       if not tint then
@@ -62,25 +63,23 @@ M.TINT = function(initial_tint)
         if hl.ctermfg and to_hl.ctermfg then
           hl.ctermfg = COLOR_UTIL.interpolate256(hl.ctermfg, to_hl.ctermfg, to_hl.fg_intensity)
         end
-        if to_hl.bg then
-          if hl.bg then
-            hl.bg = COLOR_UTIL.interpolate24b(hl.bg, to_hl.bg, to_hl.bg_intensity)
-          end
-          if target.bg then
-            target.bg = COLOR_UTIL.interpolate24b(target.bg, to_hl.bg, to_hl.bg_intensity)
-          end
+        if hl.bg and to_hl.bg then
+          hl.bg = COLOR_UTIL.interpolate24b(hl.bg, to_hl.bg, to_hl.bg_intensity)
         end
-        if to_hl.ctermbg then
-          if hl.ctermbg then
-            hl.ctermbg = COLOR_UTIL.interpolate256(hl.ctermbg, to_hl.ctermbg, to_hl.bg_intensity)
-          end
-          if target.ctermbg then
-            target.ctermbg = COLOR_UTIL.interpolate256(target.ctermbg, to_hl.ctermbg, to_hl.bg_intensity)
-          end
+        if hl.ctermbg and to_hl.ctermbg  then
+          hl.ctermbg = COLOR_UTIL.interpolate256(hl.ctermbg, to_hl.ctermbg, to_hl.bg_intensity)
         end
       end
     }
   end
+  result.value = function (replacement)
+    if replacement ~= nil then
+      initial_tint = replacement
+      return result
+    end
+    return initial_tint
+  end
+  return result
 end
 
 M.DEFAULT = M.TINT(function (win)

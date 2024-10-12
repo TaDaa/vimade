@@ -41,4 +41,8 @@ M.softInvalidateSigns = function ()
   -- no plans for implementation at this time (not needed)
 end
 
+M.animate = function ()
+  FADER.animate()
+end
+
 return M

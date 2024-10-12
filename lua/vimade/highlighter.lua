@@ -52,6 +52,7 @@ M.set_highlights = function(win)
   local normal_ctermbg = normal.ctermbg or default_ctermbg
 
   local normal_target = {
+    name = '',
     fg = normal_fg,
     bg = normal_bg,
     sp = normal_sp,
@@ -60,7 +61,7 @@ M.set_highlights = function(win)
   }
 
 
-  modifiers = win.modifiers
+  local style = win.style
   for name, highlight in pairs(highlights) do
     if name == 'NormalNC' or name =='Normal' then
       --pass
@@ -68,16 +69,21 @@ M.set_highlights = function(win)
       -- copies area required here as user mutations are expected
       local hi = TYPE.shallow_copy(highlight)
       local hi_target = TYPE.shallow_copy(normal_target)
-      for i, mod in ipairs(modifiers) do
-        mod.modify(hi, hi_target)
+      hi.name = name
+      for i, s in ipairs(style) do
+        s.modify(hi, hi_target)
       end
+      -- name needs to be unset before call nvim_set_hl
+      hi.name = nil
 
       vim.api.nvim_set_hl(win.ns.vimade_ns, name, hi)
     end
   end
-  for i, mod in ipairs(modifiers) do
-    mod.modify(normal, normal_target)
+  normal.name = 'Normal'
+  for i, s in ipairs(style) do
+    s.modify(normal, normal_target)
   end
+  normal.name = nil
   vim.api.nvim_set_hl(win.ns.vimade_ns, 'NormalNC' , normal)
   vim.api.nvim_set_hl(win.ns.vimade_ns, 'Normal' , normal)
   vim.api.nvim_set_hl(win.ns.vimade_ns, 'vimade_0' , normal)

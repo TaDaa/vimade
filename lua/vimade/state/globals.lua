@@ -1,6 +1,9 @@
 local M = {}
-local FADE = require('vimade.modifiers.fade')
-local TINT = require('vimade.modifiers.tint')
+local FADE = require('vimade.style.fade')
+local TINT = require('vimade.style.tint')
+local EXCLUDE = require('vimade.style.exclude')
+local INCLUDE = require('vimade.style.include')
+local ANIMATE = require('vimade.style.animate')
 local TYPE = require('vimade.util.type')
 local MATCHERS = require('vimade.util.matchers')
 local NAMESPACE = require('vimade.state.namespace')
@@ -18,6 +21,8 @@ end
 NAMESPACE.__init(M)
 FADE.__init(M)
 TINT.__init(M)
+EXCLUDE.__init(M)
+INCLUDE.__init(M)
 
 M.READY = 0
 M.ERROR = 1
@@ -28,6 +33,7 @@ M.vimade_lua = {}
 
 M.tick_id = 0
 M.tick_state = M.READY
+M.now = vim.loop.now()
 M.global_ns = nil-- used to cache namespace 0 at the global level
 M.vimade_fade_active = false
 M.basebg = nil
@@ -135,10 +141,18 @@ local DEFAULTS = {
       },
     },
   },
-  modifiers = {
-    TINT.DEFAULT,
-    FADE.DEFAULT,
-  }
+  style = {TINT.DEFAULT, FADE.DEFAULT},
+  -- TODO create recipes
+  --style = {
+    --INCLUDE.Include({
+      --names = {'LineNr', 'LineNrBelow', 'LineNrAbove'},
+      --style = {TINT.DEFAULT, ANIMATE.Animate({
+          --style = FADE.DEFAULT,
+          --from = 1
+        --})
+      --}
+    --})
+  --}
 }
 
 local check_fields = function (fields, next, current, defaults, return_state)
@@ -183,6 +197,7 @@ M.refresh_global_ns = function ()
 end
 
 M.refresh = function ()
+  M.now = vim.loop.now()
   M.tick_id = next_tick_id()
   M.tick_state = M.READY
   -- no reason to re-copy vimade_lua we aren't going to change it
@@ -244,7 +259,7 @@ M.refresh = function ()
   M.fademinimap = TYPE.num_to_bool(vimade.fademinimap, DEFAULTS.fademinimap)
   M.tint = vimade.tint or DEFAULTS.tint
   M.fadelevel = vimade.fadelevel or DEFAULTS.fadelevel
-  M.modifiers = vimade.modifiers or DEFAULTS.modifiers
+  M.style = vimade.style or DEFAULTS.style
   if type(vimade.fadeconditions) == 'table' then
     M.fadeconditions = vimade.fadeconditions
   elseif type(vimade.fadeconditions) == 'function' then

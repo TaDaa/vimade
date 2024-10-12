@@ -110,8 +110,10 @@ class Namespace:
       # redraw hack fixes the result, but costs performance so we only want to redraw when absolutely
       # necessary.
       # This should be moved into fader.py instead, but needs to live here for temporarily.
-      if GLOBALS.tick_state & GLOBALS.RECALCULATE:
-        vim.command('redraw')
+      # Disabling this hack, edge case with little value
+      # Leaving comments to investigate and ensure VimadeRedraw can handle this scenario
+      # if GLOBALS.tick_state & GLOBALS.RECALCULATE:
+        # vim.command('redraw')
 
   def invalidate(self):
     self.invalidate_buffer_cache()

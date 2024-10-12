@@ -3,6 +3,7 @@ import time
 M = sys.modules[__name__]
 
 import vim
+from vimade.v2 import animator as ANIMATOR
 from vimade.v2 import highlighter as HIGHLIGHTER
 from vimade.v2 import signs as SIGNS
 from vimade.v2.state import globals as GLOBALS
@@ -21,7 +22,7 @@ def _return_to_win():
   if current_winid != start_winid:
     vim.command('noautocmd call win_gotoid(%d)' % (start_winid))
 
-def _update():
+def _update(only_these_windows):
   # start_time = time.time()
   windows = IPC.eval_and_return('getwininfo()')
   fade_windows = GLOBALS.fade_windows
@@ -37,14 +38,16 @@ def _update():
 
 
   for wininfo in windows:
+    # we skip only_these_windows here because we need to know who the active window is
+    # for linking and other ops
     if current['winid'] == int(wininfo['winid']):
       WIN_STATE.refresh_active(wininfo)
       break
     
   for wininfo in windows:
-    if current['tabnr'] == int(wininfo['tabnr']):
-      if current['winid'] != int(wininfo['winid']):
-        WIN_STATE.refresh(wininfo)
+    if current['tabnr'] == int(wininfo['tabnr']) and current['winid'] != int(wininfo['winid']) and \
+        (not only_these_windows or only_these_windows.get(int(wininfo['winid']))):
+          WIN_STATE.refresh(wininfo)
 
   def next(val):
     def complete(val):
@@ -75,13 +78,23 @@ def recalculate():
 def invalidate():
   tick(GLOBALS.CHANGED)
 
-def tick(tick_state = GLOBALS.READY):
+def tick(tick_state = GLOBALS.READY, only_these_windows = None):
   GLOBALS.refresh(tick_state)
   last_ei = vim.options['ei']
   vim.options['ei'] = 'all'
 
-  _update()
+  # if the tick_state changed during an animation, we need to use that frame
+  # to sync the windows
+  if GLOBALS.tick_state > 0 and only_these_windows:
+    only_these_windows = None
+
+  _update(only_these_windows)
   vim.options['ei'] = last_ei
+
+def animate():
+  only_these_windows = ANIMATOR.refresh()
+  tick(GLOBALS.READY, only_these_windows)
+
 
 def unfadeAll(windows = None):
   if windows == None:
