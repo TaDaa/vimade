@@ -209,7 +209,7 @@ M.refresh = function (wininfo, skip_link)
       end
     end
 
-    local hi_key = ''
+    local hi_key = win.real_ns .. ':' 
     for i, s in ipairs(win.style) do
       s.before()
       hi_key = hi_key .. '#' .. s.key(i)
@@ -218,7 +218,8 @@ M.refresh = function (wininfo, skip_link)
     if not win.ns
       or not GLOBALS.nohlcheck
       or win.hi_key ~= hi_key
-      or GLOBALS.tick_state >= GLOBALS.RECALCULATE then
+      or bit.band(GLOBALS.tick_state, GLOBALS.HLCHECK) > 0
+      or bit.band(GLOBALS.tick_state, GLOBALS.RECALCULATE) > 0 then
       local ns = NAMESPACE.get_replacement(win, real_ns, hi_key)
       if ns.modified == true or win.hi_key ~= hi_key then
         win.state = bit.bor(GLOBALS.CHANGED, win.state)

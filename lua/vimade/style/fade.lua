@@ -25,6 +25,10 @@ M.Fade = function(initial_fade)
         end,
         modify = function (hl, to_hl)
           -- fade modifies all layers against the background
+          -- skip links by default, use include to target them
+          if hl.link then
+            return
+          end
           if hl.fg ~= nil then
             hl.fg = COLOR_UTIL.interpolate24b(hl.fg, to_hl.bg, fade)
           end

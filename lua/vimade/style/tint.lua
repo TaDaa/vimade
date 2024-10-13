@@ -54,6 +54,10 @@ M.TINT = function(initial_tint)
         if not to_hl then
           return
         end
+        -- skip links by default, use include to target them
+        if hl.link then
+          return
+        end
         if hl.fg and to_hl.fg then
           hl.fg = COLOR_UTIL.interpolate24b(hl.fg, to_hl.fg, to_hl.fg_intensity)
         end

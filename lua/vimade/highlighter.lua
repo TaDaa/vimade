@@ -22,26 +22,6 @@ local get_highlights = function (win, config)
   end
 end
 
-local resolve_link = function(hi, highlights)
-  local visited = {}
-  while hi.link do
-    if not visited[hi.link] then
-      visited[hi.link] = true
-      if not highlights[hi.link] then
-        -- when the link doesn't exist, we return the current node
-        -- broken links result in the last actual highlight as the user visible colors
-        return hi
-      end
-      hi = highlights[hi.link]
-    else
-      -- we already visited the node, someone has an infinite recursive links.  Yes this
-      -- is a real scenario
-      return highlights.NormalNC
-    end
-  end
-  return hi
-end
-
 M.set_highlights = function(win)
   local fade = win.fadelevel
   local tint = win.tint
@@ -50,16 +30,14 @@ M.set_highlights = function(win)
   local default_sp = default_fg
   local default_ctermfg = GLOBALS.is_dark and 231 or 0
   local default_ctermbg = GLOBALS.is_dark and 0 or 231
-  local highlights = get_highlights(win, {})
+  local highlights = win.ns.complete_highlights
   local normal_nc = TYPE.deep_copy(highlights.NormalNC or {})
   local normal = TYPE.deep_copy(highlights.Normal or {})
-  -- normal links shouldn't do anything anyways.  Behavior seems very undefined
-  -- although possible.
-  -- if the normal_nc is linked we need to try and resolve it. Some plugins
-  -- have infinite links defined so we need to track visited nodes.
+  
+  -- we have to unlink Normal and NormalNC highlights from any shenanigans that plugins are doing
+  -- things should still fade as expected.
   normal.link = nil
   if normal_nc.link then
-    normal_nc = resolve_link(normal_nc, highlights)
     normal_nc.link = nil
   end
 
@@ -98,7 +76,6 @@ M.set_highlights = function(win)
     ctermbg = normal_ctermbg,
   }
 
-
   local style = win.style
   for name, highlight in pairs(highlights) do
     if name == 'NormalNC' or name =='Normal' then
@@ -107,16 +84,35 @@ M.set_highlights = function(win)
       -- copies area required here as user mutations are expected
       local hi = TYPE.shallow_copy(highlight)
       local hi_target = TYPE.shallow_copy(normal_target)
+
+      -- set default fg highlights if they are unset
       hi.name = name
+      if hi.fg == nil then
+        hi.fg = normal_fg
+      end
+      if hi.ctermfg == nil then
+        hi.ctermfg = normal_ctermfg
+      end
+
       for i, s in ipairs(style) do
         s.modify(hi, hi_target)
       end
+
       -- name needs to be unset before call nvim_set_hl
       hi.name = nil
       vim.api.nvim_set_hl(win.ns.vimade_ns, name, hi)
     end
   end
+
+  -- set default fg highlights if they are unset
   normal.name = 'Normal'
+  if normal.fg == nil then
+    normal.fg = normal_fg
+  end
+  if normal.ctermfg == nil then
+    normal.ctermfg = normal_ctermfg
+  end
+
   for i, s in ipairs(style) do
     s.modify(normal, normal_target)
   end

@@ -28,6 +28,10 @@ M.READY = 0
 M.ERROR = 1
 M.CHANGED = 2
 M.RECALCULATE = 4
+-- some plugins (e.g. Neotree) add the highlights on window/buffer change. When nohlcheck,
+-- which prevents rechecking the namespaces for no reason, is enabled we tell the downstream
+-- logic to check namespaces on buf/win/tab change.
+M.HLCHECK = 8
 
 M.vimade_lua = {}
 
@@ -239,12 +243,15 @@ M.refresh = function ()
     'winid',
     'bufnr',
     'tabnr',
-  }, current, M.current, CURRENT, M.CHANGED))
+  }, current, M.current, CURRENT, bit.bor(M.CHANGED, M.HLCHECK)))
 
-  if not M.global_ns or not M.nohlcheck or bit.band(M.RECALCULATE, M.tick_state) > 0 then
+  if not M.global_ns or not M.nohlcheck
+    or bit.band(M.HLCHECK, M.tick_state) > 0
+    or bit.band(M.RECALCULATE, M.tick_state) > 0 then
     M.refresh_global_ns()
-    if M.nohlcheck and M.global_ns.modified == true then
-      -- RECALCULATE only for nohlcheck
+    if M.global_ns.modified == true
+      and (M.nohlcheck and bit.band(M.HLCHECK, M.tick_state) == 0) then
+      -- RECALCULATE only for nohlcheck (skip a forced HLCHECK)
       M.tick_state = bit.bor(M.RECALCULATE, M.tick_state)
     end
   end

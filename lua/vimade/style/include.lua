@@ -65,6 +65,8 @@ M.Include = function(config)
       end,
       modify = function (hl, to_hl)
         if include[hl.name] then
+          -- we want to expclitly render these highlights as they are user-targetted
+          hl.link = nil
           for i, s in ipairs(style) do
             s.modify(hl, to_hl)
           end
