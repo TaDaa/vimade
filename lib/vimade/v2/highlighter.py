@@ -13,7 +13,6 @@ IS_NVIM = GLOBALS.is_nvim
 
 def __initWinState(WinState):
   M.global_win = WinState({'winid': -1})
-  M.global_win.tint = None
   M.global_win.wincolorhl = None
   M.global_win.winhl = -1
   M.global_win.original_wincolor = None
@@ -28,34 +27,7 @@ M.base_id_cache = {}
 M.vimade_id_cache = {}
 M.win_lookup = {}
 
-HAS_NVIM_GET_HL = bool(int(GLOBALS.features['has_nvim_get_hl']))
-_process_hl_results = None
-def _process_nvim_get_hl(results, ids):
-  for i, value in enumerate(results):
-    id = int(ids[i])
-    ctermfg = value.get('ctermfg')
-    ctermbg = value.get('ctermbg')
-    fg = value.get('fg')
-    bg = value.get('bg')
-    sp = value.get('sp')
-    results[i] = {
-        'name': M.id_name_lookup[id],
-        'ctermfg': int(ctermfg) if ctermfg != None else None,
-        'ctermbg': int(ctermbg) if ctermbg != None else None,
-        'fg': int(fg) if fg != None else None,
-        'bg': int(bg) if bg != None else None,
-        'sp': int(sp) if sp != None else None}
-  return results
-
-def _process_nvim_get_hi(results, ids):
-  return [{
-    'name': M.id_name_lookup[int(ids[i])],
-    'ctermfg': int(r[0]) if int(r[0]) > -1 else None,
-    'ctermbg': int(r[1]) if int(r[1]) > -1 else None,
-    'fg': int(r[2]) if int(r[2]) > -1 else None,
-    'bg': int(r[3]) if int(r[3]) > -1 else None,
-    'sp': int(r[4]) if int(r[4]) > -1 else None} for i, r in enumerate(results)]
-def _process_vim_get_hi(input, ids):
+def _process_hl_results(input, ids):
   results = []
   for i, hi in enumerate(input):
     id = int(ids[i])
@@ -79,16 +51,11 @@ def _process_vim_get_hi(input, ids):
       })
   return results
 
-if IS_NVIM:
-  if HAS_NVIM_GET_HL:
-    hi_string = "nvim_get_hl(0,{'id':%s,'link':0})"
-    _process_hl_results = _process_nvim_get_hl
-  else:
-    hi_string = "vimade#GetNvimHi(%s)" 
-    _process_hl_results = _process_nvim_get_hi
-else:
-    hi_string = "vimade#GetHi(%s)" 
-    _process_hl_results = _process_vim_get_hi
+# Neovim highlight inspection doesn't propertly understand what the global hl is supposed
+# to be if winhl also exists. (see https://github.com/TaDaa/vimade/issues/81)
+# there isn't any performance difference doing this the vim way, but should look into optimizing
+# this more later.
+hi_string = "vimade#GetHi(%s)" 
 
 # vim/nvim are limited by 20000 highlights, so we need to be efficient and
 # reuse our created highlights everytime possible.
@@ -103,8 +70,7 @@ def get_hl_for_ids(win, ids):
   result = Promise()
   def next(ids):
     def next(value):
-      if _process_hl_results:
-        value = _process_hl_results(value, ids)
+      value = _process_hl_results(value, ids)
       result.resolve(value)
     IPC.batch_eval_and_return('['+','.join([hi_string % id for id in ids])+']').then(next)
 
@@ -238,7 +204,6 @@ def defaultWincolorHi(wincolorhl, normalhl):
 def create_highlights(win, to_process, skip_transpose = False):
   promise = Promise()
   def next(to_process):
-    tint = win['tint']
     wincolorhl = win['wincolorhl']
     normal_fg = wincolorhl['fg']
     normal_bg = wincolorhl['bg']
@@ -272,7 +237,6 @@ def create_highlights(win, to_process, skip_transpose = False):
 
     result = []
     attrs_eval = []
-
     base_keys = []
     for id in to_process:
       cache_key = str(id) + base_key_suffix

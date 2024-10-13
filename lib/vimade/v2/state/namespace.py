@@ -91,14 +91,27 @@ class Namespace:
   def add_basegroups(self):
     if GLOBALS.enablebasegroups and not self.win.vimade_winhl:
       basegroups = GLOBALS.basegroups
+      # link all pre-existing values. These could have been set by other plugins
+      # see https://github.com/TaDaa/vimade/issues/81
+      base_map = {}
+      if self.win.original_winhl:
+        for linked in self.win.original_winhl.split(','):
+          (source, target) = linked.split(':')
+          base_map[source] = target
+      for source in basegroups:
+        if not source in base_map:
+          base_map[source] = source
+      sources = list(base_map.keys())
+      targets = list(base_map.values())
+
       def next(replacement_ids):
-        replacement_winhl = ','.join([ basegroups[i]+':vimade_'+str(replacement)
+        replacement_winhl = ','.join([sources[i]+ ':' + (('vimade_'+str(replacement)) if sources[i] not in ('Normal', 'NormalNC') else targets[i])
                                       for i,replacement in enumerate(replacement_ids)])
         if replacement_winhl != self.win.winhl:
           IPC.eval_and_return('settabwinvar(%s,%s,"&winhl","%s")' % (self.win.tabnr, self.win.winnr, replacement_winhl))
           # TODO this management aspect needs to be controlled within namespace not manipulating external variables
           self.win.vimade_winhl = True
-      HIGHLIGHTER.create_highlights(self.win, basegroups).then(next)
+      HIGHLIGHTER.create_highlights(self.win, targets).then(next)
 
   def remove_basegroups(self):
     if GLOBALS.enablebasegroups and self.win.vimade_winhl:

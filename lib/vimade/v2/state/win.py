@@ -19,13 +19,27 @@ class WinDeps(Promise):
     Promise.__init__(self)
     self.win = win
     self.wincolor = None
+    self.winhl = None
     self.skip_link = skip_link
     self.get()
 
   def _apply_win_color(self):
     win = self.win
     if IS_NVIM:
-      self.wincolor = 'Normal' if win.is_active_win else 'NormalNC'
+      def set_winhl(value):
+        self.winhl = value
+        if len(value):
+          for group in value.split(','):
+            (source, target) = group.split(':')
+            if source == 'Normal' and win.is_active_win:
+              self.wincolor = target
+              break
+            elif source == 'NormalNC' and not win.is_active_win:
+              self.wincolor = target
+              break
+        if self.wincolor == None:
+          self.wincolor = 'Normal' if win.is_active_win else 'NormalNC'
+      return IPC.batch_eval_and_return('gettabwinvar(%d,%d,"&winhl")'%(win.tabnr, win.winnr)).then(set_winhl)
     else:
       def set_wincolor(value):
         self.wincolor = value
@@ -51,11 +65,11 @@ class WinDeps(Promise):
           'gettabwinvar(%d,%d,"current_syntax")' % (tabnr, winnr),
           'gettabwinvar(%d,%d,"&syntax")' % (tabnr, winnr),
           'gettabwinvar(%d,%d,"&tabstop")' % (tabnr, winnr),
-          'gettabwinvar(%d,%d,"&winhl")' % (tabnr, winnr),
           'gettabwinvar(%d,%d,"&conceallevel")' % (tabnr, winnr),
           'nvim_win_get_config('+str(winid)+')' if HAS_NVIM_WIN_GET_CONFIG else '{}',
           'win_gettype('+str(winid)+')' if HAS_WIN_GETTYPE else '""',
         ]) + ']'),
+       Promise().resolve(self.winhl),
        HIGHLIGHTER.get_hl_for_ids(self.win, [self.wincolor or GLOBALS.normalid, GLOBALS.normalid])\
      ]).then(next)
   def get(self):
@@ -267,11 +281,11 @@ class WinState(object):
          win_syntax,
          buf_syntax,
          tabstop,
-         winhl, #(local winhl)
          conceallevel,
          win_config,
          win_type,
      ),
+     winhl,
      (wincolorhl, normalhl),
      wincolor
      ) = config
@@ -281,6 +295,9 @@ class WinState(object):
     width = window.width
     cursor = window.cursor
     syntax = win_syntax if win_syntax else buf_syntax
+
+    if not window:
+      return
 
     self.win_config = win_config
     self.win_type = win_type
