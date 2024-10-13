@@ -19,7 +19,7 @@ class WinDeps(Promise):
     Promise.__init__(self)
     self.win = win
     self.wincolor = None
-    self.winhl = None
+    self.winhl = ''
     self.skip_link = skip_link
     self.get()
 
@@ -148,6 +148,11 @@ class WinState(object):
       'buf_name': None,
       'win_config': None,
       'win_type': None,
+      'buf_vars': None,
+      'buf_opts': None,
+      'win_vars': None,
+      'win_opts': None,
+      'win_config': None,
       'basebg': None,
       'linked': False,
       'blocked': False,
@@ -295,9 +300,6 @@ class WinState(object):
     width = window.width
     cursor = window.cursor
     syntax = win_syntax if win_syntax else buf_syntax
-
-    if not window:
-      return
 
     self.win_config = win_config
     self.win_type = win_type
