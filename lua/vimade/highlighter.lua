@@ -88,10 +88,10 @@ M.set_highlights = function(win)
       -- set default fg highlights if they are unset
       hi.name = name
       if hi.fg == nil then
-        hi.fg = normal_fg
+        --TODO(see https://github.com/TaDaa/vimade/issues/81)
       end
       if hi.ctermfg == nil then
-        hi.ctermfg = normal_ctermfg
+        --TODO(see https://github.com/TaDaa/vimade/issues/81)
       end
 
       for i, s in ipairs(style) do

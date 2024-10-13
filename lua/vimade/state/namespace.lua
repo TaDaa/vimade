@@ -79,7 +79,8 @@ local resolve_all_links = function (real_ns, real_highlights)
         base_hi.sp = circular_hi.sp
         base_hi.blend = circular_hi.blend
         -- unlink these immediately. Not only are the output highlights inconsistent from nvim api functions,
-        -- but they render inconsistently too! TODO: revisit one day and hopefully delete this.
+        -- but they render inconsistently too!
+        -- TODO: revisit one day and hopefully delete this.
         base_hi.link = nil
         break
       end
