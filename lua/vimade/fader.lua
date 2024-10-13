@@ -4,6 +4,7 @@ local GLOBALS = require('vimade.state.globals')
 local ANIMATOR = require('vimade.animator')
 local HIGHLIGHTER = require('vimade.highlighter')
 local WIN_STATE = require('vimade.state.win')
+local COMPAT = require('vimade.util.compat')
 
 -- internal only
 local update = function (only_these_windows)
@@ -86,7 +87,7 @@ M.unfadeAll = function ()
   local current = GLOBALS.current
 
   for i, winid in pairs(windows) do
-    local ns = vim.api.nvim_get_hl_ns({winid = winid})
+    local ns = COMPAT.nvim_get_hl_ns({winid = winid})
     if NAMESPACE.is_vimade_ns(ns) == true then
         local real_ns = vim.api._vimade_real_ns or 0
         vim.api.nvim_win_set_hl_ns(winid, real_ns)

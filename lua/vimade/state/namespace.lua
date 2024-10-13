@@ -70,6 +70,7 @@ local resolve_all_links = function (real_ns, real_highlights)
       else
         -- circular ref found base_hi is our last good one
         -- undefined behavior here, so consult api for a real highlight and hopefully its right
+        -- this does not seem to occur < 0.10.0, so not using COMPAT here
         circular_hi = vim.api.nvim_get_hl(real_ns, {name = base_name, link = false})
         base_hi.ctermfg = circular_hi.ctermfg
         base_hi.ctermbg = circular_hi.ctermbg
