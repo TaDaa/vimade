@@ -853,7 +853,7 @@ function! s:Recalculate_Lua()
   lua require('vimade').recalculate()
 endfunction
 function! s:Redraw_Lua()
-  lua require('vimade').recalculate()
+  lua require('vimade').redraw()
 endfunction
 function! s:UnfadeAll_Lua()
   lua require('vimade').unfadeAll()
