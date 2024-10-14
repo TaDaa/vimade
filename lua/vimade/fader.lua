@@ -48,6 +48,8 @@ M.recalculate = function ()
   local current = GLOBALS.current
   local updated_cache = {}
 
+  -- TODO likely deprecate this, just pipe via HLCHECK or rename HLCHECK
+  -- to RECALCULATE
   GLOBALS.refresh_global_ns()
   for i, wininfo in pairs(windows) do
     local win = WIN_STATE.get(wininfo)
@@ -63,8 +65,17 @@ M.recalculate = function ()
   end
 end
 
-M.tick = function (only_these_windows)
-  GLOBALS.refresh()
+M.redraw = function()
+  M.tick(GLOBALS.HLCHECK)
+end
+
+M.animate = function ()
+  local only_these_windows = ANIMATOR.refresh()
+  M.tick(nil, only_these_windows)
+end
+
+M.tick = function (override_tick_state, only_these_windows)
+  GLOBALS.refresh(override_tick_state)
   local last_ei = vim.go.ei
 
   if bit.band(GLOBALS.RECALCULATE, GLOBALS.tick_state) > 0 then
@@ -94,11 +105,6 @@ M.unfadeAll = function ()
         WIN_STATE.unfade(winid)
     end
   end
-end
-
-M.animate = function ()
-  local only_these_windows = ANIMATOR.refresh()
-  M.tick(only_these_windows)
 end
 
 return M

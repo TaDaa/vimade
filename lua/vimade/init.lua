@@ -25,6 +25,10 @@ M.unfadeSigns = function ()
   -- no plans for implementation at this time (not needed)
 end
 
+M.redraw = function ()
+  FADER.redraw()
+end
+
 M.recalculate = function ()
   FADER.recalculate()
 end
