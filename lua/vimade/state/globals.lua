@@ -145,18 +145,8 @@ local DEFAULTS = {
       },
     },
   },
+  -- TODO configure this via recipe
   style = {TINT.DEFAULT, FADE.DEFAULT},
-  -- TODO create recipes
-  --style = {
-    --INCLUDE.Include({
-      --names = {'LineNr', 'LineNrBelow', 'LineNrAbove'},
-      --style = {TINT.DEFAULT, ANIMATE.Animate({
-          --style = FADE.DEFAULT,
-          --from = 1
-        --})
-      --}
-    --})
-  --}
 }
 
 local check_fields = function (fields, next, current, defaults, return_state)
@@ -200,10 +190,10 @@ M.refresh_global_ns = function ()
   end
 end
 
-M.refresh = function ()
+M.refresh = function (override_tick_state)
   M.now = vim.loop.now()
   M.tick_id = next_tick_id()
-  M.tick_state = M.READY
+  M.tick_state = override_tick_state or M.READY
   -- no reason to re-copy vimade_lua we aren't going to change it
   local vimade = TYPE.shallow_extend(TYPE.deep_copy(vim.g.vimade), vimade_lua)
   local current = {
