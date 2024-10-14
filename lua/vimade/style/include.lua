@@ -1,4 +1,5 @@
 local M = {}
+local COMPAT = require('vimade.util.compat')
 
 M.__init = function (globals)
   GLOBALS = globals
@@ -65,8 +66,11 @@ M.Include = function(config)
       end,
       modify = function (hl, to_hl)
         if include[hl.name] then
-          -- we want to expclitly render these highlights as they are user-targetted
-          hl.link = nil
+          -- anything that is "Included' needs to be unlinked so that it visually changes
+          -- the highlights here should already be correct (see namespace.lua - resolve_all_links)
+          if hl.link then
+            hl.link = nil
+          end
           for i, s in ipairs(style) do
             s.modify(hl, to_hl)
           end

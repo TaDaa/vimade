@@ -9,27 +9,48 @@ M.nvim_get_hl =
   -- 256 colors need to be filled.
   or (vim.api.nvim__get_hl_defs and
     function (ns, m)
-      local result = vim.api.nvim__get_hl_defs(0)
-      for name, highlight in pairs(result) do
-        for key, attr in pairs(highlight) do
-          if key == true or key == 'true' then
-            highlight[key] = nil
-          elseif key == 'foreground' then
-            highlight['fg'] = attr
-          elseif key == 'background' then
-            highlight['bg'] = attr
+      if m.id == nil and m.name == nil then
+        -- missing id and name, then we should return all highlights
+        local result = vim.api.nvim__get_hl_defs(0)
+        for name, highlight in pairs(result) do
+          for key, attr in pairs(highlight) do
+            if key == true or key == 'true' then
+              highlight[key] = nil
+            elseif key == 'foreground' then
+              highlight['fg'] = attr
+            elseif key == 'background' then
+              highlight['bg'] = attr
+            end
+          end
+          local term = vim.api.nvim_get_hl_by_name(name, false)
+          -- cterm colors are missing using get_hl_defs
+          for key, attr in pairs(term) do
+            if key == 'foreground' then
+              highlight['ctermfg'] = attr
+            elseif key == 'background' then
+              highlight['ctermbg'] = attr
+            end
           end
         end
-        local term = vim.api.nvim_get_hl_by_name(name, false)
-        for key, attr in pairs(term) do
-          if key == 'foreground' then
-            highlight['ctermfg'] = attr
-          elseif key == 'background' then
-            highlight['ctermbg'] = attr
-          end
+        return result
+      else
+        local term
+        local gui
+        if m.id ~= nil then
+          term = vim.api.nvim_get_hl_by_id(m.id, false)
+          gui = vim.api.nvim_get_hl_by_id(m.id, true)
+        else
+          term = vim.api.nvim_get_hl_by_id(m.name, false)
+          gui = vim.api.nvim_get_hl_by_id(m.name, true)
         end
+        return {
+          ctermfg = term.foreground,
+          ctermbg = term.background,
+          fg = gui.foreground,
+          bg = gui.background,
+          sp = gui.special,
+        }
       end
-      return result
     end)
 
 -- nvim_get_hl_ns may not exist in some versions, we can try

@@ -85,22 +85,28 @@ M.set_highlights = function(win)
       local hi = TYPE.shallow_copy(highlight)
       local hi_target = TYPE.shallow_copy(normal_target)
 
-      -- set default fg highlights if they are unset
       hi.name = name
-      if hi.fg == nil then
-        --TODO(see https://github.com/TaDaa/vimade/issues/81)
-      end
-      if hi.ctermfg == nil then
-        --TODO(see https://github.com/TaDaa/vimade/issues/81)
-      end
+
+      --TODO(see https://github.com/TaDaa/vimade/issues/81)
+      --Don't enable this again below (it shouldn't be needed any more anyways)
+      -- set default fg highlights if they are unset
+      --if hi.fg == nil then
+      --end
+      --if hi.ctermfg == nil then
+      --end
 
       for i, s in ipairs(style) do
         s.modify(hi, hi_target)
       end
 
-      -- name needs to be unset before call nvim_set_hl
       hi.name = nil
-      vim.api.nvim_set_hl(win.ns.vimade_ns, name, hi)
+      local existing_hi = win.ns.vimade_highlights[name]
+      -- check to see if the object that we already stored in the namespace
+      -- actually changed.  If not, skip re-setting it
+      if TYPE.shallow_compare(hi, existing_hi) == false then
+        vim.api.nvim_set_hl(win.ns.vimade_ns, name, hi)
+        win.ns.vimade_highlights[name] = hi
+      end
     end
   end
 
@@ -117,8 +123,15 @@ M.set_highlights = function(win)
     s.modify(normal, normal_target)
   end
   normal.name = nil
-  vim.api.nvim_set_hl(win.ns.vimade_ns, 'NormalNC' , normal)
-  vim.api.nvim_set_hl(win.ns.vimade_ns, 'Normal' , normal)
-  vim.api.nvim_set_hl(win.ns.vimade_ns, 'vimade_0' , normal)
+
+  local existing_normal = win.ns.vimade_highlights['Normal']
+  if TYPE.shallow_compare(normal, existing_normal) == false then
+    vim.api.nvim_set_hl(win.ns.vimade_ns, 'NormalNC' , normal)
+    vim.api.nvim_set_hl(win.ns.vimade_ns, 'Normal' , normal)
+    vim.api.nvim_set_hl(win.ns.vimade_ns, 'vimade_0' , normal)
+    win.ns.vimade_highlights['NormalNC'] = normal
+    win.ns.vimade_highlights['Normal'] = normal
+    win.ns.vimade_highlights['vimade_0'] = normal
+  end
 end
 return M

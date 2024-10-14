@@ -70,8 +70,17 @@ local resolve_all_links = function (real_ns, real_highlights)
       else
         -- circular ref found base_hi is our last good one
         -- undefined behavior here, so consult api for a real highlight and hopefully its right
-        -- this does not seem to occur < 0.10.0, so not using COMPAT here
-        circular_hi = vim.api.nvim_get_hl(real_ns, {name = base_name, link = false})
+        -- this could very well still be an issue. To further complicate things there seems to actually
+        -- be an indeterminate status between namespaces.  Take Neotree for example:
+        -- Neotree creates a circular reference between many groups. Neovim seems to be ok with this
+        -- for the most part but it breaks many internal get_hl functions causing the wrong color to return
+        -- depending on which window is active.
+        local circular_hi = COMPAT.nvim_get_hl(real_ns, {name = base_name, link = false})
+        -- we check here to see if the highlight has any contents, if not
+        -- its in a cleared state and we should consult global
+        if next(circular_hi) == nil then
+          circular_hi = COMPAT.nvim_get_hl(0, {name = base_name, link = false})
+        end
         base_hi.ctermfg = circular_hi.ctermfg
         base_hi.ctermbg = circular_hi.ctermbg
         base_hi.fg = circular_hi.fg
@@ -108,6 +117,10 @@ M.get_replacement = function (win, real_ns, hi_key, skip_create)
   local key = real_ns .. ':' .. hi_key
 
   local ns = M.key_lookup[key]
+  local current_win_ns = M.winid_lookup[win.winid]
+  if current_win_ns and current_win_ns ~= ns then
+    M.clear_winid(win.winid, ns == nil)
+  end
   if ns == nil then
     if skip_create then
       return nil
@@ -116,16 +129,12 @@ M.get_replacement = function (win, real_ns, hi_key, skip_create)
       key = key,
       real_ns = real_ns,
       vimade_ns = table.remove(M.free_ns) or vim.api.nvim_create_namespace('vimade_' .. get_next_id()),
+      vimade_highlights = {},
       windows = {},
     }
     M.key_lookup[key] = ns
     M.vimade_active_ns_lookup[ns.vimade_ns] = ns
     M.used_ns[ns.vimade_ns] = true
-  end
-
-  local current_win_ns = M.winid_lookup[win.winid]
-  if current_win_ns and current_win_ns ~= ns then
-    M.clear_winid(win.winid)
   end
 
   ns.windows[win.winid] = win
@@ -161,14 +170,30 @@ M.from_winid = function (winid)
   return result and result.vimade_ns
 end
 
-M.clear_winid = function (winid)
+M.clear_ns = function(ns)
+  local vimade_ns = ns.vimade_ns
+  for hi_name, v in pairs(ns.vimade_highlights) do
+    vim.api.nvim_set_hl(vimade_ns, hi_name, {})
+  end
+  ns.vimade_highlights = {}
+end
+
+-- will_reuse should only be set if the calling window will
+-- for sure reuse the namespace
+M.clear_winid = function (winid, will_self_reuse)
   local current_win_ns = M.winid_lookup[winid] 
   if current_win_ns ~= nil then
     current_win_ns.windows[winid] = nil
     if not next(current_win_ns.windows) then
       M.key_lookup[current_win_ns.key] = nil
       M.vimade_active_ns_lookup[current_win_ns.vimade_ns] = nil
+      -- this is a slight hack, but basically if the ns is going to be reused by the calling parent
+      -- there is no purpose in clearing it right now.  TODO: clean this up
+      if not will_self_reuse then
+        M.clear_ns(current_win_ns)
+      end
       table.insert(M.free_ns, current_win_ns.vimade_ns)
+      current_win_ns.vimade_ns = nil
     end
   end
 end

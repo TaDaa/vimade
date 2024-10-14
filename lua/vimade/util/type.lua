@@ -16,6 +16,23 @@ M.num_to_bool = function (maybe_num, default)
   end
 end
 
+M.shallow_compare = function (left, right)
+  if (left == nil or right == nil) and left ~= right then
+    return false
+  end
+  for k, v in pairs(left) do
+    if right[k] ~= v then
+      return false
+    end
+  end
+  for k, v in pairs(right) do
+    if left[k] ~= v then
+      return false
+    end
+  end
+  return true
+end
+
 M.deep_compare = function (left, right)
   if (left == nil or right == nil) and left ~= right then
     return false

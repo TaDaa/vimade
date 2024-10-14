@@ -158,12 +158,12 @@ M.refresh = function (wininfo, skip_link)
   win.linked = linked
 
   -- check namespaces
-  local ns = COMPAT.nvim_get_hl_ns({winid = win.winid})
+  local active_ns = COMPAT.nvim_get_hl_ns({winid = win.winid})
   local real_ns
-  if NAMESPACE.is_vimade_ns(ns) == true then
+  if NAMESPACE.is_vimade_ns(active_ns) == true then
     real_ns = vim.w[win.winid]._vimade_real_ns or 0
   else
-    real_ns = ns == -1 and 0 or ns
+    real_ns = active_ns == -1 and 0 or active_ns
   end
   win.real_ns =  real_ns
   vim.w[win.winid]._vimade_real_ns = real_ns
@@ -239,7 +239,9 @@ M.refresh = function (wininfo, skip_link)
         M.fading_cache[win.ns.vimade_ns] = true
       end
       COMPAT.nvim_win_set_hl_ns(win.winid, win.ns.vimade_ns)
-    else
+    -- only set the real_ns if it actually changed and is the vimade_ns (if some other plugin changed it, who cares)
+    -- (unfade operation)
+    elseif win.ns and active_ns == win.ns.vimade_ns and active_ns ~= win.real_ns then
       COMPAT.nvim_win_set_hl_ns(win.winid, win.real_ns)
     end
   end
