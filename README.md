@@ -78,6 +78,13 @@
 Plug 'TaDaa/vimade'
 ```
 
+_Or use Vim's built-in package support_
+
+```bash
+mkdir -p ~/.vim/pack/username/start
+cd ~/.vim/pack/username/start
+git submodule add https://github.com/TaDaa/vimade
+```
 ##### Config
 Vimade is initialized with the following configuration.  Vimade will react to configuration changes on the fly:
 ```
