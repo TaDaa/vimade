@@ -221,7 +221,7 @@ M.refresh = function (override_tick_state)
     'winid',
     'bufnr',
     'tabnr',
-  }, current, M.current, CURRENT, M.CHANGED))
+  }, current, M.current, CURRENT, bit.bor(M.RECALCULATE, M.CHANGED)))
 
   -- will be handled in win_state --
   M.link = vimade.link or DEFAULTS.link --TODO this be a one-key merge/replace
