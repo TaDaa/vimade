@@ -589,7 +589,7 @@ endfunction
 
 function! vimade#DeferredCheckWindows()
   if g:vimade_features.has_timer_start
-    if exists('g:vimade_deferred_timer')
+    if exists('g:vimade_deferred_timer') || exists('g:vimade_animation_running')
       return
     endif
     let g:vimade_deferred_timer = timer_start(0, 'vimade#DeferredTick')
@@ -617,19 +617,22 @@ function! vimade#CheckWindows()
 endfunction
 
 function! vimade#StartAnimationTimer()
-  if !exists('g:vimade_animation_timer') && g:vimade_features.has_timer_start
-    let g:vimade_animation_timer = timer_start(16, 'vimade#DoAnimations', {'repeat': -1})
-  else
-    " unpause timer
-    call timer_pause(g:vimade_animation_timer, 0)
+  if g:vimade_features.has_timer_start
+    let g:vimade_animation_running = 1
+    if !exists('g:vimade_animation_timer')
+      let g:vimade_animation_timer = timer_start(16, 'vimade#DoAnimations', {'repeat': -1})
+    else
+      call timer_pause(g:vimade_animation_timer, 0)
+    endif
   endif
 endfunction
 
 function! vimade#DoAnimations(val)
   if g:vimade_running && g:vimade_paused == 0 && getcmdwintype() == ''
-    call timer_pause(g:vimade_animation_timer, 1)
     call g:vimade_active_renderer.animate()
   endif
+  unlet g:vimade_animation_running
+  call timer_pause(g:vimade_animation_timer, 1)
 endfunction
 
 function! vimade#softInvalidateBuffer(bufnr)
@@ -659,8 +662,8 @@ function! vimade#UpdateEvents()
       au ColorScheme * call vimade#Redraw()
       au FileChangedShellPost * call vimade#softInvalidateBuffer(expand("<abuf>"))
       if g:vimade.usecursorhold
-        au CursorHold,CursorHoldI * call vimade#Tick(0)
-        au VimResized * call vimade#Tick(0)
+        au CursorHold,CursorHoldI * call vimade#DeferredCheckWindows()
+        au VimResized * call vimade#DeferredCheckWindows()
       endif
   augroup END
 endfunction
@@ -850,13 +853,15 @@ function! s:DetectTermColors_Lua()
   " empty
 endfunction
 function! s:Recalculate_Lua()
-  lua require('vimade').recalculate()
+  lua require('vimade').unfadeAll()
+  lua require('vimade').redraw()
 endfunction
 function! s:Redraw_Lua()
+  lua require('vimade').unfadeAll()
   lua require('vimade').redraw()
 endfunction
 function! s:UnfadeAll_Lua()
-  lua require('vimade').unfadeAll()
+  lua require('vimade').unfadeAll
 endfunction
 function! s:Update_Lua()
   lua require('vimade').update()
