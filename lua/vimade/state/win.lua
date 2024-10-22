@@ -1,16 +1,22 @@
 local M = {}
-local GLOBALS = require('vimade.state.globals')
 local NAMESPACE = require('vimade.state.namespace')
 local LINK = require('vimade.config_helpers.link')
 local BLOCKLIST = require('vimade.config_helpers.blocklist')
 local HIGHLIGHTER = require('vimade.highlighter')
 local COMPAT = require('vimade.util.compat')
+local GLOBALS
+local FADER
+
+M.__init = function(args)
+  FADER = args.FADER
+  GLOBALS = args.GLOBALS
+  FADER.on('tick:before', function ()
+    M.fading_cache = {}
+    M.current = nil
+  end)
+end
 
 M.cache = {}
-M.current = nil
-M.fading_cache = {
-  tick_id = -1
-}
 
 local _update_state = function (next, current, state)
   local modified = false
@@ -50,7 +56,7 @@ end
 
 M.__create = function (winid)
   if M.cache[winid] == nil then
-     win = {
+     local win = {
       winid = winid,
       winnr = nil,
       bufnr = nil,
@@ -65,7 +71,7 @@ M.__create = function (winid)
       hi_key = '',
       is_active_win = nil,
       is_active_buf = nil,
-      real_ns = nil,
+      real_ns = 0,
       ns = nil,
       state = GLOBALS.READY,
       style = {},
@@ -161,7 +167,7 @@ M.refresh = function (wininfo, skip_link)
   local active_ns = COMPAT.nvim_get_hl_ns({winid = win.winid})
   local real_ns
   if NAMESPACE.is_vimade_ns(active_ns) == true then
-    real_ns = vim.w[win.winid]._vimade_real_ns or 0
+    real_ns = win.real_ns
   else
     real_ns = active_ns == -1 and 0 or active_ns
   end
@@ -210,6 +216,13 @@ M.refresh = function (wininfo, skip_link)
     end
 
     local hi_key = win.real_ns .. ':' 
+
+    -- this is to separate out the logic for inactive vs active.  we can use this for highlighting
+    -- the active ns in the future
+    if not is_active_win then
+      hi_key = 'nc:' .. hi_key
+    end
+
     for i, s in ipairs(win.style) do
       s.before()
       hi_key = hi_key .. '#' .. s.key(i)
@@ -217,33 +230,32 @@ M.refresh = function (wininfo, skip_link)
 
     if not win.ns
       or not GLOBALS.nohlcheck
+      or win.ns.modified
       or win.hi_key ~= hi_key
-      or bit.band(GLOBALS.tick_state, GLOBALS.HLCHECK) > 0
       or bit.band(GLOBALS.tick_state, GLOBALS.RECALCULATE) > 0 then
       local ns = NAMESPACE.get_replacement(win, real_ns, hi_key)
       if ns.modified == true or win.hi_key ~= hi_key then
         win.state = bit.bor(GLOBALS.CHANGED, win.state)
+        ns.modified = true
       end
-      win.ns = ns
       win.hi_key = hi_key
+      win.ns = ns
     end
   end
 
-  if bit.band(bit.bor(GLOBALS.tick_state, win.state), GLOBALS.CHANGED) > 0 then
-    if win.faded then
-      if M.fading_cache.tick_id ~= GLOBALS.tick_id  then
-        M.fading_cache = {tick_id = GLOBALS.tick_id}
-      end
-      if M.fading_cache[win.ns.vimade_ns] == nil then
-        HIGHLIGHTER.set_highlights(win)
-        M.fading_cache[win.ns.vimade_ns] = true
-      end
-      COMPAT.nvim_win_set_hl_ns(win.winid, win.ns.vimade_ns)
-    -- only set the real_ns if it actually changed and is the vimade_ns (if some other plugin changed it, who cares)
-    -- (unfade operation)
-    elseif win.ns and active_ns == win.ns.vimade_ns and active_ns ~= win.real_ns then
-      COMPAT.nvim_win_set_hl_ns(win.winid, win.real_ns)
+  -- every namespace needs to be set again, this is related to the issues where the Neovim API
+  -- sets / returns incorrect values for namespace highlights.
+  if win.ns and win.faded and win.ns.real.complete_highlights then
+    if M.fading_cache[win.ns.vimade_ns] == nil then
+      HIGHLIGHTER.set_highlights(win)
+      M.fading_cache[win.ns.vimade_ns] = true
     end
+    COMPAT.nvim_win_set_hl_ns(win.winid, win.ns.vimade_ns or 0)
+    win.current_ns = win.ns.vimade_ns
+  elseif not win.faded then
+    -- TODO allow active highlights
+    COMPAT.nvim_win_set_hl_ns(win.winid, win.real_ns or 0)
+    win.current_ns = win.real_ns
   end
 
   return win

@@ -1,13 +1,18 @@
 local M = {}
-local NAMESPACE = require('vimade.state.namespace')
-local GLOBALS = require('vimade.state.globals')
 local ANIMATOR = require('vimade.animator')
-local HIGHLIGHTER = require('vimade.highlighter')
-local WIN_STATE = require('vimade.state.win')
 local COMPAT = require('vimade.util.compat')
+local EXCLUDE = require('vimade.style.exclude')
+local FADE = require('vimade.style.fade')
+local GLOBALS = require('vimade.state.globals')
+local HIGHLIGHTER = require('vimade.highlighter')
+local INCLUDE = require('vimade.style.include')
+local NAMESPACE = require('vimade.state.namespace')
+local REAL_NAMESPACE = require('vimade.state.real_namespace')
+local TINT = require('vimade.style.tint')
+local WIN_STATE = require('vimade.state.win')
 
 -- internal only
-local update = function (only_these_windows)
+local update = function ()
   local windows = vim.fn.getwininfo()
   local fade_windows = GLOBALS.fademode == 'windows'
   local fade_buffers = not fade_windows
@@ -26,12 +31,28 @@ local update = function (only_these_windows)
   end
 
   for i, wininfo in pairs(windows) do
-    if current.tabnr == wininfo.tabnr and current.winid ~= wininfo.winid
-      and (not only_these_windows or only_these_windows[wininfo.winid]) then
+    if current.tabnr == wininfo.tabnr and current.winid ~= wininfo.winid then
       WIN_STATE.refresh(wininfo)
     end
   end
   WIN_STATE.cleanup(windows)
+end
+
+M.callbacks = {}
+M.on = function (name, callback)
+  if not M.callbacks[name] then
+    M.callbacks[name] = {}
+  end
+  table.insert(M.callbacks[name], callback)
+end
+
+M.notify = function (name)
+  local callbacks = M.callbacks[name]
+  if callbacks then
+    for k, callback in ipairs(callbacks) do
+      callback()
+    end
+  end
 end
 
 -- external --
@@ -43,53 +64,24 @@ M.getInfo = function ()
   return GLOBALS.getInfo()
 end
 
-M.recalculate = function ()
-  local windows = vim.fn.getwininfo()
-  local current = GLOBALS.current
-  local updated_cache = {}
-
-  -- TODO likely deprecate this, just pipe via HLCHECK or rename HLCHECK
-  -- to RECALCULATE
-  GLOBALS.refresh_global_ns()
-  for i, wininfo in pairs(windows) do
-    local win = WIN_STATE.get(wininfo)
-    if win ~= nil and win.ns ~= nil and win.ns.vimade_ns ~= nil then
-      if updated_cache[win.ns.vimade_ns] == nil then
-        HIGHLIGHTER.set_highlights(win)
-        updated_cache[win.ns.vimade_ns] = true
-      end
-      if win.faded == true then
-        vim.api.nvim_win_set_hl_ns(win.winid, win.ns.vimade_ns)
-      end
-    end
-  end
-end
-
 M.redraw = function()
-  M.tick(GLOBALS.HLCHECK)
+  M.tick(bit.bor(GLOBALS.RECALCULATE, GLOBALS.CHANGED))
 end
 
 M.animate = function ()
-  local only_these_windows = ANIMATOR.refresh()
-  M.tick(nil, only_these_windows)
+  -- animations are monitored via events, no special handling required here
+  M.tick()
 end
 
-M.tick = function (override_tick_state, only_these_windows)
-  GLOBALS.refresh(override_tick_state)
+M.tick = function (override_tick_state)
   local last_ei = vim.go.ei
+  vim.go.ei ='all'
+  M.notify('tick:before')
+  GLOBALS.refresh(override_tick_state)
 
-  if bit.band(GLOBALS.RECALCULATE, GLOBALS.tick_state) > 0 then
-    M.recalculate()
-  end
+  update()
 
-  -- if the tick_state changed during an animation, we need to use that frame
-  -- to sync the windows
-  if GLOBALS.tick_state > 0 and only_these_windows then
-    only_these_windows = nil
-  end
-
-  update(only_these_windows)
-
+  M.notify('tick:after')
   vim.go.ei = last_ei
 end
 
@@ -100,11 +92,20 @@ M.unfadeAll = function ()
   for i, winid in pairs(windows) do
     local ns = COMPAT.nvim_get_hl_ns({winid = winid})
     if NAMESPACE.is_vimade_ns(ns) == true then
-        local real_ns = vim.api._vimade_real_ns or 0
+        local real_ns = vim.w[winid]._vimade_real_ns or 0
         vim.api.nvim_win_set_hl_ns(winid, real_ns)
         WIN_STATE.unfade(winid)
     end
   end
 end
+
+ANIMATOR.__init({FADER=M, GLOBALS=GLOBALS})
+HIGHLIGHTER.__init({FADER=M, GLOBALS=GLOBALS})
+REAL_NAMESPACE.__init({FADER=M, GLOBALS=GLOBALS})
+FADE.__init({FADER=M, GLOBALS=GLOBALS})
+TINT.__init({FADER=M, GLOBALS=GLOBALS})
+EXCLUDE.__init({FADER=M, GLOBALS=GLOBALS})
+INCLUDE.__init({FADER=M, GLOBALS=GLOBALS})
+WIN_STATE.__init({FADER=M, GLOBALS=GLOBALS})
 
 return M

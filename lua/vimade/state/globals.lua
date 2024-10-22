@@ -1,15 +1,11 @@
 local M = {}
-local FADE = require('vimade.style.fade')
-local TINT = require('vimade.style.tint')
 local EXCLUDE = require('vimade.style.exclude')
-local INCLUDE = require('vimade.style.include')
-local ANIMATE = require('vimade.style.animate')
 local TYPE = require('vimade.util.type')
-local MATCHERS = require('vimade.util.matchers')
-local NAMESPACE = require('vimade.state.namespace')
+local REAL_NAMESPACE = require('vimade.state.real_namespace')
+local DEFAULT_RECIPE = require('vimade.recipe.default')
 
 -- arbitrary high number for us to regulate what has been processed in a single tick
-local MAX_TICK_ID = 1000000
+local MAX_TICK_ID = 400000
 local next_tick_id = function ()
   local tick_id = M.tick_id + 1
   if tick_id > MAX_TICK_ID then
@@ -17,12 +13,6 @@ local next_tick_id = function ()
   end
   return tick_id
 end
-
-NAMESPACE.__init(M)
-FADE.__init(M)
-TINT.__init(M)
-EXCLUDE.__init(M)
-INCLUDE.__init(M)
 
 M.READY = 0
 M.ERROR = 1
@@ -50,7 +40,7 @@ M.fadelevel = 0
 M.fademinimap = false
 M.groupdiff = true
 M.groupscrollbind = false
-M.nohlcheck = false
+M.nohlcheck = true
 M.colorscheme = nil
 M.termguicolors = nil
 M.is_dark = false
@@ -145,8 +135,7 @@ local DEFAULTS = {
       },
     },
   },
-  -- TODO configure this via recipe
-  style = {TINT.DEFAULT, FADE.DEFAULT},
+  style = DEFAULT_RECIPE.Default().style,
 }
 
 local check_fields = function (fields, next, current, defaults, return_state)
@@ -165,7 +154,7 @@ local check_fields = function (fields, next, current, defaults, return_state)
 end
 
 M.setup = function (config)
-  vimade_lua = TYPE.deep_copy(config)
+  M.vimade_lua = TYPE.deep_copy(config)
 end
 
 M.getInfo = function ()
@@ -181,21 +170,20 @@ M.getInfo = function ()
 end
 
 M.refresh_global_ns = function ()
-  if M.global_ns == nil then
-    M.global_ns = NAMESPACE.get_replacement({winid= 'g'}, 0, 0)
-  end
-    NAMESPACE.check_ns_modified(M.global_ns)
+  M.global_ns = REAL_NAMESPACE.refresh(0)
   if M.global_ns.modified == true then
-    M.global_highlights = M.global_ns.real_highlights
+    M.global_highlights = M.global_ns.highlights
   end
 end
+
+M.callbacks = {}
 
 M.refresh = function (override_tick_state)
   M.now = vim.loop.now()
   M.tick_id = next_tick_id()
   M.tick_state = override_tick_state or M.READY
   -- no reason to re-copy vimade_lua we aren't going to change it
-  local vimade = TYPE.shallow_extend(TYPE.deep_copy(vim.g.vimade), vimade_lua)
+  local vimade = TYPE.shallow_extend(TYPE.deep_copy(vim.g.vimade), M.vimade_lua)
   local current = {
     winid = tonumber(vim.api.nvim_get_current_win()),
     bufnr = tonumber(vim.api.nvim_get_current_buf()),
@@ -220,7 +208,7 @@ M.refresh = function (override_tick_state)
     is_dark = vim.go.background == 'dark',
     colorscheme = vim.g.colors_name,
     termguicolors = vim.go.termguicolors,
-  }, M, OTHER, M.RECALCULATE))
+  }, M, OTHER, bit.bor(M.RECALCULATE, M.CHANGED)))
   M.tick_state = bit.bor(M.tick_state, check_fields({
     'vimade_fade_active',
   }, {
@@ -233,19 +221,7 @@ M.refresh = function (override_tick_state)
     'winid',
     'bufnr',
     'tabnr',
-  }, current, M.current, CURRENT, bit.bor(M.CHANGED, M.HLCHECK)))
-
-  if not M.global_ns or not M.nohlcheck
-    or bit.band(M.HLCHECK, M.tick_state) > 0
-    or bit.band(M.RECALCULATE, M.tick_state) > 0 then
-    M.refresh_global_ns()
-    if M.global_ns.modified == true
-      and (M.nohlcheck and bit.band(M.HLCHECK, M.tick_state) == 0) then
-      -- RECALCULATE only for nohlcheck (skip a forced HLCHECK)
-      M.tick_state = bit.bor(M.RECALCULATE, M.tick_state)
-    end
-  end
-
+  }, current, M.current, CURRENT, M.CHANGED))
 
   -- will be handled in win_state --
   M.link = vimade.link or DEFAULTS.link --TODO this be a one-key merge/replace
@@ -268,6 +244,15 @@ M.refresh = function (override_tick_state)
   -- already checked --
   M.fade_windows = M.fademode == 'windows'
   M.fade_buffers = M.fademode == 'buffers'
+
+  if not M.global_ns or not M.nohlcheck
+    or bit.band(M.RECALCULATE, M.tick_state) > 0 then
+    M.refresh_global_ns()
+    if M.global_ns.modified == true then
+      M.tick_state = bit.bor(M.RECALCULATE, M.tick_state)
+    end
+  end
+
 end
 
 return M

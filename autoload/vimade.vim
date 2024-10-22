@@ -853,15 +853,13 @@ function! s:DetectTermColors_Lua()
   " empty
 endfunction
 function! s:Recalculate_Lua()
-  lua require('vimade').unfadeAll()
   lua require('vimade').redraw()
 endfunction
 function! s:Redraw_Lua()
-  lua require('vimade').unfadeAll()
   lua require('vimade').redraw()
 endfunction
 function! s:UnfadeAll_Lua()
-  lua require('vimade').unfadeAll
+  lua require('vimade').unfadeAll()
 endfunction
 function! s:Update_Lua()
   lua require('vimade').update()

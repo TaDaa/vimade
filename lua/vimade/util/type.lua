@@ -53,10 +53,10 @@ M.deep_compare = function (left, right)
       else
         return false
       end
-    elseif copy_value ~= value then
-      return false
-    else
+    elseif copy_value == value then
       copy[key] = nil
+    else
+      return false
     end
   end
   if next(copy) ~= nil then

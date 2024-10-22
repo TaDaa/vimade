@@ -1,9 +1,11 @@
-local M = {}
-local COLOR_UTIL = require('vimade.util.color')
 local math = require('math')
 
-M.__init = function (globals)
-  GLOBALS = globals
+local M = {}
+local COLOR_UTIL = require('vimade.util.color')
+local GLOBALS
+
+M.__init = function (args)
+  GLOBALS = args.GLOBALS
 end
 
 M.Fade = function(initial_fade)
@@ -26,17 +28,19 @@ M.Fade = function(initial_fade)
         modify = function (hl, to_hl)
           -- fade modifies all layers against the background
           -- skip links by default, use include to target them
-          if hl.link then
+          if hl.link or fade == nil then
             return
           end
-          if hl.fg ~= nil then
-            hl.fg = COLOR_UTIL.interpolate24b(hl.fg, to_hl.bg, fade)
-          end
-          if hl.bg ~= nil then
-            hl.bg = COLOR_UTIL.interpolate24b(hl.bg, to_hl.bg, fade)
-          end
-          if hl.sp ~= nil then
-            hl.sp = COLOR_UTIL.interpolate24b(hl.sp, to_hl.bg, fade)
+          if to_hl.bg ~= nil then
+            if hl.fg ~= nil then
+              hl.fg = COLOR_UTIL.interpolate24b(hl.fg, to_hl.bg, fade)
+            end
+            if hl.bg ~= nil then
+              hl.bg = COLOR_UTIL.interpolate24b(hl.bg, to_hl.bg, fade)
+            end
+            if hl.sp ~= nil then
+              hl.sp = COLOR_UTIL.interpolate24b(hl.sp, to_hl.bg, fade)
+            end
           end
           if hl.blend ~= nil then
             --always assume blend is 100
@@ -44,11 +48,13 @@ M.Fade = function(initial_fade)
             --cap it here.
             hl.blend = math.max(0, math.min(100, COLOR_UTIL.interpolateLinear(hl.blend, 100, fade)))
           end
-          if hl.ctermfg ~= nil then
-            hl.ctermfg = COLOR_UTIL.interpolate256(hl.ctermfg, to_hl.ctermbg, fade)
-          end
-          if hl.ctermbg ~= nil then
-            hl.ctermbg = COLOR_UTIL.interpolate256(hl.ctermbg, to_hl.ctermbg, fade)
+          if to_hl.ctermbg ~= nil then
+            if hl.ctermfg ~= nil then
+              hl.ctermfg = COLOR_UTIL.interpolate256(hl.ctermfg, to_hl.ctermbg, fade)
+            end
+            if hl.ctermbg ~= nil then
+              hl.ctermbg = COLOR_UTIL.interpolate256(hl.ctermbg, to_hl.ctermbg, fade)
+            end
           end
         end,
       }

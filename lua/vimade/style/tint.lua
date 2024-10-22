@@ -1,8 +1,9 @@
 local M = {}
 local COLOR_UTIL = require('vimade.util.color')
+local GLOBALS
 
-M.__init = function (globals)
-  GLOBALS = globals
+M.__init = function (args)
+  GLOBALS = args.GLOBALS
 end
 
 M.TINT = function(initial_tint)

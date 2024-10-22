@@ -1,8 +1,8 @@
+local math = require('math')
 local EASE = require('vimade.style.animate.ease')
 local ANIMATOR = require('vimade.animator')
 local M = {}
 
-local math = require('math')
 local DEFAULT_DURATION = 300
 local DEFAULT_EASE = EASE.OUT_QUART
 local DEFAULT_DELAY = 0
@@ -20,7 +20,7 @@ local DEFAULT_DELAY = 0
 --}
 M.Animate = function(config)
   local _style = config.style
-  local _duration = config.duraton or DEFAULT_DURATION
+  local _duration = config.duration or DEFAULT_DURATION
   local _ease = config.ease or DEFAULT_EASE
   local _delay = config.delay or DEFAULT_DELAY
   local _from = config.from
@@ -50,11 +50,11 @@ M.Animate = function(config)
       if time < 0 or not win.faded or win.faded_time == nil then
         return from
       end
-      if time >= duration or from == nil or to == nil then
+      if time > duration or from == nil or to == nil then
         return to
       end
       local elapsed = time / duration
-      elapsed = _ease(math.min(math.max(elapsed, 0), 1))
+      elapsed = math.min(math.max(_ease(elapsed), 0), 1)
       ANIMATOR.schedule(win)
       return from + (to - from) * elapsed
     end

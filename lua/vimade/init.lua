@@ -26,11 +26,8 @@ M.unfadeSigns = function ()
 end
 
 M.redraw = function ()
-  FADER.redraw()
-end
-
-M.recalculate = function ()
-  FADER.recalculate()
+  FADER.unfadeAll()
+  vim.schedule(FADER.redraw)
 end
 
 M.update = function ()

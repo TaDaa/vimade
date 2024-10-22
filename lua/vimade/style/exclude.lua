@@ -1,7 +1,7 @@
 local M = {}
 
-M.__init = function (globals)
-  GLOBALS = globals
+M.__init = function (args)
+  GLOBALS = args.GLOBALS
 end
 
 M.exclude_names = {}

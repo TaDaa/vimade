@@ -1,8 +1,8 @@
 local M = {}
 local COMPAT = require('vimade.util.compat')
 
-M.__init = function (globals)
-  GLOBALS = globals
+M.__init = function (args)
+  GLOBALS = args.GLOBALS
 end
 
 M.include_names = {}
