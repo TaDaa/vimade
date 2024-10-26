@@ -628,11 +628,11 @@ function! vimade#StartAnimationTimer()
 endfunction
 
 function! vimade#DoAnimations(val)
+  unlet g:vimade_animation_running
+  call timer_pause(g:vimade_animation_timer, 1)
   if g:vimade_running && g:vimade_paused == 0 && getcmdwintype() == ''
     call g:vimade_active_renderer.animate()
   endif
-  unlet g:vimade_animation_running
-  call timer_pause(g:vimade_animation_timer, 1)
 endfunction
 
 function! vimade#softInvalidateBuffer(bufnr)
