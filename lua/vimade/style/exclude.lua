@@ -13,8 +13,10 @@ M.exclude_id = 1
 --}
 M.Exclude = function(config)
   local result = {}
+  local _condition = config.condition
   result.attach = function (win)
     local names = config.names
+    local condition = _condition
     local style = {}
     for i, s in ipairs(config.style) do
       table.insert(style, s.attach(win))
@@ -22,7 +24,13 @@ M.Exclude = function(config)
     local exclude = {}
     local exclude_ids = {}
     return {
-      before = function ()
+      before = function (win, state)
+        if type(_condition) == 'function' then
+          condition = _condition(win, state)
+        end
+        if condition == false then
+          return
+        end
         exclude = {}
         exclude_ids = {}
         local input
@@ -49,22 +57,25 @@ M.Exclude = function(config)
           end
         end
         for i, s in ipairs(style) do
-          s.before()
+          s.before(win, state)
         end
       end,
-      key = function (i)
+      key = function (win, state)
+        if condition == false then
+          return ''
+        end
         local key ='E-' .. table.concat(exclude_ids, ',') .. '('
         for j, s in ipairs(style) do
           if j ~= 0 then
             key = key .. ','
           end
-          key = key .. s.key(j)
+          key = key .. s.key(win, state)
         end
         key = key .. ')'
         return key
       end,
       modify = function (hl, to_hl)
-        if exclude[hl.name] then
+        if condition == false or exclude[hl.name] then
           return
         end
         for i, s in ipairs(style) do

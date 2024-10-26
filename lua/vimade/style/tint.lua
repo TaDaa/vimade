@@ -1,16 +1,36 @@
 local M = {}
+local CONDITION = require('vimade.style.value.condition')
 local COLOR_UTIL = require('vimade.util.color')
+local TYPE = require('vimade.util.type')
 local GLOBALS
 
 M.__init = function (args)
   GLOBALS = args.GLOBALS
 end
 
-M.TINT = function(initial_tint)
+M._resolve_all_fn = function (obj, win, state)
+  if type(obj) == 'function' then
+    obj = obj(win, state)
+  end
+  if type(obj) == 'table' then
+    local copy = {}
+    for i, v in pairs(obj) do
+      copy[i] = M._resolve_all_fn(v, win, state)
+    end
+    return copy
+  end
+  return obj
+end
+
+M.Tint = function(config)
   local result = {}
+  local _value = config.value
+  local _condition = config.condition
   result.attach = function(win)
-    local tint = initial_tint
-    local create_to_hl = function (tint)
+    local tint = _value
+    local to_hl = nil
+    local condition = _condition
+    local create_to_hl = function (tint, win, state)
       if not tint then
         return nil
       end
@@ -20,6 +40,7 @@ M.TINT = function(initial_tint)
       if not bg and not fg and not sp then
         return nil
       end
+
       return {
         fg = fg and COLOR_UTIL.to24b(fg.rgb) or nil,
         ctermfg = fg and fg.rgb or nil,
@@ -31,33 +52,36 @@ M.TINT = function(initial_tint)
         sp_intensity = sp and (1 - (sp.intensity or 0)),
       }
     end
-    local to_hl = nil
-    if initial_tint and type(initial_tint) ~= 'function' then
-      to_hl = create_to_hl(initial_tint)
-    end
     return {
-      before = function ()
-        if type(initial_tint) == 'function' then
-          tint = initial_tint(win)
-          to_hl = create_to_hl(tint)
+      before = function (win, state)
+        if type(_condition) == 'function' then
+          condition = _condition(win, state)
         end
+        if condition == false then
+          return
+        end
+        tint = M._resolve_all_fn(_value, win, state)
+        to_hl = create_to_hl(tint, win, state)
       end,
-      key = function ()
-        if not to_hl then
+      key = function (win, state)
+        if not to_hl or condition == false then
           return ''
         end
         return 'T-'
-        .. (to_hl.fg and ((to_hl.fg or '') .. ',' .. (to_hl.ctermfg[1]..'-'..to_hl.ctermfg[2]..'-'..to_hl.ctermfg[3]) .. ',' .. to_hl.fg_intensity) or '') .. '|'
-        .. (to_hl.bg and ((to_hl.bg or '') .. ',' .. (to_hl.ctermbg[1]..'-'..to_hl.ctermbg[2]..'-'..to_hl.ctermbg[3]) .. ',' .. to_hl.bg_intensity) or '') .. '|'
+        .. (to_hl.fg and ((to_hl.fg or '') .. ',' .. (to_hl.ctermfg and ('t:' .. to_hl.ctermfg[1]..'-'..to_hl.ctermfg[2]..'-'..to_hl.ctermfg[3]) or '') .. ',' .. to_hl.fg_intensity) or '') .. '|'
+        .. (to_hl.bg and ((to_hl.bg or '') .. ',' .. (to_hl.ctermbg and ('t:' .. to_hl.ctermbg[1]..'-'..to_hl.ctermbg[2]..'-'..to_hl.ctermbg[3]) or '') .. ',' .. to_hl.bg_intensity) or '') .. '|'
         .. (to_hl.sp and ((to_hl.sp or '') .. to_hl.sp_intensity) or '')
       end,
       modify = function (hl, target)
-        if not to_hl then
+        if condition == false or not to_hl then
           return
         end
         -- skip links by default, use include to target them
         if hl.link then
           return
+        end
+        if target.ctermbg and to_hl.ctermbg then
+          target.ctermbg = COLOR_UTIL.interpolate256(target.ctermbg, to_hl.ctermbg, to_hl.bg_intensity)
         end
         if hl.fg and to_hl.fg then
           hl.fg = COLOR_UTIL.interpolate24b(hl.fg, to_hl.fg, to_hl.fg_intensity)
@@ -71,6 +95,9 @@ M.TINT = function(initial_tint)
         if hl.bg and to_hl.bg then
           hl.bg = COLOR_UTIL.interpolate24b(hl.bg, to_hl.bg, to_hl.bg_intensity)
         end
+        if target.bg and to_hl.bg then
+          target.bg = COLOR_UTIL.interpolate24b(target.bg, to_hl.bg, to_hl.bg_intensity)
+        end
         if hl.ctermbg and to_hl.ctermbg  then
           hl.ctermbg = COLOR_UTIL.interpolate256(hl.ctermbg, to_hl.ctermbg, to_hl.bg_intensity)
         end
@@ -79,17 +106,20 @@ M.TINT = function(initial_tint)
   end
   result.value = function (replacement)
     if replacement ~= nil then
-      initial_tint = replacement
+      _value = replacement
       return result
     end
-    return initial_tint
+    return _value
   end
   return result
 end
 
-M.DEFAULT = M.TINT(function (win)
+M.Default = function (config)
+return M.Tint({
+  condition = CONDITION.INACTIVE,
+  value = function (win, state)
   if type(GLOBALS.tint) == 'function' then
-    return GLOBALS.tint(win)
+    return GLOBALS.tint(win, state)
   elseif type(GLOBALS.tint) == 'table' then
     return GLOBALS.tint
   elseif GLOBALS.basebg then
@@ -101,6 +131,7 @@ M.DEFAULT = M.TINT(function (win)
     }
   end
   return GLOBALS.tint
-end)
+end})
+end
 
 return M

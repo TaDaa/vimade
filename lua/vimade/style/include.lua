@@ -14,7 +14,9 @@ M.include_id = 1
 --}
 M.Include = function(config)
   local result = {}
+  local _condition = config.condition
   result.attach = function (win)
+    local condition = _condition
     local names = config.names
     local style = {}
     for i, s in ipairs(config.style) do
@@ -23,7 +25,13 @@ M.Include = function(config)
     local include = {}
     local include_ids = {}
     return {
-      before = function ()
+      before = function (win, state)
+        if type(_condition) == 'function' then
+          condition = _condition(win, state)
+        end
+        if condition == false then
+          return
+        end
         include = {}
         include_ids = {}
         local input
@@ -50,21 +58,27 @@ M.Include = function(config)
           end
         end
         for i, s in ipairs(style) do
-          s.before()
+          s.before(win, state)
         end
       end,
-      key = function (i)
+      key = function (win, state)
+        if condition == false then
+          return ''
+        end
         local key ='I-' .. table.concat(include_ids, ',') .. '('
         for j, s in ipairs(style) do
           if j ~= 0 then
             key = key .. ','
           end
-          key = key .. s.key(j)
+          key = key .. s.key(win, state)
         end
         key = key .. ')'
         return key
       end,
       modify = function (hl, to_hl)
+        if condition == false then
+          return
+        end
         if include[hl.name] then
           -- anything that is "Included' needs to be unlinked so that it visually changes
           -- the highlights here should already be correct (see namespace.lua - resolve_all_links)

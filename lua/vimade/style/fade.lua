@@ -1,6 +1,7 @@
 local math = require('math')
 
 local M = {}
+local CONDITION = require('vimade.style.value.condition')
 local COLOR_UTIL = require('vimade.util.color')
 local GLOBALS
 
@@ -8,19 +9,34 @@ M.__init = function (args)
   GLOBALS = args.GLOBALS
 end
 
-M.Fade = function(initial_fade)
+-- @param config {
+  -- @required value = number | function (win) -> number -- number is the fadelevel that is applied to each window
+  -- }
+M.Fade = function(config)
   local result = {}
+  local _value = config.value
+  local _condition = config.condition
   result.attach = function (win)
-    local fade = initial_fade
+    local fade = _value
+    local condition = _condition
     return {
-        before = function ()
+        before = function (win, state)
           -- before any ops related to this module, we want to ensure we have the most up-to-date fade
           -- for the window
-          if type(initial_fade) == 'function' then
-            fade = initial_fade(win)
+          if type(_condition) == 'function' then
+            condition = _condition(win, state)
+          end
+          if condition == false then
+            return
+          end
+          if type(_value) == 'function' then
+            fade = _value(win, state)
           end
         end,
-        key = function ()
+        key = function (win, state)
+          if condition == false then
+            return ''
+          end
           -- this function compounds the fadelevel only on the existing higlight
           -- only needs to be keyed by fadelevel
           return 'F-' .. fade
@@ -28,7 +44,7 @@ M.Fade = function(initial_fade)
         modify = function (hl, to_hl)
           -- fade modifies all layers against the background
           -- skip links by default, use include to target them
-          if hl.link or fade == nil then
+          if condition == false or hl.link or fade == nil then
             return
           end
           if to_hl.bg ~= nil then
@@ -61,19 +77,24 @@ M.Fade = function(initial_fade)
   end
   result.value = function (replacement)
     if replacement ~= nil then
-      initial_fade = replacement
+      _value = replacement
       return result
     end
-    return initial_fade
+    return _value
   end
   return result
 end
 
-M.DEFAULT = M.Fade(function (win)
-  if type(GLOBALS.fadelevel) == 'function' then
-    return GLOBALS.fadelevel(win)
+M.Default = function (config)
+return M.Fade({
+  condition = CONDITION.INACTIVE,
+  value = function (win, state)
+    if type(GLOBALS.fadelevel) == 'function' then
+      return GLOBALS.fadelevel(win, state)
+    end
+    return GLOBALS.fadelevel
   end
-  return GLOBALS.fadelevel
-end)
+})
+end
 
 return M

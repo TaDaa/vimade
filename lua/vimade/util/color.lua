@@ -66,8 +66,27 @@ M.interpolate24b = function(source, target, fade)
   return bit.lshift(r, 16) + bit.lshift(g, 8) + b
 end
 
+M.interpolateRgb = function(source, target, fade)
+  source = source or target or {0,0,0}
+  target = target or source
+  local target_r = target[1]
+  local target_g = target[2]
+  local target_b = target[3]
+  local r = M.interpolateLinear(source[1], target_r, fade)
+  local g = M.interpolateLinear(source[2], target_g, fade)
+  local b = M.interpolateLinear(source[3], target_b, fade)
+  return {r,g,b}
+end
+
 M.interpolateLinear = function(source, target, fade)
   return math.floor(target + (source - target) * fade)
+end
+
+M.interpolateFloat = function(source, target, fade)
+  source = source or 0
+  target = target or 0
+  fade = fade or 1
+  return target + (source - target) * fade
 end
 
 M.interpolate256 = function(source, target, fade, prefer_color)

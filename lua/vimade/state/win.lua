@@ -66,11 +66,19 @@ M.__create = function (winid)
       height = -1,
       linked = false,
       blocked = false,
-      faded_time = 0,
       faded = false,
       hi_key = '',
       is_active_win = nil,
       is_active_buf = nil,
+      style_state = {
+        animations = {},
+        custom = {}
+      },
+      timestamps = {
+        active_win = 0,
+        active_buf = 0,
+        faded = 0,
+      },
       real_ns = 0,
       ns = nil,
       state = GLOBALS.READY,
@@ -116,8 +124,17 @@ M.refresh = function (wininfo, skip_link)
   win.win_type = vim.fn.win_gettype(win.winid)
   win.win_config = vim.api.nvim_win_get_config(win.winid)
 
-  win.is_active_win = win.winid == GLOBALS.current.winid
-  win.is_active_buf = win.bufnr == GLOBALS.current.bufnr
+  local is_active_win = win.winid == GLOBALS.current.winid
+  local is_active_buf = win.bufnr == GLOBALS.current.bufnr
+
+  if is_active_win ~= win.is_active_win then
+    win.is_active_win = is_active_win
+    win.timestamps.active_win = GLOBALS.now
+  end
+  if is_active_buf ~= win.is_active_buf then
+    win.is_active_buf = is_active_buf
+    win.timestamps.active_win = GLOBALS.now
+  end
 
   local can_fade = not (vim.b[win.bufnr].vimade_disabled == 1
     or vim.w[win.winid].vimade_disabled == 1)
@@ -174,19 +191,8 @@ M.refresh = function (wininfo, skip_link)
   win.real_ns =  real_ns
   vim.w[win.winid]._vimade_real_ns = real_ns
 
-  if GLOBALS.fadeconditions then
-    for i, condition in ipairs(GLOBALS.fadeconditions) do
-      local override = condition(win, M.current)
-      -- the first condition that returns a bool value wins
-      if override == true or override == false then
-        should_fade = override
-        break
-      end
-    end
-  end
-
   if (should_fade and not win.faded) or (not should_fade and win.faded) then
-    win.faded_time = vim.loop.now()
+    win.timestamps.faded = GLOBALS.now
   end
 
   win.state = bit.bor(win.state, _update_state({
@@ -195,7 +201,6 @@ M.refresh = function (wininfo, skip_link)
 
   local rerun_style = false
 
-  if should_fade == true then
     if #win._global_style ~= #GLOBALS.style then
       rerun_style = true
     else
@@ -216,23 +221,30 @@ M.refresh = function (wininfo, skip_link)
     end
 
     local hi_key = win.real_ns .. ':' 
+    if win.is_active_win then
+      hi_key = 'nc:' .. hi_key
+    else
+      hi_key = 'ac:' .. hi_key
+    end
 
     -- this is to separate out the logic for inactive vs active.  we can use this for highlighting
     -- the active ns in the future
-    if not is_active_win then
-      hi_key = 'nc:' .. hi_key
-    end
-
+    local style_hi_key = ''
     for i, s in ipairs(win.style) do
-      s.before()
-      hi_key = hi_key .. '#' .. s.key(i)
+      s.before(win, win.style_state)
+      if i ~= 0 and string.len(style_hi_key) ~= 0 then
+        style_hi_key = style_hi_key .. '#'
+      end
+      style_hi_key = style_hi_key .. s.key(win, style_state)
     end
+    hi_key = hi_key .. style_hi_key
 
-    if not win.ns
+    if string.len(style_hi_key) ~= 0
+      and (not win.ns
       or not GLOBALS.nohlcheck
       or win.ns.modified
       or win.hi_key ~= hi_key
-      or bit.band(GLOBALS.tick_state, GLOBALS.RECALCULATE) > 0 then
+      or bit.band(GLOBALS.tick_state, GLOBALS.RECALCULATE) > 0) then
       local ns = NAMESPACE.get_replacement(win, real_ns, hi_key)
       if ns.modified == true or win.hi_key ~= hi_key then
         win.state = bit.bor(GLOBALS.CHANGED, win.state)
@@ -241,7 +253,6 @@ M.refresh = function (wininfo, skip_link)
       win.hi_key = hi_key
       win.ns = ns
     end
-  end
 
   -- every namespace needs to be set again, this is related to the issues where the Neovim API
   -- sets / returns incorrect values for namespace highlights.
@@ -250,12 +261,17 @@ M.refresh = function (wininfo, skip_link)
       HIGHLIGHTER.set_highlights(win)
       M.fading_cache[win.ns.vimade_ns] = true
     end
-    COMPAT.nvim_win_set_hl_ns(win.winid, win.ns.vimade_ns or 0)
     win.current_ns = win.ns.vimade_ns
   elseif not win.faded then
-    -- TODO allow active highlights
-    COMPAT.nvim_win_set_hl_ns(win.winid, win.real_ns or 0)
-    win.current_ns = win.real_ns
+    if string.len(style_hi_key) == 0 then
+      win.current_ns = win.real_ns
+    else
+      if M.fading_cache[win.ns.vimade_ns] == nil then
+        HIGHLIGHTER.set_highlights(win)
+        M.fading_cache[win.ns.vimade_ns] = true
+      end
+      win.current_ns = win.ns.vimade_ns
+    end
   end
 
   return win

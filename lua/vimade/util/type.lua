@@ -84,19 +84,25 @@ M.shallow_copy = function (value)
   return M.shallow_extend({}, value)
 end
 
-M.shallow_extend = function (base, target)
-  if target ~= nil then
-    for key, value in pairs(target) do
-      base[key] = value
+M.shallow_extend = function (base, ...)
+  for i, target in ipairs({...}) do
+    if target ~= nil then
+      for key, value in pairs(target) do
+        base[key] = value
+      end
     end
   end
   return base
 end
+M.extend = M.shallow_extend
 
-M.deep_extend = function (base, target)
+M.deep_extend = function (base, ...)
   base = M.deep_copy(base)
-  target = M.deep_copy(target)
-  return M.shallow_extend(base, target)
+  for i, target in ipairs({...}) do
+    target = M.deep_copy(target)
+    M.shallow_extend(base, target)
+  end
+  return base
 end
 
 return M

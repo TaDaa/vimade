@@ -5,7 +5,7 @@ local FADE = require('vimade.style.fade')
 local TINT = require('vimade.style.tint')
 local TYPE = require('vimade.util.type')
 
-local animate_default = function (config)
+local animate_paper = function (config)
   local condition
   if config.direction ~= ANIMATE.DIRECTION.INOUT then
     condition = CONDITION.INACTIVE
@@ -20,7 +20,16 @@ local animate_default = function (config)
     TINT.Tint({
       condition = condition,
       value = ANIMATE.Tint(TYPE.extend({}, animation, {
-        to = TINT.Default().value(),
+        to = {
+          fg = {
+            rgb = {0,0,0},
+            intensity = 1
+          },
+          bg = {
+            rgb = {255,255,255},
+            intensity = 1
+          },
+        },
       }))
     }),
     FADE.Fade({
@@ -33,25 +42,32 @@ local animate_default = function (config)
   }
 end
 
-local default = function()
+local paper = function()
   return {
-    TINT.Default(),
-    FADE.Default()
+    TINT.Tint({
+      condition = CONDITION.INACTIVE,
+      value = {
+        fg = {
+          rgb = {0,0,0},
+          intensity = 0.35
+        },
+        bg = {
+          rgb = {255,255,255},
+          intensity = 1
+        },
+      },
+    }),
+    FADE.Fade({
+      condition = CONDITION.INACTIVE,
+      value = FADE.Default().value()
+    })
   }
 end
 
---@param config {
-  -- @optional fadein = boolean
-  -- @optional animate = boolean
-  -- @optional ease = EASE
-  -- @optional delay = number milliseconds
-  -- @optional duration = number milliseconds
-  -- @optional direction = DIRECTION
---}
-M.Default = function(config)
+M.Paper = function(config)
   config = TYPE.shallow_copy(config)
   return {
-    style = config.animate and animate_default(config) or default(config)
+    style = config.animate and animate_paper(config) or paper(config)
   }
 end
 

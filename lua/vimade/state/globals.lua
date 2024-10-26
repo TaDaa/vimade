@@ -49,7 +49,6 @@ M.current = {
   bufnr = -1,
   tabnr = -1,
 }
-M.fadeconditions = nil
 M.link = {}
 M.blocklist = {}
 M.global_highlights = {}
@@ -96,7 +95,6 @@ local DEFAULTS = {
   fademinimap = nil,
   groupdiff = true,
   groupscrollbind = false,
-  fadeconditions = nil, -- function return true should fade or table of functions
   link = {
     -- runs the default_matcher with this config
     -- any value that is a config goes to the
@@ -233,13 +231,6 @@ M.refresh = function (override_tick_state)
   M.tint = vimade.tint or DEFAULTS.tint
   M.fadelevel = vimade.fadelevel or DEFAULTS.fadelevel
   M.style = vimade.style or DEFAULTS.style
-  if type(vimade.fadeconditions) == 'table' then
-    M.fadeconditions = vimade.fadeconditions
-  elseif type(vimade.fadeconditions) == 'function' then
-    M.fadeconditions = {vimade.fadeconditions}
-  else
-    M.fadeconditions = DEFAULTS.fadecondition
-  end
 
   -- already checked --
   M.fade_windows = M.fademode == 'windows'

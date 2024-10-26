@@ -35,6 +35,14 @@ local update = function ()
       WIN_STATE.refresh(wininfo)
     end
   end
+  for i, wininfo in pairs(windows) do
+    if current.tabnr == wininfo.tabnr then
+      local win = WIN_STATE.get(wininfo)
+      if win.current_ns ~= nil then
+        COMPAT.nvim_win_set_hl_ns(wininfo.winid, WIN_STATE.get(wininfo).current_ns)
+      end
+    end
+  end
   WIN_STATE.cleanup(windows)
 end
 
