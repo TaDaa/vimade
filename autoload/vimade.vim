@@ -589,10 +589,12 @@ endfunction
 
 function! vimade#DeferredCheckWindows()
   if g:vimade_features.has_timer_start
-    if exists('g:vimade_deferred_timer') || exists('g:vimade_animation_running')
+    " only disable the deferred on animation for lua (lua doesn't
+    " only_these_windows)
+    if exists('g:vimade_deferred_timer') || (exists('g:vimade_animation_running') && g:vimade_active_renderer == s:lua_renderer)
       return
     endif
-    let g:vimade_deferred_timer = timer_start(0, 'vimade#DeferredTick')
+    let g:vimade_deferred_timer = timer_start(1, 'vimade#DeferredTick')
   else
     return vimade#CheckWindows()
   endif
