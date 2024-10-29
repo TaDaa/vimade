@@ -13,14 +13,29 @@ from vimade.v2.util import ipc as IPC
 from vimade.v2.util.promise import Promise,all
 
 IS_NVIM = GLOBALS.is_nvim
+FADER = None
+M.cache = {}
+M.current = None
+M.diffs = 0
+M.links = 0
+
+def __init(args):
+  global FADER
+  FADER = args['FADER']
+  def before():
+    M.current = None
+    M.links = 0
+    M.diffs = 0
+  FADER.on('tick:before', before)
+M.__init = __init
 
 class WinDeps(Promise):
-  def __init__(self, win, skip_link):
+  def __init__(self, win, is_active):
     Promise.__init__(self)
     self.win = win
     self.wincolor = None
     self.winhl = ''
-    self.skip_link = skip_link
+    self.is_active = is_active
     self.get()
 
   def _apply_win_color(self):
@@ -39,7 +54,7 @@ class WinDeps(Promise):
               break
         if self.wincolor == None:
           self.wincolor = 'Normal' if win.is_active_win else 'NormalNC'
-      return IPC.batch_eval_and_return('gettabwinvar(%d,%d,"&winhl")'%(win.tabnr, win.winnr)).then(set_winhl)
+      return IPC.batch_eval_and_return('gettabwinvar(%d,%d,"&winhl")'%(win.tabnr, win.winid)).then(set_winhl)
     else:
       def set_wincolor(value):
         self.wincolor = value
@@ -62,6 +77,7 @@ class WinDeps(Promise):
           'gettabwinvar(%d,%d,"&buftype")' % (tabnr, winnr),
           'gettabwinvar(%d,%d,"vimade_disabled")' % (tabnr, winnr),
           'getbufvar(%d, "vimade_disabled")' % bufnr,
+          'getbufvar(%d, "&diff")' % bufnr,
           'gettabwinvar(%d,%d,"current_syntax")' % (tabnr, winnr),
           'gettabwinvar(%d,%d,"&syntax")' % (tabnr, winnr),
           'gettabwinvar(%d,%d,"&tabstop")' % (tabnr, winnr),
@@ -87,9 +103,6 @@ class WinDeps(Promise):
 HAS_NVIM_WIN_GET_CONFIG = True if int(IPC.eval_and_return('exists("*nvim_win_get_config")')) else False
 HAS_NVIM_GET_HL_NS = True if int(IPC.eval_and_return('exists("*nvim_get_hl_ns")')) else False
 HAS_WIN_GETTYPE = True if int(vim.eval('exists("*win_gettype")')) else False
-
-M.cache = {}
-M.current = None
 
 def _get_values(input):
   if type(input) == list:
@@ -117,25 +130,25 @@ def cleanup(wininfos):
     if not winid in map:
       cache[winid].cleanup()
 
-def unfade(winid):
+def unhighlight(winid):
   win = M.cache.get(winid)
   if win:
-    win.faded = False
+    # set to a value that forces the window to have changed state (non-bool)
+    win.nc = None
     if win.ns:
-      win.ns.unfade()
+      win.ns.unhighlight()
 
 def refresh_active(wininfo):
-  win = refresh(wininfo, True)
-  M.current = win
-  return win
+  return refresh(wininfo, True)
 
-def refresh(wininfo, skip_link = False):
+def refresh(wininfo, is_active = False):
   winid = int(wininfo['winid'])
   win = M.cache.get(winid)
   if not win:
     win = M.cache[winid] = WinState(wininfo)
-  win.refresh(wininfo, skip_link)
-  return win
+  if is_active:
+    M.current = win
+  return win.refresh(wininfo, is_active)
 
 class WinState(object):
   def __init__(self, wininfo):
@@ -156,17 +169,28 @@ class WinState(object):
       'basebg': None,
       'linked': False,
       'blocked': False,
-      'faded': False,
+      'nc': False,
+      'should_nc': False,
       'fadelevel': None,
-      'faded_time': 0,
-      'fadepriority': -1,
+      'matchpriority': -1,
       'tint': None,
       'is_active_win': None,
       'is_active_buf': None,
       'state': GLOBALS.READY,
       'style': [],
+      'style_active': 0,
+      'style_state': {
+        'animations': {},
+        'custom': {},
+      },
+      'timestamps': {
+        'active_win': 0,
+        'active_buf': 0,
+        'nc': 0,
+      },
       '_global_style': [],
       # python-only (needed to due to difference in renderes)
+      'diff': None,
       'window': None,
       'buffer': None,
       'coords_key': None,
@@ -234,7 +258,7 @@ class WinState(object):
       return None
     return None
 
-  def refresh(self, wininfo, skip_link):
+  def refresh(self, wininfo, is_active):
     self.state = GLOBALS.READY
     self.winid = winid = int(wininfo['winid'])
     self.winnr = winnr = int(wininfo['winnr'])
@@ -242,8 +266,15 @@ class WinState(object):
     self.bufnr = bufnr = int(wininfo['bufnr'])
     self.basebg = GLOBALS.basebg
 
-    self.is_active_win = GLOBALS.current['winid'] == self.winid
-    self.is_active_buf = GLOBALS.current['bufnr'] == self.bufnr
+    is_active_win = GLOBALS.current['winid'] == self.winid
+    is_active_buf = GLOBALS.current['bufnr'] == self.bufnr
+
+    if is_active_win != self.is_active_win:
+      self.is_active_win = is_active_win
+      self.timestamps['active_win'] = GLOBALS.now
+    if is_active_buf != self.is_active_buf:
+      self.is_active_buf = is_active_buf
+      self.timestamps['active_buf'] = GLOBALS.now
 
     window = self.get_window()
     if window == None:
@@ -257,32 +288,20 @@ class WinState(object):
     self.ns.refresh()
 
     def next(config):
-      self.apply_async_config(config, wininfo, skip_link)
-      state = (self.state | GLOBALS.tick_state)
-      if self.ns:
-        if (GLOBALS.INVALIDATE_HIGHLIGHTS & state) > 0:
-          self.ns.invalidate_highlights()
-        if (GLOBALS.INVALIDATE_BUFFER_CACHE & state) > 0:
-          self.ns.invalidate_buffer_cache()
-        if (GLOBALS.CHANGED & state) > 0:
-          if self.faded:
-            self.ns.fade()
-          else:
-            self.ns.unfade()
-        # elif here because we don't need to trigger SIGNS if CHANGED already occurred
-        elif (GLOBALS.SIGNS & state) > 0:
-          if self.faded:
-            self.ns.add_signs()
-          else:
-            self.ns.remove_signs()
+      self.apply_async_config(config, wininfo, is_active)
+      promise.resolve(self)
 
-    WinDeps(self, skip_link).then(next)
+    promise = Promise()
+    WinDeps(self, is_active).then(next)
+    return promise
+     
 
-  def apply_async_config(self, config, wininfo, skip_link):
+  def apply_async_config(self, config, wininfo, is_active):
     ((wrap,
          buftype,
          win_disabled,
          buf_disabled,
+         diff,
          win_syntax,
          buf_syntax,
          tabstop,
@@ -307,13 +326,22 @@ class WinState(object):
     self.buf_opts = self.buffer.options
     self.win_vars = self.window.vars
     self.win_opts = self.window.options
-
+    self.diff = bool(int(diff))
     self.wincolor = wincolor
+
+    if self.diff:
+      M.diffs += 1
 
     was_vimade_wincolor = False
     if wincolor.startswith('vimade_'):
       wincolor = self.original_wincolor or ('NormalNC' if (IS_NVIM and self.is_active_win) else 'Normal')
-      was_vimade_wincolor = True
+      # this can happen because vim passes the wincolor over to new splits, not sure why it does this
+      # but requires special handling otherwise target bg color is unknown
+      if not self.original_wincolor:
+        self.original_wincolor = wincolor # (based on the condition above this would be a Normal type)
+        wincolorhl = normalhl
+      else:
+        was_vimade_wincolor = True
     else:
       self.original_wincolor = wincolor or ('NormalNC' if (IS_NVIM and self.is_active_win) else 'Normal')
 
@@ -331,7 +359,6 @@ class WinState(object):
     is_minimap = 'vim-minimap' in self.buf_name or '-MINIMAP-' in self.buf_name
 
     wincolorhl = HIGHLIGHTER.defaultWincolorHi(wincolorhl, normalhl)
-
 
     if not was_vimade_wincolor:
       self.wincolorhl = wincolorhl
@@ -360,7 +387,7 @@ class WinState(object):
     self.width = window.width
     self.cursor = window.cursor
 
-    can_fade = not win_disabled and not buf_disabled
+    can_nc = not win_disabled and not buf_disabled
     blocked = False
     for value in _get_values(GLOBALS.blocklist):
       if type(value) == dict:
@@ -368,45 +395,63 @@ class WinState(object):
       elif callable(value):
         blocked = value(self, current)
       if blocked == True:
-        can_fade = False
+        can_nc = False
         break
 
-    should_fade = False
-    fade_active = can_fade and GLOBALS.vimade_fade_active
-    fade_inactive = can_fade
+    should_nc = False
+    hi_active = can_nc and GLOBALS.vimade_fade_active
+    hi_inactive = can_nc
 
-    if GLOBALS.fade_windows and self.is_active_win:
-      should_fade = fade_active
-    elif GLOBALS.fade_buffers and self.is_active_buf:
-      should_fade = fade_active
+    if GLOBALS.nc_windows and self.is_active_win:
+      should_nc = hi_active
+    elif GLOBALS.nc_buffers and self.is_active_buf:
+      should_nc = hi_active
     else:
-      should_fade = fade_inactive
+      should_nc = hi_inactive
 
     linked = False
-    if current and not skip_link:
+    if current and not is_active:
       for value in _get_values(GLOBALS.link):
         if type(value) == dict:
           linked = LINK.DEFAULT(self, current, value)
         elif callable(value):
           linked = value(self, current)
         if linked == True:
-          should_fade = fade_active
+          should_nc = hi_active
+          M.links += 1
           break
 
-    if GLOBALS.fadeconditions:
-      for condition in _get_values(GLOBALS.fadeconditions.values()):
-        override = condition(self, current)
-        if override == True or override == False:
-          should_fade = override
-          break
+    self.blocked = blocked
+    self.linked = linked
 
-    if (should_fade and not self.faded) or (not should_fade and self.faded):
-      self.faded_time = GLOBALS.now
+    if (should_nc and not self.nc) or (not should_nc and self.nc):
+      self.timestamps['nc'] = GLOBALS.now
+
+    self.should_nc = should_nc
+
+    # buffers manage the collected synID()'s so that we don't need to reprocess
+    # these should only change if the syntax has changed (this can happen)
+    # per window, using :help ownsyntax
+    coords_key = syntax 
 
     self.state |= _update_state({
-      'faded': should_fade == True,
-    }, self, GLOBALS.CHANGED)
+      'coords_key': coords_key,
+      'syntax': syntax,
+    }, self, GLOBALS.INVALIDATE_BUFFER_CACHE | GLOBALS.INVALIDATE_HIGHLIGHTS | GLOBALS.CHANGED)
 
+  def finish(self):
+    should_nc = self.should_nc
+
+    if M.current == self and M.links > 0:
+      self.linked = True
+
+    if self.blocked or (M.links > 0 and M.diffs > 1 and self.linked):
+      self.should_nc = should_nc = False
+      self.blocked = True
+
+    self.state |= _update_state({
+      'nc': self.should_nc == True,
+    }, self, GLOBALS.CHANGED)
 
     rerun_style = False
     style = self.style
@@ -424,45 +469,62 @@ class WinState(object):
       self._global_style = _global_style =  []
       for s in global_style:
         _global_style.append(s)
-        style.append(s.attach(self))
+        style.append(s.attach(self, self.style_state))
+
     hi_key = ''
-    for i, s in enumerate(style):
-      s.before()
-      hi_key = hi_key + '#' + s.key(i)
+    style_active = 0
 
-    if should_fade == True:
+    if self.blocked == False:
+      for i, s in enumerate(style):
+        s.before(self, self.style_state)
+        style_key = s.key(self, self.style_state)
+        if len(style_key) > 0:
+          if style_active > 0:
+            hi_key = hi_key + '#'
+          hi_key = hi_key + style_key
+          style_active += 1
 
-      if GLOBALS.enablesigns and (GLOBALS.signsretentionperiod or 0) > 0 and (GLOBALS.now - self.faded_time) * 1000 < GLOBALS.signsretentionperiod:
+    # TODO ensure this stays as is, signsretentionperiod is essentially based off win/buf change
+    if self.nc == True:
+      if GLOBALS.enablesigns and (GLOBALS.signsretentionperiod or 0) > 0 and (GLOBALS.now - self.timestamps['nc']) * 1000 < GLOBALS.signsretentionperiod:
         self.state |= GLOBALS.SIGNS
 
     # hi_key is used by the highlighter for replacement highlights.  These are
     # calculated based on a number of window criteria such as fadelevel, tint
     # wincolor.
 
-    hi_key = '-'.join([str(x if x != None else 'N') for x in wincolorhl.values()]) + ':' + hi_key
+    hi_key = '-'.join([str(x if x != None else 'N') for x in self.wincolorhl.values()]) + ':' + hi_key
 
     # INVALIDATE matches to be readded, free highlights, and get new synID
     self.state |= _update_state({
       'hi_key': hi_key,
-      'fadepriority': 9 if is_minimap else int(GLOBALS.fadepriority),
+      'matchpriority': 9 if self.is_minimap else int(GLOBALS.matchpriority),
     }, self, GLOBALS.INVALIDATE_HIGHLIGHTS | GLOBALS.CHANGED)
 
-    # buffers manage the collected synID()'s so that we don't need to reprocess
-    # these should only change if the syntax has changed (this can happen)
-    # per window, using :help ownsyntax
-    coords_key = syntax 
-
-    # nvim_ns = int(nvim_ns)
-    # self.nvim_ns = 0 if nvim_ns == -1 else nvim_ns
-    self.state |= _update_state({
-      'coords_key': coords_key,
-      'syntax': syntax,
-    }, self, GLOBALS.INVALIDATE_BUFFER_CACHE | GLOBALS.INVALIDATE_HIGHLIGHTS | GLOBALS.CHANGED)
-
-    # force the window to refresh if fademode='windows' -- caching mostly handles performance here
-    # We also fade linked status when fade_windows is activated.  This handles scenarios where the user
+    # force the window to refresh if ncmode='windows' -- caching mostly handles performance here
+    # We also hi linked status when nc_windows is activated.  This handles scenarios where the user
     # is on the diff side, against a buffer shared amongst multiple windows.
-    if self.faded and (self.is_active_buf or (self.linked and GLOBALS.fade_windows)):
+    self.style_active = style_active
+
+    if (self.is_active_buf or (self.linked and GLOBALS.nc_windows)):
       self.state |= GLOBALS.CHANGED
+
+    state = (self.state | GLOBALS.tick_state)
+    if self.ns:
+      if (GLOBALS.INVALIDATE_HIGHLIGHTS & state) > 0:
+        self.ns.invalidate_highlights()
+      if (GLOBALS.INVALIDATE_BUFFER_CACHE & state) > 0:
+        self.ns.invalidate_buffer_cache()
+      if (GLOBALS.CHANGED & state) > 0:
+        if self.style_active > 0:
+          self.ns.highlight()
+        else:
+          self.ns.unhighlight()
+      # elif here because we don't need to trigger SIGNS if CHANGED already occurred
+      elif (GLOBALS.SIGNS & state) > 0:
+        if self.style_active > 0:
+          self.ns.add_signs()
+        else:
+          self.ns.remove_signs()
 
 HIGHLIGHTER.__initWinState(WinState)

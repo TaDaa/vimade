@@ -1,6 +1,8 @@
 local M = {}
 local ANIMATE = require('vimade.style.value.animate')
 local CONDITION = require('vimade.style.value.condition')
+local DIRECTION = require('vimade.style.value.direction')
+local EASE = require('vimade.style.value.ease')
 local FADE = require('vimade.style.fade')
 local TINT = require('vimade.style.tint')
 local TYPE = require('vimade.util.type')
@@ -16,20 +18,20 @@ local animate_space = function (config)
     TINT.Tint({
       condition = CONDITION.INACTIVE,
       value = ANIMATE.Tint(TYPE.extend({}, animation, {
-        id = 'recipe-space-tint',
-        from = {
+        direction = DIRECTION.OUT,
+        start = {
           fg = {
-            rgb = {235,0,217},
+            rgb = {192,0,255},
             intensity = 0.7
           },
           bg = {
-            rgb = {30,0,30},
+            rgb = {10,0,40},
             intensity = 1
           },
         },
         to = {
           fg = {
-            rgb = {235,0,217},
+            rgb = {192,0,255},
             intensity = 0.35
           },
           bg = {
@@ -42,10 +44,10 @@ local animate_space = function (config)
     TINT.Tint({
       condition = CONDITION.ACTIVE,
       value = ANIMATE.Tint(TYPE.extend({}, animation, {
-        id = 'recipe-space-tint',
-        from = {
+        direction = DIRECTION.IN,
+        start = {
           fg = {
-            rgb = {235,0,217},
+            rgb = {192,0,255},
             intensity = 0.35
           },
           bg = {
@@ -67,9 +69,10 @@ local animate_space = function (config)
     }),
     FADE.Fade({
       condition = CONDITION.INACTIVE,
+      direction = DIRECTION.OUT,
       value = ANIMATE.Number(TYPE.extend({}, animation, {
         to = FADE.Default().value(),
-        from = 1,
+        start = 1,
       }))
     })
   }
@@ -106,11 +109,15 @@ local space = function()
   }
 end
 
+--@param config {
+  -- @optional animate: boolean = false
+  -- @optional ease: EASE = ANIMATE.DEFAULT_EASE
+  -- @optional delay: number = ANIMATE.DEFAULT_DELAY
+  -- @optional duration: number = 1500
+--}
 M.Space = function(config)
   config = TYPE.shallow_copy(config)
-  config.duration = config.duration or 1500
-  -- sorry no overrides allowed
-  config.direction = ANIMATE.DIRECTION.OUT
+  config.duration = config.duration or 1000
   return {
     style = config.animate and animate_space(config) or space(config)
   }

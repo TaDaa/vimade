@@ -11,8 +11,11 @@ def all(promises):
       if cnt[0] == 0:
         result.resolve(values)
     promise.then(reduce)
-  for i, promise in enumerate(promises):
-    scope_reduce(i, promise)
+  if len(promises) > 0:
+    for i, promise in enumerate(promises):
+      scope_reduce(i, promise)
+  else:
+    result.resolve([])
   return result
 
 

@@ -3,26 +3,36 @@ import time
 M = sys.modules[__name__]
 
 from vimade.v2.util import color as COLOR_UTIL
+from vimade.v2.style.value import condition as CONDITION
 GLOBALS = None
 
-def __init(globals):
+def __init(args):
   global GLOBALS
-  GLOBALS = globals
+  GLOBALS = args['GLOBALS']
 M.__init = __init
 
 class Fade():
-  def __init__(parent, initial_fade):
-    parent.initial_fade = initial_fade
+  def __init__(parent, **kwargs):
+    _condition = kwargs.get('condition')
+    _condition = _condition if _condition != None else CONDITION.INACTIVE
+    parent._value = kwargs.get('value')
     class __Fade():
-      def __init__(self, win):
-        self.fade = parent.initial_fade
+      def __init__(self, win, state):
         self.win = win
-      def before(self):
-        if callable(parent.initial_fade):
-          self.fade = parent.initial_fade(self.win)
-      def key(self, i):
+        self._condition = _condition
+        self.condition = None
+        self.fade = parent._value
+        self._animating = False
+      def before(self, win, state):
+        self.fade = parent._value(self, state) if callable(parent._value) else parent._value
+        self.condition = _condition(self, state) if callable(_condition) else _condition
+      def key(self, win, state):
+        if self.condition == False:
+          return ''
         return 'F-' + str(self.fade)
       def modify(self, hl, to_hl):
+        if self.condition == False:
+          return
         fade = self.fade
         fg = hl['fg']
         bg = hl['bg']
@@ -43,8 +53,10 @@ class Fade():
     parent.attach = __Fade
   def value(parent, replacement = None):
     if replacement != None:
-      parent.initial_fade = replacement
+      parent._value = replacement
       return parent
-    return parent.initial_fade
+    return parent._value
 
-M.DEFAULT = Fade(lambda win: GLOBALS.fadelevel(win) if callable(GLOBALS.fadelevel) else GLOBALS.fadelevel)
+def Default(**kwardgs):
+  return Fade(condition = CONDITION.INACTIVE,
+    value = lambda style, state: GLOBALS.fadelevel(style, state) if callable(GLOBALS.fadelevel) else GLOBALS.fadelevel)

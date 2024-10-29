@@ -13,13 +13,17 @@ def deep_copy(obj):
 def shallow_copy(obj):
   return shallow_extend({}, obj)
 
-def shallow_extend(base, target):
-  if type(target) == dict: 
-    for key, value in target.items():
-      base[key] = value
+def shallow_extend(base, *args):
+  for target in args:
+    if type(target) == dict: 
+      for key, value in target.items():
+        base[key] = value
   return base
+extend = shallow_extend
 
-def deep_extend(base, target):
+def deep_extend(base, *args):
   base = deep_copy(base)
-  target = deep_copy(target)
-  return shallow_extend(base, target)
+  for target in args:
+    target = deep_copy(target)
+    shallow_extend(base, target)
+  return base

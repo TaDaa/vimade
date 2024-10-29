@@ -1,10 +1,14 @@
 local M = {}
 
-M.ACTIVE = function (win, state)
-  return win.faded == false
+-- TODO represent these as behaviors
+M.ACTIVE = function (style, state)
+  return style.win.nc == false or style._animating == true
 end
-M.INACTIVE = function (win, state)
-  return win.faded == true
+M.INACTIVE = function (style, state)
+  return style.win.nc == true or style._animating == true
+end
+M.ALL = function (style, state)
+  return true
 end
 
 return M

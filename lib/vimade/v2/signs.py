@@ -44,8 +44,8 @@ def _parse_get_signs_parts(line):
 
 
 READY = 0
-HAS_FADED_WINDOWS = 1
-HAS_UNFADED_WINDOWS = 2
+HAS_HI_WINDOWS = 1
+HAS_UNHI_WINDOWS = 2
 
 def _setup():
   M._buffer_cache = {}
@@ -62,7 +62,7 @@ def clear_win(win):
   def next(signs):
     undefine_eval = []
     if lookup:
-      _do_unfade(bufnr, signs, win)
+      _do_unhighlight(bufnr, signs, win)
       for name in list(lookup.keys()):
         del lookup[name]
         cached = M._sign_cache[name]
@@ -96,31 +96,31 @@ def _get_buffer_from_cache(bufnr):
   return buf
 
 
-def unfade_signs(win):
+def unhighlight_signs(win):
   buf = M._get_buffer_from_cache(win.bufnr)
-  buf['state'] |= HAS_UNFADED_WINDOWS
+  buf['state'] |= HAS_UNHI_WINDOWS
 
-# collect the visible rows so that we know what should be faded. The actual fading is initiated
+# collect the visible rows so that we know what should be unhighlighted. The actual fading is initiated
 # later (see fader.py)
-def fade_signs(win, visible_rows):
+def highlight_signs(win, visible_rows):
   bufnr = win.bufnr
   buf = M._get_buffer_from_cache(bufnr)
-  buf['state'] |= HAS_FADED_WINDOWS
+  buf['state'] |= HAS_HI_WINDOWS
   if not buf['owner_win']:
     buf['owner_win'] = win
   buf_visible_rows = buf['visible_rows']
   for row in visible_rows:
     buf_visible_rows[row[0]] = True
 
-def _do_unfade(bufnr, signs, win):
-  unfade_eval = []
+def _do_unhighlight(bufnr, signs, win):
+  unhi_eval = []
   for sign in signs:
     if sign['name'][0:7] == 'vimade_':
       id = sign['id']
-      unfade_eval.append('silent! noautocmd sign unplace ' + id + VIMADE_GROUP_TEXT + ' buffer='+str(bufnr))
+      unhi_eval.append('silent! noautocmd sign unplace ' + id + VIMADE_GROUP_TEXT + ' buffer='+str(bufnr))
       M._free_ids.append(id)
-  if len(unfade_eval):
-    return IPC.batch_command('function! VimadeSignTemp()\n' + ('\n'.join(unfade_eval)) + '\nendfunction \n call VimadeSignTemp()')
+  if len(unhi_eval):
+    return IPC.batch_command('function! VimadeSignTemp()\n' + ('\n'.join(unhi_eval)) + '\nendfunction \n call VimadeSignTemp()')
 
 def _do_create(bufnr, win, names):
   promise = Promise()
@@ -192,7 +192,7 @@ def _do_create(bufnr, win, names):
     return promise
   return promise.resolve(None)
 
-def _do_fade(bufnr, visible_rows, signs, win):
+def _do_highlight(bufnr, visible_rows, signs, win):
   lines = {}
   vimade_signs = {}
   other_signs = {}
@@ -278,12 +278,12 @@ def flush():
     for i, signs in enumerate(infos):
       buf = bufs[i]
       state = buf['state']
-      # A sign can be on a faded and unfaded window simultaneously because they are only supported on buffers.
+      # A sign can be on a highlighted and unhighlighted window simultaneously because they are only supported on buffers.
       # In this case, we prioritize fading.
-      if (state & HAS_FADED_WINDOWS) > 0:
-        _do_fade(buf['bufnr'], buf['visible_rows'], signs, buf['owner_win'])
-      elif (state & HAS_UNFADED_WINDOWS) > 0:
-        _do_unfade(buf['bufnr'], signs, buf['owner_win'])
+      if (state & HAS_HI_WINDOWS) > 0:
+        _do_highlight(buf['bufnr'], buf['visible_rows'], signs, buf['owner_win'])
+      elif (state & HAS_UNHI_WINDOWS) > 0:
+        _do_unhighlight(buf['bufnr'], signs, buf['owner_win'])
 
   IPC.batch_eval_and_return('[' + \
       ','.join( \

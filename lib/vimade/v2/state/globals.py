@@ -1,9 +1,11 @@
 import sys
 import time
 import vim
-from vimade.v2.style import animate as ANIMATE
-from vimade.v2.style import exclude as EXCLUDE
-from vimade.v2.style import include as INCLUDE
+from vimade.v2.recipe import default as DEFAULT_RECIPE
+from vimade.v2.style.value import animate as ANIMATE
+from vimade.v2.style.value import condition as CONDITION
+from vimade.v2.style.value import direction as DIRECTION
+from vimade.v2.style.value import ease as EASE
 from vimade.v2.style import fade as FADE
 from vimade.v2.style import tint as TINT
 from vimade.v2.util import ipc as IPC
@@ -22,15 +24,14 @@ _CURRENT = {
   'bufnr': -1,
   'tabnr': -1,
 }
-_DEFAULTS = {
+_DEFAULTS = TYPE.extend(DEFAULT_RECIPE.Default(), {
   'basebg': None,
-  'fademode': 'buffers',
+  'ncmode': 'buffers',
   'tint': None,
   'fadelevel': 0.4,
   'fademinimap': None,
   'groupdiff': True,
   'groupscrollbind': False,
-  'fadeconditions': None,
   # link can be an array of objects or functions
   # objects are passed to the default handler
   # values can be Matchers
@@ -64,23 +65,6 @@ _DEFAULTS = {
        },
     }
   },
-  # TODO create minimalist animated mode
-  # See below for a cool use-case
-  # 'style': [EXCLUDE.Exclude({
-    # 'names': ['WinSeparator', 'LineNr', 'NonText', 'LineNrBelow', 'LineNrAbove'],
-    # 'style': [TINT.DEFAULT, FADE.DEFAULT],
-  # })],
-  # 'style': [INCLUDE.Include({
-     # 'names': ['WinSeparator', 'LineNr', 'NonText', 'LineNrBelow', 'LineNrAbove'],
-     # 'style': [TINT.DEFAULT, FADE.DEFAULT],
-   # })],
-  'style': [TINT.DEFAULT, FADE.DEFAULT],
-  # 'style': [TINT.DEFAULT, ANIMATE.Animate({
-     # 'from': 1,
-     # 'duration': 300,
-     # 'style': FADE.DEFAULT,
-   # })],
-   # })['start'](1)['duration'](1000)],
   # python only config
   'enabletreesitter': False,
   'enablebasegroups': False,
@@ -93,7 +77,7 @@ _DEFAULTS = {
   'signspriority': 31,
   'signsretentionperiod': 4000,
   'disablebatch': False,
-}
+})
 
 class Globals(object):
   def __init__(self):
@@ -124,10 +108,10 @@ class Globals(object):
       'basebg': None,
       'normalid': 0,
       'normalncid': 0,
-      'fademode': 'buffers',
-      'fadepriority': 0,
-      'fade_windows': False,
-      'fade_buffers': False,
+      'ncmode': 'buffers',
+      'matchpriority': 0,
+      'nc_windows': False,
+      'nc_buffers': False,
       'tint': None,
       'fadelevel': 0,
       'fademinimap': False,
@@ -141,7 +125,6 @@ class Globals(object):
           'bufnr': -1,
           'tabnr': -1,
       },
-      'fadeconditions': None,
       'link': {},
       'blocklist': {},
       'is_nvim': bool(int(is_nvim)),
@@ -165,9 +148,6 @@ class Globals(object):
     }
     self.vim = vim
     self.time = time
-    self.ANIMATE = ANIMATE
-    self.EXCLUDE = EXCLUDE
-    self.INCLUDE = INCLUDE
     self.FADE = FADE
     self.TINT = TINT
     self.IPC = IPC
@@ -256,6 +236,8 @@ class Globals(object):
     # some versions of vim return bytes instead of str
     # output of coerceTypes is essentially already a deep copy
     vimade = self.TYPE.shallow_extend(self.IPC.coerceTypes(self.vim.vars['vimade']), self.vimade_py)
+    if 'fadepriority' in vimade and not 'matchpriority' in vimade:
+      vimade['matchpriority'] = vimade['fadepriority']
     
 
     current = {
@@ -291,7 +273,7 @@ class Globals(object):
       'normalid',
       'normalncid',
       'enablebasegroups',
-      'fadepriority',
+      'matchpriority',
     ], vimade, self, self._DEFAULTS, self.INVALIDATE_HIGHLIGHTS | self.CHANGED)
     self.tick_state |= self._check_fields([
       'enabletreesitter'
@@ -302,7 +284,7 @@ class Globals(object):
       'vimade_fade_active': bool(int(vimade_fade_active))
     }, self, self._OTHER, self.CHANGED)
     self.tick_state |= self._check_fields([
-      'fademode',
+      'ncmode',
       'enablescroll',
       'colbufsize',
       'rowbufsize'
@@ -332,22 +314,10 @@ class Globals(object):
     self.tint = vimade.get('tint', self._DEFAULTS['tint'])
     self.fadelevel = float(vimade.get('fadelevel', self._DEFAULTS['fadelevel']))
     self.disablebatch = bool(int(vimade.get('disablebatch', self._DEFAULTS['disablebatch'])))
-    if 'fadeconditions' in vimade:
-      if type(vimade.fadeconditions) == dict or type(vimade.fadeconditions) == list:
-        self.fadeconditions = vimade.fadeconditions
-      elif callable(vimade.fadeconditions):
-        self.fadeconditions = [vimade.fadeconditions]
-      else:
-        self.fadeconditions = vimade.fadeconditions
 
     ## already checked
-    self.fade_windows = self.fademode == 'windows'
-    self.fade_buffers = not self.fade_windows
+    self.nc_windows = self.ncmode == 'windows'
+    self.nc_buffers = self.ncmode == 'buffers'
+    # if you don't choose one of the above, everything is highlighted
 
 M = Globals()
-M.ANIMATE.__init(M)
-M.FADE.__init(M)
-M.TINT.__init(M)
-M.EXCLUDE.__init(M)
-M.INCLUDE.__init(M)
-M.IPC.__init(M)

@@ -105,7 +105,7 @@ def update():
   enabletreesitter = int(nextGlobals['enabletreesitter']) if is_nvim else 0
   groupscrollbind = int(nextGlobals['groupscrollbind'])
   groupdiff = int(nextGlobals['groupdiff'])
-  fademode = nextGlobals['fademode']
+  fademode = nextGlobals['ncmode']
 
   GLOBALS.fade_minimap = fademinimap
   GLOBALS.row_buf_size = rowbufsize

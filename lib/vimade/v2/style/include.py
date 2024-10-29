@@ -1,11 +1,13 @@
 import sys
 M = sys.modules[__name__]
 
+from vimade.v2.style.value import condition as CONDITION
+
 GLOBALS = None
 
-def __init(globals):
+def __init(args):
   global GLOBALS
-  GLOBALS = globals
+  GLOBALS = args['GLOBALS']
 M.__init = __init
 
 
@@ -17,30 +19,44 @@ M.include_id = 1
 # }
 class Include():
   def __init__(self, config):
+    _condition = kwargs.get('condition')
+    _condition = _condition if _condition != None else CONDITION.INACTIVE
+    _names = kwargs.get('names', [])
     class __Include():
-      def __init__(self, win):
+      def __init__(self, win, state):
         self.win = win
-        self.names = config['names']
-        self.style = [s.attach(win) for s in config['style']]
+        self.condition = None
+        self.names = []
+        self.style = [s.attach(win, state) for s in config['style']]
         self.include = {}
-      def before(self):
+        self._animating = False
+      def before(self, win, state):
+        self.condition = _condition(self, state) if callable(_condition) else _condition
+        if self.condition == False:
+          return
+        names = self.names = _names(self, state) if callable(_names) else _names
         self.include = include = {}
-        names = self.names
-        input = names(win) if callable(names) else names
-        if type(input) == str:
-          input = [input]
-        for name in input:
+        if type(names) == str:
+          names = [names]
+        for name in names:
           name_id = M.include_names.get(name)
           if not name_id:
             M.include_names[name] = name_id = str(M.include_id)
             M.include_id += 1
           include[name] = name_id
         for s in self.style:
-          s.before()
-      def key(self, i):
+          s.before(win, state)
+      def key(self, win, state):
+        if self.condition == False:
+          return ''
+        style_key = ','.join([s.key(win, state) for j, s in enumerate(self.style)])
+        if len(style_key) == 0:
+          return ''
         return 'I-' + ','.join(self.include.values()) + '(' \
-            + ','.join([s.key(j) for j, s in enumerate(self.style)]) + ')'
+            + style_key + ')'
       def modify(self, hl, to_hl):
+        if self.condition == False:
+          return
         if hl['name'] in self.include:
           for s in self.style:
             s.modify(hl, to_hl)

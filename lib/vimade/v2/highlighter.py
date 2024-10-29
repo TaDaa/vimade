@@ -27,7 +27,26 @@ M.base_id_cache = {}
 M.vimade_id_cache = {}
 M.win_lookup = {}
 
-def _process_hl_results(input, ids):
+HAS_NVIM_GET_HL = bool(int(GLOBALS.features['has_nvim_get_hl']))
+_process_hl_results = None
+def _process_nvim_hl_results(results, ids):
+  for i, value in enumerate(results):
+    id = int(ids[i])
+    ctermfg = value.get('ctermfg')
+    ctermbg = value.get('ctermbg')
+    fg = value.get('fg')
+    bg = value.get('bg')
+    sp = value.get('sp')
+    results[i] = {
+        'name': M.id_name_lookup[id],
+        'ctermfg': int(ctermfg) if ctermfg != None else None,
+        'ctermbg': int(ctermbg) if ctermbg != None else None,
+        'fg': int(fg) if fg != None else None,
+        'bg': int(bg) if bg != None else None,
+        'sp': int(sp) if sp != None else None}
+  return results
+
+def _process_vim_hl_results(input, ids):
   results = []
   for i, hi in enumerate(input):
     id = int(ids[i])
@@ -51,11 +70,19 @@ def _process_hl_results(input, ids):
       })
   return results
 
-# Neovim highlight inspection doesn't propertly understand what the global hl is supposed
-# to be if winhl also exists. (see https://github.com/TaDaa/vimade/issues/81)
-# there isn't any performance difference doing this the vim way, but should look into optimizing
-# this more later.
-hi_string = "vimade#GetHi(%s)" 
+if IS_NVIM:
+  if HAS_NVIM_GET_HL:
+    hi_string = "nvim_get_hl(0,{'id':%s,'link':0})"
+    hi_string_normal = "nvim_get_hl(0,{'id':%s})" 
+    _process_hl_results = _process_nvim_hl_results
+  else:
+    hi_string = "vimade#GetHi(%s)" 
+    hi_string_normal = "vimade#GetHi(%s)" 
+    _process_hl_results = _process_vim_hl_results
+else:
+    hi_string = "vimade#GetHi(%s)" 
+    hi_string_normal = "vimade#GetHi(%s)" 
+    _process_hl_results = _process_vim_hl_results
 
 # vim/nvim are limited by 20000 highlights, so we need to be efficient and
 # reuse our created highlights everytime possible.
@@ -72,7 +99,7 @@ def get_hl_for_ids(win, ids):
     def next(value):
       value = _process_hl_results(value, ids)
       result.resolve(value)
-    IPC.batch_eval_and_return('['+','.join([hi_string % id for id in ids])+']').then(next)
+    IPC.batch_eval_and_return('['+','.join([(hi_string_normal if id in (GLOBALS.normalid, GLOBALS.normalncid) else hi_string) % id for id in ids])+']').then(next)
 
   _get_hl_name_and_ids_for(win, ids).then(next)
   return result
@@ -162,10 +189,9 @@ def _get_hl_name_and_ids_for(win, to_process):
 
 def create_vimade_0():
   # TODO cleanup naming, provider the minimum data needed from win to create vimade_0
-  s = FADE.DEFAULT.attach(global_win)
-  s.before()
+  s = FADE.Default().attach(global_win, global_win.style_state)
+  s.before(global_win, global_win.style_state)
   global_win.style = [s]
-  # win_config['style']=[s]
   def next(value):
     (wincolor, normal) = value
     global_win.wincolorhl = defaultWincolorHi(wincolor, normal)

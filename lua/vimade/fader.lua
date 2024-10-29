@@ -14,8 +14,6 @@ local WIN_STATE = require('vimade.state.win')
 -- internal only
 local update = function ()
   local windows = vim.fn.getwininfo()
-  local fade_windows = GLOBALS.fademode == 'windows'
-  local fade_buffers = not fade_windows
   local current = GLOBALS.current
   local updated_cache = {}
 
@@ -39,7 +37,7 @@ local update = function ()
     if current.tabnr == wininfo.tabnr then
       local win = WIN_STATE.get(wininfo)
       if win.current_ns ~= nil then
-        COMPAT.nvim_win_set_hl_ns(wininfo.winid, WIN_STATE.get(wininfo).current_ns)
+        COMPAT.nvim_win_set_hl_ns(wininfo.winid, win.current_ns)
       end
     end
   end
@@ -93,7 +91,7 @@ M.tick = function (override_tick_state)
   vim.go.ei = last_ei
 end
 
-M.unfadeAll = function ()
+M.unhighlightAll = function ()
   local windows = vim.api.nvim_list_wins()
   local current = GLOBALS.current
 
@@ -102,7 +100,7 @@ M.unfadeAll = function ()
     if NAMESPACE.is_vimade_ns(ns) == true then
         local real_ns = vim.w[winid]._vimade_real_ns or 0
         vim.api.nvim_win_set_hl_ns(winid, real_ns)
-        WIN_STATE.unfade(winid)
+        WIN_STATE.unhighlight(winid)
     end
   end
 end

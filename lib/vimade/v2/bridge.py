@@ -10,8 +10,8 @@ def detectTermColors():
   #  TODO: NOT HAPPENING. Remove from v1 as well
   pass
 
-def unfadeAll():
-  FADER.unfadeAll()
+def unhighlightAll():
+  FADER.unhighlightAll()
 
 def invalidate():
   # distinction between buffer and signs invalidation is not needed, this basically just mean

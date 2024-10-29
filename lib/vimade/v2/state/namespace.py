@@ -47,7 +47,7 @@ class Namespace:
     self.win = win
     self.tick_id = GLOBALS.tick_id
     self.matches = []
-    self.fade_grid = {}
+    self.hi_grid = {}
     self.basegroups = []
     self.shared_state = None
     self.visible_rows = None
@@ -76,7 +76,7 @@ class Namespace:
     # should be called when the window is destroyed
     HIGHLIGHTER.clear_win(self.win)
     SIGNS.clear_win(self.win)
-    self.unfade(True) # try to unfade
+    self.unhighlight(True) # try to unhighlight
 
     if self.shared_state:
       self.shared_state['active'] = max(self.shared_state['active'] - 1, 0)
@@ -146,10 +146,10 @@ class Namespace:
     HIGHLIGHTER.clear_win(self.win)
     SIGNS.clear_win(self.win)
 
-    self.unfade()
+    self.unhighlight()
 
 
-  def unfade(self, cleanup = False):
+  def unhighlight(self, cleanup = False):
     win = self.win
     if not cleanup:
       if not GLOBALS.is_nvim and win.window and 'wincolor' in win.window.options:
@@ -172,9 +172,9 @@ class Namespace:
       except:
         pass
       self.matches = []
-      self.fade_grid = {}
+      self.hi_grid = {}
 
-  def fade(self):
+  def highlight(self):
     win = self.win
 
     self.add_matches()
@@ -191,11 +191,11 @@ class Namespace:
 
   def add_signs(self):
     if GLOBALS.enablesigns and self.win.bufnr != None and self.visible_rows:
-      SIGNS.fade_signs(self.win, self.visible_rows)
+      SIGNS.highlight_signs(self.win, self.visible_rows)
 
   def remove_signs(self):
     if GLOBALS.enablesigns and self.win.bufnr != None:
-      SIGNS.unfade_signs(self.win)
+      SIGNS.unhighlight_signs(self.win)
 
   # the process below is extremely tricky and logic needs to be cached/reduced
   # as much as possible. Matches are added per window. We try to reduce
@@ -204,7 +204,7 @@ class Namespace:
   # SynIDs are cached per-buffer per-ownsyntax.
   # We leverage tick_id to determine if a calculation state is out of sync vs
   # found SynID
-  # Each window needs to compute its own fade calculation based on found syntax
+  # Each window needs to compute its own highlight calculation based on found syntax
   # and window state.
   def add_matches(self):
     win = self.win
@@ -302,7 +302,7 @@ class Namespace:
     contents_changed = None
     treesitter_eval = None
 
-    # shrink to_eval based on what's already been checked if fade_mode=windows or fade_active
+    # shrink to_eval based on what's already been checked if ncmode=windows or fade_active
     tick_id = GLOBALS.tick_id
 
     if not coords:
@@ -314,7 +314,7 @@ class Namespace:
       if enabletreesitter:
         treesitter_eval = to_eval
     # the check below only needs to happen when multiple of the same buffer
-    # is faded. There isn't any point in querying treesitter multiple times
+    # is highlighted. There isn't any point in querying treesitter multiple times
     # for the same visible area.
     # TODO: This could be further improved by monitoring an 'active' field
     # per coords key, but likely to only benefit edge cases by 1 or 2 ms.
@@ -349,7 +349,7 @@ class Namespace:
               # 't' is only used by treesitter highlighter. this allows us
               # us to skip requesting parts of the screen that were already
               # evaluated in different windows. This mostly benefits
-              # fademode='windows' but can also improve buffer fading as well.
+              # ncmode='windows' but can also improve buffer fading as well.
               if not color or color['t'] != tick_id:
                 if len(treesitter_eval) and treesitter_eval[-1][2] == column - 1:
                   treesitter_eval[-1][2] += 1
@@ -389,7 +389,7 @@ class Namespace:
         if grid_ln > buf_ln:
           coords['grid'] = grid[0:buf_ln]
 
-    fade_grid = self.fade_grid
+    hi_grid = self.hi_grid
     # ensure we have updated grid and its sized appropriately
     grid = coords['grid']
     for (row, column, end_col, text_i) in to_eval:
@@ -404,9 +404,9 @@ class Namespace:
         grid[row] = grid[row] + [None] * (len(text) - len(grid[row]))
       else:
         grid[row]
-      fade_row = fade_grid.get(row)
-      if fade_row == None:
-        fade_grid[row] = fade_row = {}
+      hi_row = hi_grid.get(row)
+      if hi_row == None:
+        hi_grid[row] = hi_row = {}
 
     # tick_id is just a quick & dirty way we can ensure that the state is
     # synced between multiple layers of changes
@@ -442,7 +442,7 @@ class Namespace:
         text = buf[text_i]
         colors = grid[row]
         ts_row = ts_results.get(str(row)) if ts_results else None
-        fade_row = fade_grid.get(row)
+        hi_row = hi_grid.get(row)
         for column in range(start_col, end_col+1):
           color = colors[column]
           ch = text[column]
@@ -475,7 +475,7 @@ class Namespace:
               self.remove_matches()
               return process_treesitter(to_eval)
             gaps.append((s, row, column))
-          elif color['s'] != None and not fade_row.get(column):
+          elif color['s'] != None and not hi_row.get(column):
             gaps.append((color['s'], row, column))
           # tick_id here is used to skip changes that have already been processed during this run
           # this is completely safe and even if a conflict was encountered, which is highly improbable
@@ -488,7 +488,7 @@ class Namespace:
           continue
         text = buf[text_i]
         colors = grid[row]
-        fade_row = fade_grid.get(row)
+        hi_row = hi_grid.get(row)
         for column in range(start_col, end_col+1):
           color = colors[column]
           if color == None:
@@ -501,7 +501,7 @@ class Namespace:
             elif enablebasegroups == False:
               color['s'] = 0
               gaps.append((0, row, column))
-          elif color['s'] != None and not fade_row.get(column):
+          elif color['s'] != None and not hi_row.get(column):
             gaps.append((color['s'], row, column))
           color['t'] = tick_id
 
@@ -517,9 +517,9 @@ class Namespace:
       matches = {}
       for (id, row, column) in gaps:
         color = grid[row][column]
-        fade_row = fade_grid[row]
-        if not fade_row.get(column):
-          fade_row[column] = True
+        hi_row = hi_grid[row]
+        if not hi_row.get(column):
+          hi_row[column] = True
         c = column + 1
         r = row + 1
         if not id in matches:
@@ -537,9 +537,9 @@ class Namespace:
       def next(replacement_ids):
         if len(match_keys):
           matchadds = []
-          fade_priority = str(self.win.fadepriority)
+          matchpriority = str(self.win.matchpriority)
           lambda_tup = lambda tup: '[' + ','.join(map(str,tup)) + ']'
-          suffix = fade_priority + ',-1,{"window":'+str(winid)+'})'
+          suffix = matchpriority + ',-1,{"window":'+str(winid)+'})'
           for i, (id, coords) in enumerate(items):
             prefix = 'matchaddpos("vimade_' + str(replacement_ids[i]) + '",['
             move = len(coords) if UNLIMITED_MATCHADDPOS else 8

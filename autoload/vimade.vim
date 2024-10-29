@@ -36,7 +36,7 @@ function! vimade#SetupRenderer()
   endif
   if l:next_renderer != g:vimade_active_renderer.name
     try
-      call vimade#UnfadeAll()
+      call vimade#UnhighlightAll()
     catch
     endtry
     if l:next_renderer == 'lua'
@@ -174,11 +174,11 @@ function! vimade#GetDefaults()
 
     let g:vimade_defaults.basebg = ''
 
-    ""@setting vimade.fademode
+    ""@setting vimade.ncmode
     "Supported:     lua, python, python-legacy
     "Whether to fade active windows or buffers.  Options are 'windows' or 'buffers'.  Defaults to 'buffers'.
 
-    let g:vimade_defaults.fademode = 'buffers'
+    let g:vimade_defaults.ncmode = 'buffers'
 
     ""@setting vimade.fadecondition
     "Supported:     lua, python
@@ -427,14 +427,14 @@ function! vimade#Disable()
   "disable vimade
   let g:vimade_running = 0
   call vimade#StopTimer()
-  call g:vimade_active_renderer.unfadeAll()
+  call g:vimade_active_renderer.unhighlightAll()
 endfunction
 
-function! vimade#UnfadeAll()
+function! vimade#UnhighlightAll()
   if winnr() == 0
     return
   endif
-  call g:vimade_active_renderer.unfadeAll()
+  call g:vimade_active_renderer.unhighlightAll()
 endfunction
 
 function! vimade#DetectTermColors()
@@ -840,7 +840,7 @@ let s:empty_renderer = {
     \ 'getInfo': function('vimade#Empty'),
     \ 'recalculate': function('vimade#Empty'),
     \ 'redraw': function('vimade#Empty'),
-    \ 'unfadeAll': function('vimade#Empty'),
+    \ 'unhighlightAll': function('vimade#Empty'),
     \ 'update': function('vimade#Empty'),
     \ 'softInvalidateBuffer': function('vimade#Empty'),
     \ 'softInvalidateSigns': function('vimade#Empty'),
@@ -860,8 +860,8 @@ endfunction
 function! s:Redraw_Lua()
   lua require('vimade').redraw()
 endfunction
-function! s:UnfadeAll_Lua()
-  lua require('vimade').unfadeAll()
+function! s:UnhighlightAll_Lua()
+  lua require('vimade').unhighlightAll()
 endfunction
 function! s:Update_Lua()
   lua require('vimade').update()
@@ -885,7 +885,7 @@ let s:lua_renderer = {
   \ 'getInfo': function('s:GetInfo_Lua'),
   \ 'recalculate': function('s:Recalculate_Lua'),
   \ 'redraw': function('s:Redraw_Lua'),
-  \ 'unfadeAll': function('s:UnfadeAll_Lua'),
+  \ 'unhighlightAll': function('s:UnhighlightAll_Lua'),
   \ 'update': function('s:Update_Lua'),
   \ 'softInvalidateBuffer': function('s:SoftInvalidateBuffer_Lua'),
   \ 'softInvalidateSigns': function('s:SoftInvalidateSigns_Lua'),
@@ -903,11 +903,11 @@ function! s:Recalculate_Python()
   exec g:vimade_py_cmd "from vimade.v2 import bridge; bridge.recalculate()"
 endfunction
 function! s:Redraw_Python()
-  exec g:vimade_py_cmd "from vimade.v2 import bridge; bridge.unfadeAll(); bridge.recalculate()"
+  exec g:vimade_py_cmd "from vimade.v2 import bridge; bridge.unhighlightAll(); bridge.recalculate()"
   call vimade#CheckWindows()
 endfunction
-function! s:UnfadeAll_Python()
-  exec g:vimade_py_cmd "from vimade.v2 import bridge; bridge.unfadeAll()"
+function! s:UnhighlightAll_Python()
+  exec g:vimade_py_cmd "from vimade.v2 import bridge; bridge.unhighlightAll()"
 endfunction
 function! s:Update_Python()
   exec g:vimade_py_cmd "from vimade.v2 import bridge; bridge.update()"
@@ -928,7 +928,7 @@ let s:python_renderer = {
   \ 'getInfo': function('s:GetInfo_Python'),
   \ 'recalculate': function('s:Recalculate_Python'),
   \ 'redraw': function('s:Redraw_Python'),
-  \ 'unfadeAll': function('s:UnfadeAll_Python'),
+  \ 'unhighlightAll': function('s:UnhighlightAll_Python'),
   \ 'update': function('s:Update_Python'),
   \ 'softInvalidateBuffer': function('s:SoftInvalidateBuffer_Python'),
   \ 'softInvalidateSigns': function('s:SoftInvalidateSigns_Python'),
@@ -949,7 +949,7 @@ function! s:Redraw_PythonLegacy()
   exec g:vimade_py_cmd "from vimade import bridge; bridge.unfadeAll(); bridge.recalculate()"
   call vimade#CheckWindows()
 endfunction
-function! s:UnfadeAll_PythonLegacy()
+function! s:UnhighlightAll_PythonLegacy()
   exec g:vimade_py_cmd "from vimade import bridge; bridge.unfadeAll()"
 endfunction
 function! s:Update_PythonLegacy()
@@ -968,7 +968,7 @@ let s:python_legacy_renderer = {
   \ 'getInfo': function('s:GetInfo_PythonLegacy'),
   \ 'recalculate': function('s:Recalculate_PythonLegacy'),
   \ 'redraw': function('s:Redraw_PythonLegacy'),
-  \ 'unfadeAll': function('s:UnfadeAll_PythonLegacy'),
+  \ 'unhighlightAll': function('s:UnhighlightAll_PythonLegacy'),
   \ 'update': function('s:Update_PythonLegacy'),
   \ 'softInvalidateBuffer': function('s:SoftInvalidateBuffer_PythonLegacy'),
   \ 'softInvalidateSigns': function('s:SoftInvalidateSigns_PythonLegacy'),

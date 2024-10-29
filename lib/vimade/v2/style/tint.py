@@ -2,12 +2,23 @@ import sys
 M = sys.modules[__name__]
 
 from vimade.v2.util import color as COLOR_UTIL
+from vimade.v2.style.value import condition as CONDITION
 GLOBALS = None
 
-def __init(globals):
+def __init(args):
   global GLOBALS
-  GLOBALS = globals
+  GLOBALS = args['GLOBALS']
 M.__init = __init
+
+def _resolve_all_fn(obj, style, state):
+  if callable(obj):
+    obj = obj(style, state)
+  if type(obj) == dict:
+    copy = {}
+    for k, v in obj.items():
+      copy[k] = _resolve_all_fn(v, style, state)
+    return copy
+  return obj
 
 def _tint_or_basebg(tint):
   if type(tint) == 'dict':
@@ -51,37 +62,54 @@ def _create_to_hl(tint):
     result['sp_intensity'] = 1 - sp.get('intensity', 1)
   return result
 
-# @param initial_tint = {
+# @param **kwargs {
+# condition, 
+# value = {
 #  'fg': {'rgb': [255,255,255], 'intensity': 0-1},
 #  'bg': {'rgb': [255,255,255], 'intensity': 0-1}, 
 #  'sp': {'rgb': [255,255,255], 'intensity': 0-1}, 
 # }
+#}
 # rgb value for each fg, bg, and sp.
 # These are optional and you can choose which ones that you want to specify.
 # intensity is 0-1 (1 being the most amount of recoloring applied)
 class Tint():
-  def __init__(parent, initial_tint):
-    parent.initial_tint = initial_tint
+  def __init__(parent, **kwargs):
+    _condition = kwargs.get('condition')
+    _condition = _condition if _condition != None else CONDITION.INACTIVE
+    parent._value = kwargs.get('value')
     class __Tint():
-      def __init__(self, win):
-        initial_tint = parent.initial_tint
-        self.to_hl = _create_to_hl(initial_tint) if (initial_tint and type(initial_tint) == 'dict') else None
+      def __init__(self, win, state):
+        value = parent._value
         self.win = win
-      def before(self):
-        if callable(parent.initial_tint):
-          self.to_hl = _create_to_hl(parent.initial_tint(self.win))
-      def key(self, i):
-        to_hl = self.to_hl
-        if not to_hl:
+        self._condition = _condition
+        self.condition = None
+        self.to_hl = None
+        self._animating = False
+      def before(self, win, state):
+        self.condition = _condition(self, state) if callable(_condition) else _condition
+        if self.condition == False:
+          return
+        tint = _resolve_all_fn(parent._value, self, state)
+        self.to_hl =_create_to_hl(tint)
+      def key(self, win, state):
+        if self.condition == False or not self.to_hl:
           return ''
+        to_hl = self.to_hl
         return 'T-' \
         + str(to_hl['fg'] != None and (str(to_hl['fg'] or '') + ',' + (str(to_hl['ctermfg'][0])+'-'+str(to_hl['ctermfg'][1])+'-'+str(to_hl['ctermfg'][2])) + ',' + str(to_hl['fg_intensity'])) or '') + '|' \
         + (to_hl['bg'] != None and (str(to_hl['bg'] or '') + ',' + (str(to_hl['ctermbg'][0])+'-'+str(to_hl['ctermbg'][1])+'-'+str(to_hl['ctermbg'][2])) + ',' + str(to_hl['bg_intensity'])) or '') + '|'
         + (to_hl['sp'] != None and (str(to_hl['sp'] or '') + str(to_hl['sp_intensity'])) or '')
       def modify(self, hl, target):
+        if self.condition == False:
+          return
         to_hl = self.to_hl
         if not to_hl:
           return
+        if target['bg'] != None and to_hl['bg'] != None:
+          target['bg'] = COLOR_UTIL.interpolate24b(target['bg'], to_hl['bg'], to_hl['bg_intensity'])
+        if target['ctermbg'] != None and to_hl['ctermbg'] != None:
+          target['ctermbg'] = COLOR_UTIL.interpolate256(target['ctermbg'], to_hl['ctermbg'], to_hl['bg_intensity'])
         if hl['fg'] != None and to_hl['fg'] !=None:
           hl['fg'] = COLOR_UTIL.interpolate24b(hl['fg'], to_hl['fg'], to_hl['fg_intensity'])
         if hl['bg'] != None and to_hl['bg'] != None:
@@ -96,7 +124,9 @@ class Tint():
     parent.attach = __Tint
   def value(parent, replacement = None):
     if replacement != None:
-      parent.initial_tint = replacement
+      parent._value = replacement
       return result
-    return parent.initial_tint
-M.DEFAULT = Tint(lambda win: GLOBALS.tint(win) if callable(GLOBALS.tint) else _tint_or_basebg(GLOBALS.tint))
+    return parent._value
+
+def Default(**kwargs):
+  return Tint(condition = CONDITION.INACTIVE, value = lambda style, state: GLOBALS.tint(style, state) if callable(GLOBALS.tint) else _tint_or_basebg(GLOBALS.tint))

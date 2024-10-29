@@ -8,9 +8,9 @@ IS_V3 = False
 if (sys.version_info > (3, 0)):
     IS_V3 = True
 
-def __init(globals):
+def __init(args):
   global GLOBALS
-  GLOBALS = globals
+  GLOBALS = args['GLOBALS']
 
 IS_NVIM = int(vim.eval('has("nvim")')) == 1
 DICTIONARY = (dict, vim.Dictionary) if hasattr(vim, 'Dictionary') else dict

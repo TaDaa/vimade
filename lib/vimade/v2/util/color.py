@@ -54,8 +54,23 @@ def interpolate24b(source, target, fade):
       + (int(M.interpolateLinear((source & 0x00FF00) >> 8, (target & 0x00FF00) >> 8, fade)) << 8) \
       + int(M.interpolateLinear((source & 0x0000FF), (target & 0x0000FF), fade))
 
+def interpolateRgb(source, target, fade):
+  source = source if source != None else target
+  source = source if source != None else [0,0,0]
+  target = target if target != None else source
+  r = interpolateLinear(source[0], target[0], fade)
+  g = interpolateLinear(source[1], target[1], fade)
+  b = interpolateLinear(source[2], target[2], fade)
+  return [r, g, b]
+
 def interpolateLinear(source, target, fade):
   return math.floor(target + (source - target) * fade)
+
+def interpolateFloat(source, target, fade):
+  source = source if source != None else 0
+  target = target if target != None else 0
+  fade = fade if fade != None else 1
+  return target + (source - target) * fade
 
 def interpolate256(source, target, fade, prefer_color = False):
   source = source if type(source) == list else M.RGB_256[source]

@@ -13,20 +13,12 @@ M.getInfo = function ()
   return FADER.getInfo()
 end
 
-M.unfadeAll = function ()
-  FADER.unfadeAll()
-end
-
-M.fadeSigns = function ()
-  -- no plans for implementation at this time (not needed)
-end
-
-M.unfadeSigns = function ()
-  -- no plans for implementation at this time (not needed)
+M.unhighlightAll = function ()
+  FADER.unhighlightAll()
 end
 
 M.redraw = function ()
-  FADER.unfadeAll()
+  FADER.unhighlightAll()
   vim.schedule(FADER.redraw)
 end
 

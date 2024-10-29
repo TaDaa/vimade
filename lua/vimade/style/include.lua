@@ -1,5 +1,6 @@
 local M = {}
 local COMPAT = require('vimade.util.compat')
+local CONDITION = require('vimade.style.value.condition')
 
 M.__init = function (args)
   GLOBALS = args.GLOBALS
@@ -14,83 +15,94 @@ M.include_id = 1
 --}
 M.Include = function(config)
   local result = {}
-  local _condition = config.condition
+  local _condition = config.condition or CONDITION.INACTIVE
   result.attach = function (win)
     local condition = _condition
     local names = config.names
-    local style = {}
+    local children = {}
     for i, s in ipairs(config.style) do
-      table.insert(style, s.attach(win))
+      table.insert(children, s.attach(win))
     end
     local include = {}
     local include_ids = {}
-    return {
-      before = function (win, state)
-        if type(_condition) == 'function' then
-          condition = _condition(win, state)
-        end
-        if condition == false then
-          return
-        end
-        include = {}
-        include_ids = {}
-        local input
+    local style = {}
+    style.win = win
+    style._condition = _condition
+    style._animating = false
+    style.before = function (win, state)
+      if type(_condition) == 'function' then
+        condition = _condition(style, state)
+      end
+      if condition == false then
+        return
+      end
+      include = {}
+      include_ids = {}
+      local input
 
-        if type(names) == 'function' then
-          input = names(win)
-        else
-          input = names
+      if type(names) == 'function' then
+        input = names(win)
+      else
+        input = names
+      end
+      if type(input) == 'string' then
+        input = {input}
+      end
+      -- order required to prevent invalidation
+      for i, name in ipairs(input) do
+        local name_id = M.include_names[name]
+        if name_id == nil then
+          name_id = M.include_id
+          M.include_names[name] = name_id
+          M.include_id = M.include_id + 1
         end
-        if type(input) == 'string' then
-          input = {input}
+        if include[name] == nil then
+          include[name] = name_id
+          table.insert(include_ids, name_id)
         end
-        -- order required to prevent invalidation
-        for i, name in ipairs(input) do
-          local name_id = M.include_names[name]
-          if name_id == nil then
-            name_id = M.include_id
-            M.include_names[name] = name_id
-            M.include_id = M.include_id + 1
-          end
-          if include[name] == nil then
-            include[name] = name_id
-            table.insert(include_ids, name_id)
-          end
+      end
+      for i, s in ipairs(children) do
+        s.before(win, state)
+      end
+    end
+    style.key = function (win, state)
+      if condition == false then
+        return ''
+      end
+      local key ='I-' .. table.concat(include_ids, ',') .. '('
+      local s_active = 0
+      for j, s in ipairs(children) do
+        if j ~= 0 then
+          key = key .. ','
         end
-        for i, s in ipairs(style) do
-          s.before(win, state)
+        local s_key = s.key(win, state)
+        key = key .. s_key
+        if string.len(s_key) > 0 then
+          s_active = s_active + 1
         end
-      end,
-      key = function (win, state)
-        if condition == false then
-          return ''
+      end
+      if s_active == 0 then
+        return ''
+      end
+      key = key .. ')'
+      return key
+    end
+    style.modify = function (hl, to_hl)
+      if condition == false then
+        return
+      end
+      if include[hl.name] then
+        -- anything that is "Included' needs to be unlinked so that it visually changes
+        -- the highlights here should already be correct (see namespace.lua - resolve_all_links)
+        if hl.link then
+          hl.link = nil
         end
-        local key ='I-' .. table.concat(include_ids, ',') .. '('
-        for j, s in ipairs(style) do
-          if j ~= 0 then
-            key = key .. ','
-          end
-          key = key .. s.key(win, state)
+        for i, s in ipairs(children) do
+          s.modify(hl, to_hl)
         end
-        key = key .. ')'
-        return key
-      end,
-      modify = function (hl, to_hl)
-        if condition == false then
-          return
-        end
-        if include[hl.name] then
-          -- anything that is "Included' needs to be unlinked so that it visually changes
-          -- the highlights here should already be correct (see namespace.lua - resolve_all_links)
-          if hl.link then
-            hl.link = nil
-          end
-          for i, s in ipairs(style) do
-            s.modify(hl, to_hl)
-          end
-        end
-      end,
-    }
+      end
+    end
+    return style
   end
   -- value is not exposed here, no use-case currently
   return result

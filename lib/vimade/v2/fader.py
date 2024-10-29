@@ -3,7 +3,13 @@ import time
 M = sys.modules[__name__]
 
 import vim
+from vimade.v2.util.promise import Promise, all
+from vimade.v2.style.value import animate as ANIMATE
 from vimade.v2 import animator as ANIMATOR
+from vimade.v2.style import exclude as EXCLUDE
+from vimade.v2.style import fade as FADE
+from vimade.v2.style import tint as TINT
+from vimade.v2.style import include as INCLUDE
 from vimade.v2 import highlighter as HIGHLIGHTER
 from vimade.v2 import signs as SIGNS
 from vimade.v2.state import globals as GLOBALS
@@ -23,34 +29,45 @@ def _return_to_win():
     vim.command('noautocmd call win_gotoid(%d)' % (start_winid))
 
 def _update(only_these_windows):
+  promise = Promise()
   # start_time = time.time()
   windows = IPC.eval_and_return('getwininfo()')
-  fade_windows = GLOBALS.fade_windows
-  fade_buffers = not fade_windows
   current = GLOBALS.current
+  current_promise = None
+  other_promises = []
   updated_cache = {}
 
   # if highlights are invalidated at the global level, we need to 
   if (GLOBALS.RECALCULATE & GLOBALS.tick_state) > 0:
     HIGHLIGHTER.clear_base_cache()
     HIGHLIGHTER.create_vimade_0()
-    unfadeAll(windows)
+    unhighlightAll(windows)
 
 
   for wininfo in windows:
     # we skip only_these_windows here because we need to know who the active window is
     # for linking and other ops
+    # python is a bit tricker because the diff window hl overrides the default
+    # we get around this refreshing the active, but not determining its end state
+    # we then complete the end state after all other windows have been refreshed
     if current['winid'] == int(wininfo['winid']):
-      WIN_STATE.refresh_active(wininfo)
+      current_promise = WIN_STATE.refresh_active(wininfo)
       break
     
   for wininfo in windows:
     if current['tabnr'] == int(wininfo['tabnr']) and current['winid'] != int(wininfo['winid']) and \
         (not only_these_windows or only_these_windows.get(int(wininfo['winid']))):
-          WIN_STATE.refresh(wininfo)
+          other_promises.append(WIN_STATE.refresh(wininfo))
+
+  def finish(not_current_win):
+    for win in not_current_win:
+      win.finish()
+    current_promise.then(lambda win: win.finish())
+  all(other_promises).then(finish)
 
   def next(val):
     def complete(val):
+      promise.resolve(None)
       # delta = time.time() - start_time
       # if delta * 1000 > 3:
          # print('d', delta*1000)
@@ -61,10 +78,23 @@ def _update(only_these_windows):
     SIGNS.flush().then(complete)
 
   IPC.flush_batch().then(next)
-
+  return promise
 
 def _after_promise(val):
   _return_to_win()
+
+_callbacks = {}
+def on(name, callback):
+  callbacks = _callbacks.get(name)
+  if not callbacks:
+    _callbacks[name] = callbacks = []
+  callbacks.append(callback)
+
+def notify(name):
+  callbacks = _callbacks.get(name)
+  if callbacks:
+    for callback in callbacks:
+      callback()
 
 def setup(config):
   return GLOBALS.setup(config)
@@ -79,16 +109,21 @@ def invalidate():
   tick(GLOBALS.CHANGED)
 
 def tick(tick_state = GLOBALS.READY, only_these_windows = None):
-  GLOBALS.refresh(tick_state)
   last_ei = vim.options['ei']
   vim.options['ei'] = 'all'
+  notify('tick:before')
+  GLOBALS.refresh(tick_state)
 
   # if the tick_state changed during an animation, we need to use that frame
   # to sync the windows
   if GLOBALS.tick_state > 0 and only_these_windows:
     only_these_windows = None
 
-  _update(only_these_windows)
+  def after_update(v):
+    notify('tick:after')
+  _update(only_these_windows).then(after_update)
+
+
   vim.options['ei'] = last_ei
 
 def animate():
@@ -96,9 +131,18 @@ def animate():
   tick(GLOBALS.READY, only_these_windows)
 
 
-def unfadeAll(windows = None):
+def unhighlightAll(windows = None):
   if windows == None:
     windows = IPC.eval_and_return('getwininfo()')
   for wininfo in windows:
-    WIN_STATE.unfade(int(wininfo['winid']))
+    WIN_STATE.unhighlight(int(wininfo['winid']))
   SIGNS.flush()
+
+M.ANIMATE.__init({'FADER': M, 'GLOBALS': GLOBALS})
+M.ANIMATOR.__init({'FADER': M, 'GLOBALS': GLOBALS})
+M.FADE.__init({'FADER': M, 'GLOBALS': GLOBALS})
+M.TINT.__init({'FADER': M, 'GLOBALS': GLOBALS})
+M.EXCLUDE.__init({'FADER': M, 'GLOBALS': GLOBALS})
+M.INCLUDE.__init({'FADER': M, 'GLOBALS': GLOBALS})
+M.IPC.__init({'FADER': M, 'GLOBALS': GLOBALS})
+M.WIN_STATE.__init({'FADER': M, 'GLOBALS': GLOBALS})

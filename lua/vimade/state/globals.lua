@@ -1,4 +1,5 @@
 local M = {}
+local DIRECTION = require('vimade.style.value.direction')
 local EXCLUDE = require('vimade.style.exclude')
 local TYPE = require('vimade.util.type')
 local REAL_NAMESPACE = require('vimade.state.real_namespace')
@@ -33,9 +34,9 @@ M.vimade_fade_active = false
 M.basebg = nil
 M.normalid = 0
 M.normalncid = 0
-M.fademode = 'buffers'
-M.fade_windows = false
-M.fade_buffers = false
+M.ncmode = 'buffers'
+M.nc_windows = false
+M.nc_buffers = false
 M.fadelevel = 0
 M.fademinimap = false
 M.groupdiff = true
@@ -62,9 +63,9 @@ local OTHER = {
   vimade_fade_active = false,
   is_dark = false,
 }
-local DEFAULTS = {
+local DEFAULTS = TYPE.extend(DEFAULT_RECIPE.Default(), {
   basebg = nil,
-  fademode = 'buffers',
+  ncmode = 'buffers',
   -- disabled for absolute peformance
   -- can be enabled to re-check highlights each tick
   nohlcheck = true,
@@ -133,8 +134,7 @@ local DEFAULTS = {
       },
     },
   },
-  style = DEFAULT_RECIPE.Default().style,
-}
+})
 
 local check_fields = function (fields, next, current, defaults, return_state)
   local modified = false
@@ -213,7 +213,7 @@ M.refresh = function (override_tick_state)
     vimade_fade_active = vim.g.vimade_fade_active == 1,
   }, M, OTHER, M.CHANGED))
   M.tick_state = bit.bor(M.tick_state, check_fields({
-    'fademode',
+    'ncmode',
   }, vimade, M, DEFAULTS, M.CHANGED))
   M.tick_state = bit.bor(M.tick_state, check_fields({
     'winid',
@@ -233,8 +233,9 @@ M.refresh = function (override_tick_state)
   M.style = vimade.style or DEFAULTS.style
 
   -- already checked --
-  M.fade_windows = M.fademode == 'windows'
-  M.fade_buffers = M.fademode == 'buffers'
+  M.nc_windows = M.ncmode == 'windows'
+  M.nc_buffers = M.ncmode == 'buffers'
+  -- if you don't choose one of the above, everything is highlighted
 
   if not M.global_ns or not M.nohlcheck
     or bit.band(M.RECALCULATE, M.tick_state) > 0 then
