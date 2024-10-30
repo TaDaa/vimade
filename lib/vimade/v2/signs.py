@@ -263,7 +263,7 @@ def _do_highlight(bufnr, visible_rows, signs, win):
     if len(add_eval):
       IPC.batch_command('function! VimadeSignTemp() \n' + ('\n'.join(add_eval)) + '\nendfunction \n call VimadeSignTemp()')
 
-  IPC.batch_command('|'.join(remove_eval)),
+  IPC.batch_command('function! VimadeSignTemp() \n' + ('\n'.join(remove_eval)) + '\nendfunction \n call VimadeSignTemp()')
   _do_create(bufnr, win, to_create).then(add_signs)
 
 def flush():
