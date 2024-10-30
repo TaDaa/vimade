@@ -131,13 +131,15 @@ function! vimade#GetDefaults()
     let g:vimade_defaults = {'$extended': 1}
 
     ""@setting vimade.renderer
-    "If not specificed, defaults to ['python-legacy']. This default value will soon change to 'auto'.
+    "Select the renderer to use for vimade window/buffer highlights.
+    "If not specificed, defaults to 'auto'. It is recommended to leave this
+    "option set to 'auto', 'lua', or 'python'.
     "Current options are:
-    "  - 'auto' - Uses lua renderer if supported on your Neovim version
+    "  - 'auto' - Uses lua renderer if supported on your Neovim version. Otherwise, this option will automatically fallback to 'python'.
     "  - 'python' - Uses a new high performance renderer compatible with Vim and Neovim
-    "  - 'python-legacy' - Uses the legacy and stable python renderer that Vimade has relied on for the last 6 years. This will be removed once all bugs have been fixed in new renderers.
+    "  - 'python-legacy' - Uses the legacy and stable python logic. This renderer is not as performant as the other options.
 
-    let g:vimade_defaults.renderer = 'python-legacy'
+    let g:vimade_defaults.renderer = 'auto'
 
     ""@setting vimade.fadelevel
     "Supported:     lua, python, python-legacy
