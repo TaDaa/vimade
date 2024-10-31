@@ -1,7 +1,5 @@
-# vimade
-
-
-###### An eye catching plugin that fades your inactive buffers and preserves syntax highlighting!!!!
+# vimade (vim+fade)
+###### Fade, highlight, and customize your windows + buffers
 
 ##### Screenshots
 
@@ -34,43 +32,34 @@
 ![](http://tadaa.github.io/images/vimade_normalnck.gif)
 
 ##### Features
-- [X] Fade inactive buffers
-- [X] Fade/Unfade diffs together
-- [X] Apply custom tints (not necessarily your background color to text)
-- [X] Automatically adjust to configuration changes (e.g. colorscheme, syntax, and vimade variables)
+- [X] Fade & highlight buffers and windows
+- [X] Switch between Window and Buffer highlighting
+- [X] Link windows so that they unfade/unhighlight together.  (e.g. diffs!)
+- [X] Blocklist 
+- [X] Custom tints
+- [X] Prebuilt recipes
+- [X] Fully customizable (see styles and recipes for examples of what you can do)
+- [X] Animations (in, out, all directions, and extensive easing options)
+- [X] Auto adjust to state and configuration changes
 - [X] Automatically adjust to fadelevel changes
-- [X] React to window resize + scroll changes
-- [X] Vim8+
-- [X] Neovim - plays well with NormalNC and treesitter
-- [X] Python3
-- [X] Python2
-- [X] GUI Neovim + GUI Vim
-- [X] 256 color terminals
-- [X] Toggle vimade on/off (VimadeEnable, VimadeDisable, VimadeToggle)
-- [X] Wrapped Text (only selects and processes the parts of the text that need highlighting)
-- [X] Folded Text (detects folded rows and fades above/below -- see VimadeOverrideFolded for highlight recommendations on hi Folded)
-- [X] :ownsyntax support
-- [X] Sign column support
+- [X] 256color and termguicolor support!
+- [X] Performance.  Lua-mode is sub-millisecond per frame. Updated python logic is 2-10x faster than the previous iteration.
+- [X] Many commands (VimEnable, VimDisable, VimToggle)
+- [X] Supports Lua-only for Neovim 0.8.0+
+- [X] Supports Vim8+, Neovim 0+???? (requires python2.7 or newer)
+- [X] (Vim+Older Neovim) Tons of logic to support wrapped text, folded text, ownsyntax, signs, etc.  
+- [X] `VimadeOverrideAll` and other override commands to help make built-in highlights look better while Vimade is enabled.
 - [X] Vim Documentation/Help
-- [X] Helpers to fade Vim global highlights (e.g VertSplit, Folded, NonText, etc -- will alleviate issues with high contrast in some colorschemes)
 
 ###### Whats coming?
-- [ ] Configurable option to switch between Windows and Buffers
-- [ ] Configurable FadeLevel per Window
-- [ ] Configurable Tint per Window
-- [ ] Conditional interface to determine which windows/buffers get faded/unfaded.
-- [ ] Lua only renderer for Neovim (no python dependency required!).
-- [ ] Performance Improvements
-- [ ] Improve terminal color rounding for grays
-- [ ] Animations
-- [ ] Limelight but with syntax highlighting!
+- [ ] Some good stuff
 - [ ] Code cleanup
 - [ ] Tests
 
 ##### What/Why?
-- Vimade fades inactive/unfocused buffer text and removes the fade from focused buffers. 
-- Vimade diffs and multiple windows linked to the same buffer are treated as a group that highlights/unhighlights together.
-- Vimade reacts to scrolling, tab changes, colorscheme changes, diff, and much more!
+This plugin was created to help keep your attention focused on the active buffer especially in scenarios where you might have many windows open at the same time.  
+Previously Vimade accomplished this by fading just thet inactive buffers.  Vimade has now transitioned into a plugin that is pretty much fully customizable and you can highlight any window/buffer however you see fit.
+The old "just fade/dim" functionality is a small subset of the new features!
 
 ##### Install
 *Add `TaDaa/vimade` to your vimrc -- you can use any plugin manager e.g:*
@@ -78,44 +67,114 @@
 Plug 'TaDaa/vimade'
 ```
 
-##### Config
-Vimade is initialized with the following configuration.  Vimade will react to configuration changes on the fly:
+
+
+##### General Config
+Vimade is initialized with the following and will react to configuration changes on the fly.  Some of these options don't matter if you are using the lua renderer, but you can set them anyways just in case you ever need to use Vim as well. 
 ```
 let g:vimade = {
-  \ "normalid": '',
-  \ "normalncid": '',
-  \ "basefg": '',
-  \ "basebg": '',
-  \ "fadelevel": 0.4,
-  \ "colbufsize": 15, "15 is the default for gui vim, 5 is the default for terminals and gvim
-  \ "rowbufsize": 15, "15 is the default for gui vim, 0 is the default for terminals and gvim
-  \ "checkinterval": 100, "100 is the default for gui vim, 500 is the default for terminals and neovim
-  \ "usecursorhold": 0, "0 is default, but will automatically set to 1 for Windows GVIM
-  \ "detecttermcolors": 0,
-  \ 'enablescroll': 1, "1 is the default for gui vim, but will automatically set to 0 for terminals and Windows GVIM.
+  \ 'renderer': 'auto',
+  \ 'ncmode': 'buffers',
+  \ 'normalid": '',
+  \ 'normalncid': '',
+  \ 'basebg': '',
+  \ 'fadelevel': 0.4,
+  \ 'groupdiff': 1,
+  \ 'groupscrollbind': 0,
+  \ 'checkinterval': 100, "100 is the default for gui vim, 500 is the default for terminals and neovim
+  \ 'usecursorhold': 0, "0 is default, but will automatically set to 1 for Windows GVIM
+  \ 'blocklist': {'default': {'buf_opts': {'buftype': ['prompt', 'terminal', 'popup']}, 'win_config': {'relative': 1}}}, " blocks floatings windows and prompts.  Terminal is blocked on Neovim but may be added later.  See below for how to use blocklist
   \ 'enablesigns': g:vimade_features.has_signs_priority, "enabled for vim/nvim versions that support sign priority.  Older vim/nvim versions may suffer performance issues
   \ 'signsid': 13100,
   \ 'signsretentionperiod': 4000,
   \ 'fademinimap': 1,
-  \ 'fadepriority': 10,
-  \ 'groupdiff': 1,
-  \ 'groupscrollbind': 0,
+  \ 'matchpriority': 10,
   \ 'enablefocusfading': 0,
   \ 'enablebasegroups': 1,
   \ 'enabletreesitter' : 0, "EXPERIMENTAL FEATURE - 0 is the default, enables support for treesitter highlights"
   \ 'basegroups': ['Folded', 'Search', 'SignColumn', 'LineNr', 'CursorLine', 'CursorLineNr', 'DiffAdd', 'DiffChange', 'DiffDelete', 'DiffText', 'FoldColumn', 'Whitespace']
 }
 ```
-- **vimade.normalid** - if not specified, the normalid is determined when vimade is first loaded.  normalid provides the id of the "Normal" highlight which is used to calculate fading.  You can override this config with another highlight group.
-- **vimade.normalncid** - if not specified, the normalncid is determined when vimade is first loaded.  normalncid provides the id of the "NormalNC" highlight which is used to calculate fading for inactive buffers in NVIM.  You can override this config with another highlight group.
-- **vimade.basefg** - basefg can either be six digit hexidecimal color, rgb array [0-255,0-255,0-255], or cterm code (in terminal).  Basefg is only used to calculate the default fading that should be applied to Normal text.  By default basefg is calculated as the "Normal" highlight guifg or ctermfg.
-- **vimade.basebg** - basebg can be either be six digit hexidecimal color, rgb array [0-255,0-255,0-255], or cterm code (in terminal).  basebg is used as the color that text is faded against.  You can override this config with another hexidecimal color.  A cool feature of basebg is to use it to change the tint of faded text even if its not your background!
+
+
+###### Common functionality between Lua and Python renderers
+
+- **vimade.renderer** - By default set to **auto**. The **auto** renderer prioritizes **lua** for Neovim users that have the required features and **python** for everyone else. **python-legacy** is the previous version of the **python** renderer, but should not be used as the newer versions are much higher performing!  
+
+| Renderer | Neovim version | Vim version | Performance per frame |
+| -------- | ------ | ------- | ----------|
+| let g:vimade.renderer='auto' | All | 0.7.4+ | See below |
+| let g:vimade.renderer='lua'  | 0.8.0+ | N/A | < 1ms | 
+| let g:vimade.renderer='python' | All | 0.7.4+ | variable based on many factors |
+
+- **vimade.ncmode** - either `'windows'` or `'buffers'`.  Determines whether windows or buffers are highlighted and unhighlighted together.  By default Vimade uses `'buffers'`.
 - **vimade.fadelevel** - amount of fading applied between text and basebg.  0 will make the text the same color as the background and 1 applies no fading.  The default value is 0.4.  If you are using terminal, you may need to tweak this value to get better results.
-- **vimade.rowbufsize** - the number of rows above and below of the determined scroll area that should be precalculated. Reduce this value to improve performance. Default is 15 for gui vim and 0 for terminals/gvim.
-- **vimade.colbufsize** - the number of cols left and right of the determined scroll area that should be precalculated. Reduce this value to improve performance. Default is 15 for gui vim and 1 for terminals/gvim.
+- **vimade.groupdiff** - highlights and unhighlights diff windows together (otherwise you wouldn't be able to see the diff!).  Enable by default
+- **vimade.groupscrollbind** - Same as **vimade.groupdiff** but for windows with scrollbind. Disabled by default. 
 - **vimade.checkinterval** - the amount of time in milliseconds that vimade should check the screen for changes.  This config is mainly used to detect resize and scroll changes that occur on inactive windows. Checkinterval does nothing on gvim, if you want to control the refresh time, see 'h updatetime'. Default is 100.  
 - **vimade.usecursorhold** -  disables the timer running in the background and instead relies `OnCursorHold` and `updatetime` (see h:updatetime).  The default value is `0` except on Windows GVIM, which defaults to `1` due to the timer breaking movements.  If you find that the timer is causing performance problems or other issues you can disable it by setting this option to `1`. 
-- **vimade.detecttermcolors** - detect the terminal background and foreground colors.  This will work for Vim8 + iTerm, Tilix, Kitty, Gnome, Rxvt, and other editors that support the following query (```\033]11;?\007``` or ```\033]11;?\033\\```).  Default is 0.  Enable this at your own risk as it can cause unwanted side effects.
+- **vimade.basebg** - basebg can be either be six digit hexidecimal color, rgb array [0-255,0-255,0-255], or cterm code (in terminal).  basebg is used as a tint applied to fg text.  This option exists mainly as a legacy option (hence the strange naming!).  See the tint option below for a more
+customizable way to modify your configuration. 
+- **vimade.tint** - Allows full configuration over the colors applied to **fg**, **bg**, and **sp** highlights.  This is further customaizable via the **Lua** and **Python** logic.  
+Vimscript:
+```
+let g:vimade.tint = {
+\   'fg': {
+\     'rgb': [255,0,0], " Any rgb value is valid. If you are in 256 color mode, the value will automatically be converted for you
+\     'intensity': 1 " [0-1] are valid values. 0 is no tint applied and 1 is maximum
+\   },
+\   'bg': {
+\     'rgb': [0,0,0], " Neovim will modify the full background color with this setting allowing you to fully customize the window appearance!
+\     'intensity': 0.5
+\   },
+\   'sp': {
+\     'rgb': [0,0,255], " Modifies special highlights
+\     'intensity': 0.5
+\   }
+\ }
+```
+- **vimade.blocklist** - Configurable via vimscript, but more customizable via **Lua** and **Python** specific logic.  This allows you block windows that match against parts of the window matcher object.  Window matchers include `buf_name`, `buf_opts`, `buf_vars`, `win_opts`, `win_vars`, `win_type`, and `win_config`.  For example:
+```
+let g:vimade.blocklist = {
+\ 'some_blocklist_name': {
+\   'buf_name': ['buffer_name.py'],
+\   'buf_opts': {
+\     'buftype': ['terminal'],
+\   },
+\   'buf_vars': {
+\     'some_buf_var': 123
+\   },
+\   'win_opts': {},
+\   'win_vars': {},
+\   'win_config': {}
+\  }
+\ }
+```
+**vimade.link** - Configurable via vimscript, but more customizable via **Lua** and **Python** specific logic below. This allows you to use a window matcher object to highlight and unhlighlight windows together.  Windows are matched for linked status against the active window.
+```
+let g:vimade.link = { \
+'some_link_name': { \
+\   'buf_name': [],
+\   'buf_opts': {},
+\   'buf_vars': {},
+\   'win_opts': {
+\     'diff': 1
+\   },
+\   'win_vars': {},
+\   'win_config': {}
+\  }
+\ }
+```
+- **vimade.normalid** - if not specified, the normalid is determined when vimade is first loaded.  normalid provides the id of the "Normal" highlight which is used to calculate fading.  You can override this config with another highlight group.
+- **vimade.normalncid** - if not specified, the normalncid is determined when vimade is first loaded.  normalncid provides the id of the "NormalNC" highlight which is used to calculate fading for inactive buffers in NVIM.  You can override this config with another highlight group.
+
+###### Lua-specific options
+
+** Ensure you are on **Neovim 0.8.0** or later.
+
+
+###### Python-specific options
+
 - **vimade.enablesigns** - Enabled by default for vim/nvim versions that support sign priority and causes signs to be faded when switching buffers.  Only visible signs are faded.  This feature can cause performance issues on older vim/nvim versions that don't support sign priority.  Use signsretentionperiod to control the duration that vimade checks for sign updates after switching buffers.
 - **vimade.enablescroll** - Enables fading while scrolling inactive windows.  This is only useful in gui vim and does have a performance cost.  By default this setting is enabled in gui vim and disabled for terminals.
 - **vimade.signsid** - The starting id that Vimade should use when creating new signs. By default Vim requires numeric values to create signs and its possible that collisions may occur between plugins.  If you need to override this value for compatibility, please open an issue as well.  Default is 13100.
@@ -138,7 +197,8 @@ let g:vimade = {
              call feedkeys(":silent execute '!' | redraw!\<CR>")
           endif
           ```
-- **vimade.enabletreesitter** - This is an EXPERIMENTAL feature.  Combines treesitter with syntax highlights if needed to fade buffer.  Default value is 0.   
+- **vimade.enabletreesitter** - This is an EXPERIMENTAL feature.  Combines treesitter with syntax highlights if needed to fade buffer.  Default value is 0.
+- **viamde.disablebatch** - Disables high-performance batch mode. Set this feature to 1 if you need to debug something not working.  
  
 
 ##### Config Example(s)
