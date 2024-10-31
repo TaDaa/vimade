@@ -72,9 +72,9 @@ Plug 'TaDaa/vimade'
 ## Getting started / Recipes:
 
 - [Fade buffers](#fade-buffers)
-- [Fade windows](#fade_windows)
-- [Default recipe](#default_recipe)
-- [Minimalist recipe](#minimalist_recipe)
+- [Fade windows](#fade-windows)
+- [Default recipe](#default-recipe)
+- [Minimalist recipe](#minimalist-recipe)
 
 <details>
 
@@ -197,7 +197,7 @@ Hides UI components on inactive windows that have low value such as number colum
 
 ```lua 
 local Minimalist = require('vimade.recipe.minimalist').Minimalist
-require('vimade').setup(Default{animate = true})
+require('vimade').setup(Minimalist{animate = true})
 ```
 
 </blockquote>
