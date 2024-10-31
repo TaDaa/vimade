@@ -1,8 +1,8 @@
 import sys
 M = sys.modules[__name__]
 
-from vimade.v2.util import matchers as MATCHERS
-from vimade.v2.state import globals as GLOBALS
+from vimade.util import matchers as MATCHERS
+from vimade.state import globals as GLOBALS
 
 def DEFAULT(win, active, config):
   legacy = False

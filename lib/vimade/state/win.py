@@ -4,13 +4,13 @@ M = sys.modules[__name__]
 
 import vim
 
-from vimade.v2 import highlighter as HIGHLIGHTER
-from vimade.v2.state import globals as GLOBALS
-from vimade.v2.state import namespace as NAMESPACE
-from vimade.v2.config_helpers import link as LINK
-from vimade.v2.config_helpers import blocklist as BLOCKLIST
-from vimade.v2.util import ipc as IPC
-from vimade.v2.util.promise import Promise,all
+from vimade import highlighter as HIGHLIGHTER
+from vimade.state import globals as GLOBALS
+from vimade.state import namespace as NAMESPACE
+from vimade.config_helpers import link as LINK
+from vimade.config_helpers import blocklist as BLOCKLIST
+from vimade.util import ipc as IPC
+from vimade.util.promise import Promise,all
 
 IS_NVIM = GLOBALS.is_nvim
 FADER = None

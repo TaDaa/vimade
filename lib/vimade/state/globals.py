@@ -1,16 +1,16 @@
 import sys
 import time
 import vim
-from vimade.v2.recipe import default as DEFAULT_RECIPE
-from vimade.v2.style.value import animate as ANIMATE
-from vimade.v2.style.value import condition as CONDITION
-from vimade.v2.style.value import direction as DIRECTION
-from vimade.v2.style.value import ease as EASE
-from vimade.v2.style import fade as FADE
-from vimade.v2.style import tint as TINT
-from vimade.v2.util import ipc as IPC
-from vimade.v2.util import matchers as MATCHERS
-from vimade.v2.util import type as TYPE
+from vimade.recipe import default as DEFAULT_RECIPE
+from vimade.style.value import animate as ANIMATE
+from vimade.style.value import condition as CONDITION
+from vimade.style.value import direction as DIRECTION
+from vimade.style.value import ease as EASE
+from vimade.style import fade as FADE
+from vimade.style import tint as TINT
+from vimade.util import ipc as IPC
+from vimade.util import matchers as MATCHERS
+from vimade.util import type as TYPE
 
 MAX_TICK_ID = 1000000000
 
@@ -194,8 +194,8 @@ class Globals(object):
       tick_id = 1000
     return tick_id
 
-  def setup(self, config):
-    self.vimade_py = self.TYPE.deep_copy(config)
+  def setup(self, **kwargs):
+    self.vimade_py = self.TYPE.deep_copy(kwargs)
 
   def getInfo(self):
     info = self.__internal

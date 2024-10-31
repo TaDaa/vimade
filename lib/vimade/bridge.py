@@ -1,32 +1,28 @@
-from vimade import terminal
-from vimade import signs
-from vimade import fader
-from vimade import highlighter
-from vimade import global_state as GLOBALS
+from vimade import fader as FADER
+
+def setup(**kwargs):
+  return FADER.setup(**kwargs)
 
 def getInfo():
-  return GLOBALS.getInfo()
+  return FADER.getInfo()
 
 def detectTermColors():
-  terminal.detectColors()
+  #  TODO: NOT HAPPENING. Remove from v1 as well
+  pass
 
-def unfadeAll():
-  fader.unfadeAll()
+def unhighlightAll():
+  FADER.unhighlightAll()
 
-def fadeSigns(bufnr):
-  signs.fade_bufs([bufnr])
-
-def unfadeSigns(bufnr):
-  signs.unfade_bufs([bufnr])
-
-def softInvalidateBuffer(bufnr):
-  fader.softInvalidateBuffer(bufnr)
-
-def softInvalidateSigns():
-  fader.softInvalidateSigns()
+def invalidate():
+  # distinction between buffer and signs invalidation is not needed, this basically just mean
+  # recheck the screen.
+  FADER.invalidate()
 
 def recalculate():
-  highlighter.recalculate()
+  FADER.recalculate()
 
-def update(nextState = None):
-  fader.update(nextState)
+def update():
+  FADER.tick()
+
+def animate():
+  FADER.animate()

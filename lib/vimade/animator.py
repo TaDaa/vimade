@@ -1,7 +1,7 @@
 import sys
 M = sys.modules[__name__]
 
-from vimade.v2.util import ipc as IPC
+from vimade.util import ipc as IPC
 
 FADER = None
 GLOBALS = None

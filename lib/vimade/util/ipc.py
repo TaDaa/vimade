@@ -1,5 +1,5 @@
 import sys
-from vimade.v2.util.promise import Promise
+from vimade.util.promise import Promise
 M = sys.modules[__name__]
 import vim
 

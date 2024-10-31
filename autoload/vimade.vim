@@ -899,29 +899,29 @@ function! s:DetectTermColors_Python()
   " empty
 endfunction
 function! s:GetInfo_Python()
-  exec g:vimade_py_cmd "from vimade.v2 import bridge; import vim; vim.vars['vimade_renderer_info'] = bridge.getInfo()"
+  exec g:vimade_py_cmd "from vimade import bridge; import vim; vim.vars['vimade_renderer_info'] = bridge.getInfo()"
 endfunction
 function! s:Recalculate_Python()
-  exec g:vimade_py_cmd "from vimade.v2 import bridge; bridge.recalculate()"
+  exec g:vimade_py_cmd "from vimade import bridge; bridge.recalculate()"
 endfunction
 function! s:Redraw_Python()
-  exec g:vimade_py_cmd "from vimade.v2 import bridge; bridge.unhighlightAll(); bridge.recalculate()"
+  exec g:vimade_py_cmd "from vimade import bridge; bridge.unhighlightAll(); bridge.recalculate()"
   call vimade#CheckWindows()
 endfunction
 function! s:UnhighlightAll_Python()
-  exec g:vimade_py_cmd "from vimade.v2 import bridge; bridge.unhighlightAll()"
+  exec g:vimade_py_cmd "from vimade import bridge; bridge.unhighlightAll()"
 endfunction
 function! s:Update_Python()
-  exec g:vimade_py_cmd "from vimade.v2 import bridge; bridge.update()"
+  exec g:vimade_py_cmd "from vimade import bridge; bridge.update()"
 endfunction
 function! s:Animate_Python()
-  exec g:vimade_py_cmd "from vimade.v2 import bridge; bridge.animate()"
+  exec g:vimade_py_cmd "from vimade import bridge; bridge.animate()"
 endfunction
 function! s:SoftInvalidateBuffer_Python()
-  exec g:vimade_py_cmd "from vimade.v2 import bridge; bridge.invalidate()"
+  exec g:vimade_py_cmd "from vimade import bridge; bridge.invalidate()"
 endfunction
 function! s:SoftInvalidateSigns_Python()
-  exec g:vimade_py_cmd "from vimade.v2 import bridge; bridge.invalidate()"
+  exec g:vimade_py_cmd "from vimade import bridge; bridge.invalidate()"
 endfunction
 let s:python_renderer = {
   \ 'name': 'python',
@@ -939,29 +939,29 @@ let s:python_renderer = {
 
 " PythonLegacy Renderer START
 function! s:DetectTermColors_PythonLegacy()
-  exec g:vimade_py_cmd "from vimade import bridge; bridge.detectTermColors()"
+  exec g:vimade_py_cmd "from vimade.legacy import bridge; bridge.detectTermColors()"
 endfunction
 function! s:GetInfo_PythonLegacy()
-  exec g:vimade_py_cmd "from vimade import bridge; import vim; vim.vars['vimade_renderer_info'] = bridge.getInfo()"
+  exec g:vimade_py_cmd "from vimade.legacy import bridge; import vim; vim.vars['vimade_renderer_info'] = bridge.getInfo()"
 endfunction
 function! s:Recalculate_PythonLegacy()
-  exec g:vimade_py_cmd "from vimade import bridge; bridge.recalculate()"
+  exec g:vimade_py_cmd "from vimade.legacy import bridge; bridge.recalculate()"
 endfunction
 function! s:Redraw_PythonLegacy()
-  exec g:vimade_py_cmd "from vimade import bridge; bridge.unfadeAll(); bridge.recalculate()"
+  exec g:vimade_py_cmd "from vimade.legacy import bridge; bridge.unfadeAll(); bridge.recalculate()"
   call vimade#CheckWindows()
 endfunction
 function! s:UnhighlightAll_PythonLegacy()
-  exec g:vimade_py_cmd "from vimade import bridge; bridge.unfadeAll()"
+  exec g:vimade_py_cmd "from vimade.legacy import bridge; bridge.unfadeAll()"
 endfunction
 function! s:Update_PythonLegacy()
-  exec g:vimade_py_cmd "from vimade import bridge; bridge.update({'activeBuffer': str(vim.current.buffer.number), 'activeTab': '".tabpagenr()."', 'activeWindow': '".win_getid(winnr())."'})"
+  exec g:vimade_py_cmd "from vimade.legacy import bridge; bridge.update({'activeBuffer': str(vim.current.buffer.number), 'activeTab': '".tabpagenr()."', 'activeWindow': '".win_getid(winnr())."'})"
 endfunction
 function! s:SoftInvalidateBuffer_PythonLegacy()
-  exec g:vimade_py_cmd "from vimade import bridge; bridge.softInvalidateBuffer('".a:bufnr."')"
+  exec g:vimade_py_cmd "from vimade.legacy import bridge; bridge.softInvalidateBuffer('".a:bufnr."')"
 endfunction
 function! s:SoftInvalidateSigns_PythonLegacy()
-  exec g:vimade_py_cmd "from vimade import bridge; bridge.softInvalidateSigns()"
+  exec g:vimade_py_cmd "from vimade.legacy import bridge; bridge.softInvalidateSigns()"
 endfunction
 let s:python_legacy_renderer = {
   \ 'name': 'python_legacy',

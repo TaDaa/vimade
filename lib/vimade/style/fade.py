@@ -2,8 +2,8 @@ import sys
 import time
 M = sys.modules[__name__]
 
-from vimade.v2.util import color as COLOR_UTIL
-from vimade.v2.style.value import condition as CONDITION
+from vimade.util import color as COLOR_UTIL
+from vimade.style.value import condition as CONDITION
 GLOBALS = None
 
 def __init(args):

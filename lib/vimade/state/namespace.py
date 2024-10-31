@@ -10,10 +10,10 @@ IS_V3 = False
 if (sys.version_info > (3, 0)):
     IS_V3 = True
 
-from vimade.v2 import signs as SIGNS
-from vimade.v2.util import ipc as IPC
-from vimade.v2.state import globals as GLOBALS
-from vimade.v2 import highlighter as HIGHLIGHTER
+from vimade import signs as SIGNS
+from vimade.util import ipc as IPC
+from vimade.state import globals as GLOBALS
+from vimade import highlighter as HIGHLIGHTER
 
 tab = bytes('\t', 'utf-8', 'replace')[0] if IS_V3 else '\t'
 sp = bytes(' ', 'utf-8', 'replace')[0] if IS_V3 else ' '

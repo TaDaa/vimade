@@ -34,7 +34,7 @@
 ##### Features
 - [X] Fade & highlight buffers and windows
 - [X] Switch between Window and Buffer highlighting
-- [X] Link windows so that they unfade/unhighlight together.  (e.g. diffs!)
+- [X] Link windows so that change together (e.g. diffs!)
 - [X] Blocklist 
 - [X] Custom tints
 - [X] Prebuilt recipes
@@ -63,10 +63,80 @@ Previously Vimade accomplished this by fading just thet inactive buffers.  Vimad
 
 ##### Install
 *Add `TaDaa/vimade` to your vimrc -- you can use any plugin manager e.g:*
+
 ```
 Plug 'TaDaa/vimade'
 ```
 
+##### Getting started / Recipes:
+
+- [Fade buffers](#fade_buffers)
+- [Fade windows](#fade_windows)
+- [Default recipe](#default_recipe)
+- [Minimalist recipe](#minimalist_recipe)
+
+##### <a name="fade_buffers">Fade buffers</a>
+
+Just adding **Vimade** to your vimrc is enough. But you may want to play around the config options and other recipes!
+
+Example:
+
+```vimscript
+let g:vimade = {}
+let g:vimade.fadelevel = 0.4
+```
+
+```lua
+require('vimade').setup{fadelevel = 0.4}
+```
+
+```python
+vimade.setup(fadelevel = 0.4)
+```
+
+##### <a name="fade_windows">Fade windows</a>
+
+```vimscript
+let g:vimade = {}
+let g:vimade.fadelevel = 0.4
+let g:vimade.ncmode = 'windows'
+```
+
+```lua
+require('vimade').setup{fadelevel = 0.4, ncmode = 'windows'}
+```
+
+```python
+vimade.setup(fadelevel = 0.4, ncmode = 'windows')
+```
+
+##### <a name="default_recipe">Default recipe</a>
+
+** The default recipe configures Vimade to apply any defined tints and fades to inactive buffers or windows.
+
+source: [lua](https://github.com/TaDaa/vimade/lua/vimade/recipe/default.lua) | [python](https://github.com/TaDaa/vimade/lib/vimade/recipe/default.py)
+
+```lua
+local Default = require('vimade.recipe.default').Default
+require('vimade').setup(Default(animate=true))
+```
+
+```python
+from vimade import vimade
+from vimade.recipe.default import Default
+vimade.setup(Default(animate=True))
+```
+
+##### <a name="minimalist_recipe">Minimalist recipe</a>
+
+** Minimalist hides UI components on inactive windows that have low value such as number column and end of buffer highlights. It also greatly reduces the inactive WinSeparator highlight.
+
+source: [lua](https://github.com/TaDaa/vimade/lua/vimade/recipe/minimalist.lua) | [python](https://github.com/TaDaa/vimade/lib/vimade/recipe/minimalist.py)
+
+```lua
+local Minimalist = require('vimade.recipe.minimalist').Minimalist
+require('vimade').setup(Default{animate = true})
+```
 
 
 ##### General Config

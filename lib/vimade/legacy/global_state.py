@@ -1,8 +1,8 @@
 import vim
 import sys
-from vimade import colors
-from vimade.term_256 import RGB_256
-from vimade import util
+from vimade.legacy import colors
+from vimade.legacy.term_256 import RGB_256
+from vimade.legacy import util
 
 GLOBALS = sys.modules[__name__]
 

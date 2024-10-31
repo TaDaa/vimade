@@ -1,7 +1,7 @@
 import subprocess
 import re
 import os
-from vimade import global_state as GLOBALS
+from vimade.legacy import global_state as GLOBALS
 
 DIR = os.path.dirname(__file__)
 COLORS_SH = ['bash' , os.path.realpath(os.path.join(DIR, '..', '..', 'colors.sh'))]

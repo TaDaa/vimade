@@ -1,12 +1,12 @@
 import sys
 M = sys.modules[__name__]
 
-from vimade.v2 import animator as ANIMATOR
-from vimade.v2.style.value import ease as EASE
-from vimade.v2.style.value import condition as CONDITION
-from vimade.v2.style.value import direction as DIRECTION
-from vimade.v2.util import type as TYPE
-from vimade.v2.util import color as COLOR_UTIL
+from vimade import animator as ANIMATOR
+from vimade.style.value import ease as EASE
+from vimade.style.value import condition as CONDITION
+from vimade.style.value import direction as DIRECTION
+from vimade.util import type as TYPE
+from vimade.util import color as COLOR_UTIL
 
 DEFAULT_DURATION = 300
 DEFAULT_DELAY = 0

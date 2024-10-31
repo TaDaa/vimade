@@ -1,11 +1,11 @@
 import sys
 M = sys.modules[__name__]
 
-from vimade.v2.style.value import animate as ANIMATE
-from vimade.v2.style.value import condition as CONDITION
-from vimade.v2.style import fade as FADE
-from vimade.v2.style import tint as TINT
-from vimade.v2.util import type as TYPE
+from vimade.style.value import animate as ANIMATE
+from vimade.style.value import condition as CONDITION
+from vimade.style import fade as FADE
+from vimade.style import tint as TINT
+from vimade.util import type as TYPE
 
 def animate_default(**kwargs):
   condition = None
