@@ -1,5 +1,11 @@
 # vimade (vim+fade)
-###### Fade, highlight, and customize your windows + buffers
+> Fade, highlight, and customize your windows + buffers
+
+## What is this?
+This plugin was created to help keep your attention focused on the active buffer especially in scenarios where you might have many windows open at the same time.  
+
+Previously Vimade accomplished this by fading just thet inactive buffers.  Vimade has now transitioned into a plugin that is fully customizable and you can highlight any window/buffer however you see fit.  The old "just fade/dim" functionality is a small subset of the new features!
+
 
 ##### Screenshots
 
@@ -31,7 +37,7 @@
 
 ![](http://tadaa.github.io/images/vimade_normalnck.gif)
 
-##### Features
+## Features
 - [X] Fade & highlight buffers and windows
 - [X] Switch between Window and Buffer highlighting
 - [X] Link windows so that change together (e.g. diffs!)
@@ -51,50 +57,74 @@
 - [X] `VimadeOverrideAll` and other override commands to help make built-in highlights look better while Vimade is enabled.
 - [X] Vim Documentation/Help
 
-###### Whats coming?
+#### Whats coming?
 - [ ] Some good stuff
 - [ ] Code cleanup
 - [ ] Tests
 
-##### What/Why?
-This plugin was created to help keep your attention focused on the active buffer especially in scenarios where you might have many windows open at the same time.  
-
-Previously Vimade accomplished this by fading just thet inactive buffers.  Vimade has now transitioned into a plugin that is fully customizable and you can highlight any window/buffer however you see fit.  The old "just fade/dim" functionality is a small subset of the new features!
-
-##### Install
+## Install
 *Add `TaDaa/vimade` to your vimrc -- you can use any plugin manager e.g:*
 
 ```
 Plug 'TaDaa/vimade'
 ```
 
-##### Getting started / Recipes:
+## Getting started / Recipes:
 
-- [Fade buffers](#fade_buffers)
+- [Fade buffers](#fade-buffers)
 - [Fade windows](#fade_windows)
 - [Default recipe](#default_recipe)
 - [Minimalist recipe](#minimalist_recipe)
 
-##### <a name="fade_buffers">Fade buffers</a>
+<details>
 
-Just adding **Vimade** to your vimrc is enough. But you may want to play around the config options and other recipes!
+<summary>
 
-Example:
+### Fade buffers
+
+Just adding **Vimade** to your vimrc is enough as this is the default behavior. But you may want to play around the config options and other recipes!
+</summary>
+
+
+<blockquote>
+
+###### vimscript
 
 ```vimscript
 let g:vimade = {}
 let g:vimade.fadelevel = 0.4
 ```
 
+
+
+###### lua
+
 ```lua
 require('vimade').setup{fadelevel = 0.4}
 ```
 
+
+###### python
+
 ```python
 vimade.setup(fadelevel = 0.4)
 ```
+  
+</blockquote>
 
-##### <a name="fade_windows">Fade windows</a>
+</details>
+
+<details>
+
+<summary>
+
+### Fade windows
+
+Fade inactive windows instead of buffers!
+
+</summary>
+
+<blockquote>
 
 ```vimscript
 let g:vimade = {}
@@ -102,24 +132,44 @@ let g:vimade.fadelevel = 0.4
 let g:vimade.ncmode = 'windows'
 ```
 
+###### lua
+
 ```lua
 require('vimade').setup{fadelevel = 0.4, ncmode = 'windows'}
 ```
+
+###### python
 
 ```python
 vimade.setup(fadelevel = 0.4, ncmode = 'windows')
 ```
 
-##### <a name="default_recipe">Default recipe</a>
+</blockquote>
 
-** The default recipe configures Vimade to apply any defined tints and fades to inactive buffers or windows.
+</details>
 
-source: [lua](https://github.com/TaDaa/vimade/lua/vimade/recipe/default.lua) | [python](https://github.com/TaDaa/vimade/lib/vimade/recipe/default.py)
+<details>
+
+<summary>
+
+### Default recipe
+
+The default recipe configures Vimade to apply any defined tints and fades to inactive buffers or windows.  This is enabled by default, but has additional options for animations.
+
+
+</summary>
+
+<blockquote>
+
+
+###### lua | [source](https://github.com/TaDaa/vimade/lua/vimade/recipe/default.lua)
 
 ```lua
 local Default = require('vimade.recipe.default').Default
 require('vimade').setup(Default(animate=true))
 ```
+
+###### python | [source](https://github.com/TaDaa/vimade/lib/vimade/recipe/default.py)
 
 ```python
 from vimade import vimade
@@ -127,17 +177,33 @@ from vimade.recipe.default import Default
 vimade.setup(Default(animate=True))
 ```
 
-##### <a name="minimalist_recipe">Minimalist recipe</a>
+</blockquote>
 
-** Minimalist hides UI components on inactive windows that have low value such as number column and end of buffer highlights. It also greatly reduces the inactive WinSeparator highlight.
+</details>
 
-source: [lua](https://github.com/TaDaa/vimade/lua/vimade/recipe/minimalist.lua) | [python](https://github.com/TaDaa/vimade/lib/vimade/recipe/minimalist.py)
+<details>
 
-```lua
+<summary>
+
+### Minimalist recipe
+
+Hides UI components on inactive windows that have low value such as number column and end of buffer highlights. It also greatly reduces the inactive WinSeparator highlight.
+
+</summary>
+
+<blockquote>
+
+###### lua | [source](https://github.com/TaDaa/vimade/lua/vimade/recipe/minimalist.lua)
+
+```lua 
 local Minimalist = require('vimade.recipe.minimalist').Minimalist
 require('vimade').setup(Default{animate = true})
 ```
 
+</blockquote>
+
+
+</details>
 
 ##### General Config
 Vimade is initialized with the following and will react to configuration changes on the fly.  Some of these options don't matter if you are using the lua renderer, but you can set them anyways just in case you ever need to use Vim as well. 
