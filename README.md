@@ -58,8 +58,8 @@
 
 ##### What/Why?
 This plugin was created to help keep your attention focused on the active buffer especially in scenarios where you might have many windows open at the same time.  
-Previously Vimade accomplished this by fading just thet inactive buffers.  Vimade has now transitioned into a plugin that is pretty much fully customizable and you can highlight any window/buffer however you see fit.
-The old "just fade/dim" functionality is a small subset of the new features!
+
+Previously Vimade accomplished this by fading just thet inactive buffers.  Vimade has now transitioned into a plugin that is fully customizable and you can highlight any window/buffer however you see fit.  The old "just fade/dim" functionality is a small subset of the new features!
 
 ##### Install
 *Add `TaDaa/vimade` to your vimrc -- you can use any plugin manager e.g:*
@@ -99,7 +99,7 @@ let g:vimade = {
 
 ###### Common functionality between Lua and Python renderers
 
-- **vimade.renderer** - By default set to **auto**. The **auto** renderer prioritizes **lua** for Neovim users that have the required features and **python** for everyone else. **python-legacy** is the previous version of the **python** renderer, but should not be used as the newer versions are much higher performing!  
+- **vimade.renderer** - Set to **auto** by default. The **auto** renderer prioritizes **lua** for Neovim users that have the required features and **python** for everyone else. **python-legacy** is the previous version of the **python** renderer, but should not be used as the newer versions are much higher performing!  
 
 | Renderer | Neovim version | Vim version | Performance per frame |
 | -------- | ------ | ------- | ----------|
@@ -165,12 +165,25 @@ let g:vimade.link = { \
 \  }
 \ }
 ```
+- **vimade.enablefocusfading** - Fades the current active window on focus blur and unfades when focus gained.  This can be desirable when switching applications or TMUX splits.  Default value is 0.   
+  *Requires additional setup for terminal and tmux:*
+
+    1. Install `tmux-plugins/vim-tmux-focus-events`
+    2. Add `set -g focus-events on` to your tmux.conf
+    3. Neovim should just work at this point.  If you are using Vim, you may need to add the following snippet to the very end of your vimrc.
+          ```
+          if has('gui_running') == 0 && has('nvim') == 0
+             call feedkeys(":silent execute '!' | redraw!\<CR>")
+          endif
+          ```
 - **vimade.normalid** - if not specified, the normalid is determined when vimade is first loaded.  normalid provides the id of the "Normal" highlight which is used to calculate fading.  You can override this config with another highlight group.
 - **vimade.normalncid** - if not specified, the normalncid is determined when vimade is first loaded.  normalncid provides the id of the "NormalNC" highlight which is used to calculate fading for inactive buffers in NVIM.  You can override this config with another highlight group.
+
 
 ###### Lua-specific options
 
 ** Ensure you are on **Neovim 0.8.0** or later.
+
 
 
 ###### Python-specific options
@@ -186,17 +199,6 @@ let g:vimade.link = { \
 - **vimade.groupscrollbind** - Controls whether or not scrollbound windows will fade/unfade together.  If you want scrollbound windows to unfade together, set this to 1.  Default is 0.
 - **vimade.enablebasegroups** - Neovim only setting.  Enabled by default and allows basegroups/built-in highlight fading using winhl.  This allows fading of built-in highlights such as Folded, Search, etc.
 - **vimade.basegroups** - Neovim only setting that specifies the basegroups/built-in highlight groups that will be faded using winhl when switching windows
-- **vimade.enablefocusfading** - Fades the current active window on focus blur and unfades when focus gained.  This can be desirable when switching applications or TMUX splits.  Default value is 0.   
-  *Requires additional setup for terminal and tmux:*
-
-    1. Install `tmux-plugins/vim-tmux-focus-events`
-    2. Add `set -g focus-events on` to your tmux.conf
-    3. Neovim should just work at this point.  If you are using Vim, you may need to add the following snippet to the very end of your vimrc.
-          ```
-          if has('gui_running') == 0 && has('nvim') == 0
-             call feedkeys(":silent execute '!' | redraw!\<CR>")
-          endif
-          ```
 - **vimade.enabletreesitter** - This is an EXPERIMENTAL feature.  Combines treesitter with syntax highlights if needed to fade buffer.  Default value is 0.
 - **viamde.disablebatch** - Disables high-performance batch mode. Set this feature to 1 if you need to debug something not working.  
  
