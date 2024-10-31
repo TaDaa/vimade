@@ -162,14 +162,14 @@ The default recipe configures Vimade to apply any defined tints and fades to ina
 <blockquote>
 
 
-###### lua | [source](https://github.com/TaDaa/vimade/lua/vimade/recipe/default.lua)
+###### lua | [source](https://github.com/TaDaa/vimade/tree/master/lua/vimade/recipe/default.lua)
 
 ```lua
 local Default = require('vimade.recipe.default').Default
 require('vimade').setup(Default(animate=true))
 ```
 
-###### python | [source](https://github.com/TaDaa/vimade/lib/vimade/recipe/default.py)
+###### python | [source](https://github.com/TaDaa/vimade/tree/master/lib/vimade/recipe/default.py)
 
 ```python
 from vimade import vimade
@@ -193,7 +193,7 @@ Hides UI components on inactive windows that have low value such as number colum
 
 <blockquote>
 
-###### lua | [source](https://github.com/TaDaa/vimade/lua/vimade/recipe/minimalist.lua)
+###### lua | [source](https://github.com/TaDaa/vimade/lua/tree/master/vimade/recipe/minimalist.lua)
 
 ```lua 
 local Minimalist = require('vimade.recipe.minimalist').Minimalist
