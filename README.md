@@ -4,7 +4,7 @@
 ## What is this?
 This plugin was created to help keep your attention focused on the active buffer especially in scenarios where you might have many windows open at the same time.  
 
-Previously Vimade accomplished this by fading just thet inactive buffers.  Vimade has now transitioned into a plugin that is fully customizable and you can highlight any window/buffer however you see fit.  The old "just fade/dim" functionality is a small subset of the new features!
+Previously Vimade accomplished this by fading just the inactive buffers.  Vimade has now transitioned into a plugin that is fully customizable and you can highlight any window/buffer however you see fit.  The old "just fade/dim" functionality is a small subset of the new features!
 
 
 ##### Screenshots
@@ -181,29 +181,33 @@ vimade.setup(Default(animate=True))
 
 </details>
 
-<details>
+
+
+<details open>
 
 <summary>
 
 ### Minimalist recipe
 
-Hides UI components on inactive windows that have low value such as number column and end of buffer highlights. It also greatly reduces the inactive WinSeparator highlight.
+Hide low value built-in highlights on inactive windows such as number column and end of buffer highlights.  Additionally greatly reduces visibility of WinSeparator on inactive windows. 
 
 </summary>
 
-<blockquote>
-
 ###### lua | [source](https://github.com/TaDaa/vimade/lua/tree/master/vimade/recipe/minimalist.lua)
+
+<blockquote>
 
 ```lua 
 local Minimalist = require('vimade.recipe.minimalist').Minimalist
 require('vimade').setup(Minimalist{animate = true})
 ```
 
-</blockquote>
-
+![](https://github.com/TaDaa/tadaa.github.io/blob/master/images/minimalist_recipe_animate2.gif)
 
 </details>
+
+</blockquote>
+
 
 ##### General Config
 Vimade is initialized with the following and will react to configuration changes on the fly.  Some of these options don't matter if you are using the lua renderer, but you can set them anyways just in case you ever need to use Vim as well. 
