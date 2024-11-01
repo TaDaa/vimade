@@ -1,5 +1,10 @@
-# vimade (vim+fade)
-> Fade, highlight, and customize your windows + buffers
+# vimade
+
+(vim+fade)
+
+### Fade, highlight, and customize your windows + buffers
+
+![](http://tadaa.github.io/images/minimalist_full.gif)
 
 ## What is this?
 This plugin was created to help keep your attention focused on the active buffer especially in scenarios where you might have many windows open at the same time.  
@@ -7,35 +12,6 @@ This plugin was created to help keep your attention focused on the active buffer
 Previously Vimade accomplished this by fading just the inactive buffers.  Vimade has now transitioned into a plugin that is fully customizable and you can highlight any window/buffer however you see fit.  The old "just fade/dim" functionality is a small subset of the new features!
 
 
-##### Screenshots
-
-**Fade inactive windows**
-
-![](http://tadaa.github.io/images/vimade_fadek.gif)
-
-**Fade using custom tints**
-
-![](http://tadaa.github.io/images/vimade_tintk.gif)
-
-**Change the fadelevel**
-
-![](http://tadaa.github.io/images/vimade_fadelevelk.gif)
-
-**Fade signs (example below does 4000 signs)**
-
-![](http://tadaa.github.io/images/vimade_signsk.gif)
-
-**Fade/Unfade diffs together**
-
-![](http://tadaa.github.io/images/vimade_diffk.gif)
-
-**Fade/Unfade using word wrap**
-
-![](http://tadaa.github.io/images/vimade_wrapk.gif)
-
-**Fade using NormalNC (NVIM only)**
-
-![](http://tadaa.github.io/images/vimade_normalnck.gif)
 
 ## Features
 - [X] Fade & highlight buffers and windows
