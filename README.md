@@ -148,14 +148,13 @@ vimade.setup(fadelevel = 0.4, ncmode = 'windows')
 
 </details>
 
-<details>
+<details open>
 
 <summary>
 
 ### Default recipe
 
-The default recipe configures Vimade to apply any defined tints and fades to inactive buffers or windows.  This is enabled by default, but has additional options for animations.
-
+This recipe is enabled by default, but you can re-apply it with additional customizations (e.g. animations)
 
 </summary>
 
@@ -176,6 +175,8 @@ from vimade import vimade
 from vimade.recipe.default import Default
 vimade.setup(Default(animate=True))
 ```
+
+![](https://github.com/TaDaa/tadaa.github.io/blob/master/images/default_recipe_animate.gif)
 
 </blockquote>
 
