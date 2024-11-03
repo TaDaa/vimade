@@ -1,5 +1,5 @@
 # vimade
-(**[n]vim[f]ade**)
+([n]vim[f]ade)
 
 ### Fade, highlight, and customize your windows + buffers
 
@@ -238,7 +238,7 @@ vimade.setup(Default(animate=True))
 
 This recipe hides low value built-in highlights on inactive windows such as number column and end of buffer highlights.  Greatly reduces visibility of WinSeparator on inactive windows. 
 
-*<sub>::lua:: [source](https://github.com/TaDaa/vimade/tree/master/lua/vimade/recipe/default.lua) (see here for additional params)</sub>*
+*<sub>::lua:: [source](https://github.com/TaDaa/vimade/tree/master/lua/vimade/recipe/minimalist.lua) (see here for additional params)</sub>*
 
 ```lua
 local Minimalist = require('vimade.recipe.minimalist').Minimalist
@@ -246,7 +246,7 @@ require('vimade').setup(Minimalist{animate = true})
 ```
 
 
-![](https://github.com/TaDaa/tadaa.github.io/blob/master/images/default_recipe_animate.gif)
+![](https://github.com/TaDaa/tadaa.github.io/blob/master/images/minimalist_recipe_animate2.gif)
 ---
 </details>
 
@@ -391,7 +391,7 @@ If you find a feature gap, please file an issue or contribute!
 
 ## Contributing
 
-Feel free to open a PR or file issues for bugs and feature requests! All contributions are valued even its just a question!
-If you are looking for a place to share your own code and flavor in this plugin, **recipes** are a great starting place!
+Feel free to open a PR or file issues for bugs and feature requests. All contributions are valued even its just a question!
+If you are looking for a place to share your own code and flavor in this plugin, **recipes** are a great starting place.
 
 ##### Thanks for reading!
