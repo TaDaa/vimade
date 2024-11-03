@@ -378,7 +378,7 @@ If you find a feature gap, please file an issue or contribute!
 | -                                             | -      | -     | -            | -          |
 | Fade buffers                                  | Yes    |    |           |         |
 | Fade windows                                  | Yes    | Yes   | Yes          | Yes        |
-| Group diffs                                   | Yes    |       |              |            |
+| Group diffs                                   | Yes    |       | via function |            |
 | Links                                         | Yes    |       | via function |            |
 | Blocklist                                     | Yes    |       | via function | Yes        |
 | Animations                                    | Yes    |       |              |            |
