@@ -45,7 +45,7 @@ Vim7.4+ and Neovim < 0.8.0 require Python or Python3 support. For older versions
 
 <details open>
 <summary>
-<a><ins>Basic tutorial</ins></a> - 
+<a><ins>Installation</ins></a> - 
 Any plugin manager will work.
 <br>
 </summary>
@@ -128,7 +128,7 @@ vimade.setup(
 Both languages use the same syntax and logic for configuration.
 
 
-> [!NOTE]
+> [!Note]
 > Advanced configurations in **python** and **lua** are treated as overlays, whatever you pass through the **setup** functions will overlay
 on top of your **vimscript** configuration. This means you won't be able to do an advanced configuration, then override it with
 a **vimscript** configuration after.  You'll need to unset the advanced configuration first, which can be done as seen below
