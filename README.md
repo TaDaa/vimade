@@ -311,7 +311,7 @@ require('vimade').setup(Minimalist{animate = true})
 | `matchpriority` | `int` | `10`  | Controls the highlighting priority.  You may want to tweak this value to make Vimade play nicely with other highlighting plugins and behaviors.  For example, if you want hlsearch to show results on all buffers, you may want to lower this value to 0.
 | `disablebatch` | `0` `1` `bool` | `0`  | Disables IPC batching. Enabling this will greatly reduce performance, but allow you debug issues.
 | `enablebasegroups` | `0` `1` `bool` | `true`  | Only old **Neovim**. Allows winlocal winhl for the basegroups listed below.
-| `basegroups` | `string[]` | `all built_in highlights`  | Only old **Neovim**. Fades the listed highlights in addition to the buffer text.
+| `basegroups` | `string[]` | <sub>**every built-in highlight**</sub>  | Only old **Neovim**. Fades the listed highlights in addition to the buffer text.
 | `enabletreesitter` | `0` `1` `bool` | `0`  | Only old **Neovim**. Uses treesitter to directly query highlight groups instead of relying on `synID`.
 
   
