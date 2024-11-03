@@ -394,4 +394,4 @@ If you find a feature gap, please file an issue or contribute!
 Feel free to open a PR or file issues for bugs and feature requests. All contributions are valued even its just a question!
 If you are looking for a place to share your own code and flavor in this plugin, **recipes** are a great starting place.
 
-##### Thanks for reading!
+**Thanks for reading!**
