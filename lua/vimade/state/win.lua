@@ -56,7 +56,7 @@ end
 
 M.__create = function (winid)
   if M.cache[winid] == nil then
-     local win = {
+    local win = {
       winid = winid,
       winnr = nil,
       bufnr = nil,
@@ -85,18 +85,10 @@ M.__create = function (winid)
       style = {},
       -- raw global styles that were used to build this win
       _global_style = {},
-      buf_opts = function(self)
-        return vim.bo[self.bufnr]
-      end,
-      buf_vars = function(self)
-        return vim.b[self.bufnr]
-      end,
-      win_opts = function(self)
-        return vim.wo[self.winid]
-      end,
-      win_vars = function(self)
-        return vim.w[self.winid]
-      end,
+      buf_opts = nil,
+      buf_vars = nil,
+      win_opts = nil,
+      win_vars = nil,
     }
     M.cache[winid] = win
   end
@@ -123,6 +115,10 @@ M.refresh = function (wininfo, skip_link)
   win.buf_name = vim.api.nvim_buf_get_name(win.bufnr)
   win.win_type = vim.fn.win_gettype(win.winid)
   win.win_config = vim.api.nvim_win_get_config(win.winid)
+  win.buf_opts = vim.bo[win.bufnr]
+  win.buf_vars = vim.b[win.bufnr]
+  win.win_opts = vim.wo[win.winid]
+  win.win_vars = vim.w[win.winid]
 
   local is_active_win = win.winid == GLOBALS.current.winid
   local is_active_buf = win.bufnr == GLOBALS.current.bufnr

@@ -312,7 +312,8 @@ class Globals(object):
     self.groupscrollbind = bool(int(vimade.get('groupscrollbind', self._DEFAULTS['groupscrollbind'])))
     self.fademinimap = bool(int(vimade.get('fademinimap', self._DEFAULTS['fademinimap'])))
     self.tint = vimade.get('tint', self._DEFAULTS['tint'])
-    self.fadelevel = float(vimade.get('fadelevel', self._DEFAULTS['fadelevel']))
+    fadelevel = vimade.get('fadelevel', self._DEFAULTS['fadelevel'])
+    self.fadelevel = fadelevel if callable(fadelevel) else float(fadelevel)
     self.disablebatch = bool(int(vimade.get('disablebatch', self._DEFAULTS['disablebatch'])))
 
     ## already checked
