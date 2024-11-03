@@ -45,8 +45,8 @@ Vim7.4+ and Neovim < 0.8.0 require Python or Python3 support. For older versions
 
 <details open>
 <summary>
-<a href="#">Installation</a> - 
-any plugin manager will work. If you need specific examples click the <a href="#">link</a>.
+<a><ins>Basic tutorial</ins></a> - 
+Any plugin manager will work.
 <br>
 </summary>
 
@@ -61,7 +61,7 @@ any plugin manager will work. If you need specific examples click the <a href="#
 
 <details>
 <summary>
-<a href="#">Basic tutorial</a>
+<a><ins>Basic tutorial</ins></a>
  
 </summary>
 <br>
@@ -154,7 +154,7 @@ You now know the basics for configuring **Vimade**!
 
 <details>
 <summary>
-<a href="#">Highlight by active buffers or windows</a>
+<a><ins>Highlight by active buffers or windows</ins></a>
  
 </summary>
 <br>
@@ -178,7 +178,7 @@ are impacted by your edits or which windows you can cleanup.
 
 <details open>
 <summary>
-<a href="#">Style modifiers</a>
+<a><ins>Style modifiers</ins></a>
 </summary>
 
 <br>
@@ -190,7 +190,7 @@ Sorry this section will be updated soon.
 
 <details open>
 <summary>
-<a href="#">Animations</a>
+<a><ins>Animations</ins></a>
 </summary>
 
 <br>
@@ -202,7 +202,7 @@ Sorry this section will be updated soon.
 
 <details open>
 <summary>
-<a href="#">Recipe: Default</a>
+<a><ins>Recipe: Default</ins></a>
 </summary>
 
 <br>
@@ -231,7 +231,7 @@ vimade.setup(Default(animate=True))
 
 <details open>
 <summary>
-<a href="#">Recipe: Minimalist</a>
+<a><ins>Recipe: Minimalist</ins></a>
 </summary>
 
 <br>
@@ -253,7 +253,7 @@ require('vimade').setup(Minimalist{animate = true})
 
 <details>
 <summary>
-<a href="#">Configuration options for <b>lua</b>, <b>python</b>, and <b>vimscript</b></a>
+<a><ins>Configuration options for <b>lua</b>, <b>python</b>, and <b>vimscript</b></ins></a>
  
 </summary>
 <br>
@@ -282,7 +282,7 @@ require('vimade').setup(Minimalist{animate = true})
 
 <details>
 <summary>
-<a href="#">Configuration options only for <b>lua</b></a>
+<a><ins>Configuration options only for <b>lua</b></ins></a>
  
 </summary>
 <br>
@@ -297,7 +297,7 @@ require('vimade').setup(Minimalist{animate = true})
 
 <details>
 <summary>
-<a href="#">Options only for <b>python</b></a>
+<a><ins>Configuration options only for <b>python</b></ins></a>
  
 </summary>
 <br>
@@ -320,7 +320,7 @@ require('vimade').setup(Minimalist{animate = true})
 
 <details>
 <summary>
-<a href="#">Commands</a>
+<a><ins>Commands</ins></a>
  
 </summary>
 <br>
@@ -354,7 +354,7 @@ require('vimade').setup(Minimalist{animate = true})
 
 <details open>
 <summary>
-<a href="#">FAQ/Help</a>
+<a><ins>FAQ/Help</ins></a>
 
 </summary>
 <br>
