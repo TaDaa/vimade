@@ -222,7 +222,7 @@ require('vimade').setup(Default(animate=true))
 ```python
 from vimade import vimade
 from vimade.recipe.default import Default
-vimade.setup(Default(animate=True))
+vimade.setup(**Default(animate=True))
 ```
 
 ![](https://github.com/TaDaa/tadaa.github.io/blob/master/images/default_recipe_animate.gif)
