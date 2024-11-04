@@ -159,6 +159,7 @@ M.getInfo = function ()
   result = {renderer = 'lua', [vim.type_idx]=vim.types.dictionary}
   for key, value in pairs(M) do
     if type(value) ~= 'function'
+      and key ~= 'style'
       and key ~= 'global_ns'
       and key ~= 'global_highlights' then
       result[key] = value

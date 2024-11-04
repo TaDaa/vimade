@@ -55,9 +55,10 @@ function! vimade#SetupPython()
   let g:vimade_python_setup = 1
   " find proper command
   if !exists('g:vimade_py_cmd')
-    if has('python3')
+    call vimade#SetupPythonFeatures()
+    if g:vimade_features.has_python3
       let g:vimade_py_cmd = "py3"
-    elseif has('python')
+    elseif g:vimade_features.has_python
       let g:vimade_py_cmd = "py"
     else
       return
@@ -66,7 +67,14 @@ function! vimade#SetupPython()
           \ "import vim",
           \ "sys.path.append(vim.eval('g:vimade_plugin_current_directory'))",
           \ ], "\n")
+    doautocmd User Vimade#PythonReady
   endif
+endfunction
+
+function! vimade#SetupPythonFeatures()
+  let g:vimade_features.has_python3 = has('python3')
+  let g:vimade_features.has_python = has('python')
+  let g:vimade_features.supports_python_renderer = g:vimade_features.has_python3 || g:vimade_features.has_python
 endfunction
 
 function! vimade#GetFeatures()
@@ -76,12 +84,6 @@ function! vimade#GetFeatures()
     let g:vimade_features.has_gui = has('gui')
     let g:vimade_features.has_nvim = has('nvim')
     let g:vimade_features.has_vimr = has('gui_vimr')
-    try
-      let g:vimade_features.has_python = has('python')
-    catch
-      let g:vimade_features.has_python = 0
-    endtry
-    let g:vimade_features.has_python3 = has('python3')
     let g:vimade_features.has_gui_version = !has('nvim') && (execute('version')=~"GUI version")
     let g:vimade_features.has_timer_start = exists('*timer_start')
     let g:vimade_features.has_sign_getplaced = exists('*sign_getplaced')
@@ -103,10 +105,6 @@ function! vimade#GetFeatures()
     let g:vimade_features.has_nvim_get_hl_ns = exists('*nvim_get_hl_ns')
 
     let g:vimade_features.supports_lua_renderer = (g:vimade_features.has_nvim_get_hl || g:vimade_features.has__nvim_get_hl_defs) && g:vimade_features.has_nvim_win_set_hl_ns
-
-    let g:vimade_features.has_python3 = has('python3')
-    let g:vimade_features.has_python = has('python')
-    let g:vimade_features.supports_python_renderer = g:vimade_features.has_python3 || g:vimade_features.has_python
 
     try
       sign define Vimade_Test text=1
@@ -452,34 +450,32 @@ function! vimade#Toggle()
   endif
 endfunction
 
+function! vimade#Override(name)
+  execute('hi! link '. a:name . ' vimade_0')
+endfunction
+
 function! vimade#OverrideFolded()
-  hi! clear Folded
-  hi! link Folded vimade_0
+  call vimade#Override('Folded')
 endfunction
 
 function! vimade#OverrideSignColumn()
-  hi! clear SignColumn
-  hi! link SignColumn vimade_0
+  call vimade#Override('SignColumn')
 endfunction
 
 function! vimade#OverrideLineNr()
-  hi! clear LineNr
-  hi! link LineNr vimade_0
+  call vimade#Override('LineNr')
 endfunction
 
 function! vimade#OverrideVertSplit()
-  hi! clear VertSplit
-  hi! link VertSplit vimade_0
+  call vimade#Override('VertSplit')
 endfunction
 
 function! vimade#OverrideEndOfBuffer()
-  hi! clear EndOfBuffer
-  hi! link EndOfBuffer vimade_0
+  call vimade#Override('EndOfBuffer')
 endfunction
 
 function! vimade#OverrideNonText()
-  hi! clear NonText
-  hi! link NonText vimade_0
+  call vimade#Override('NonText')
 endfunction
 
 function! vimade#OverrideAll()
