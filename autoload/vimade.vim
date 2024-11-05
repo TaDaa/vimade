@@ -67,7 +67,7 @@ function! vimade#SetupPython()
           \ "import vim",
           \ "sys.path.append(vim.eval('g:vimade_plugin_current_directory'))",
           \ ], "\n")
-    doautocmd User Vimade#PythonReady
+    silent doautocmd User Vimade#PythonReady
   endif
 endfunction
 
