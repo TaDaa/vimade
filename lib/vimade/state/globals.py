@@ -301,8 +301,8 @@ class Globals(object):
 
     ## handled in win state
     # link and blocklist are merged at the name level (user overlay has priority)
-    self.link = TYPE.extend({}, self._DEFAULTS['link'], vimade.get('link',{}))
-    self.blocklist = TYPE.extend({}, self._DEFAULTS['blocklist'], vimade.get('blocklist',{}))
+    self.link = self.TYPE.extend({}, self._DEFAULTS['link'], vimade.get('link',{}))
+    self.blocklist = self.TYPE.extend({}, self._DEFAULTS['blocklist'], vimade.get('blocklist',{}))
 
     self.style = vimade.get('style', self._DEFAULTS['style'])
     self.basegroups = vimade.get('basegroups', self._DEFAULTS['basegroups'])
