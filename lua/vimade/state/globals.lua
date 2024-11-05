@@ -223,9 +223,11 @@ M.refresh = function (override_tick_state)
   }, current, M.current, CURRENT, bit.bor(M.RECALCULATE, M.CHANGED)))
 
   -- will be handled in win_state --
-  M.link = vimade.link or DEFAULTS.link --TODO this be a one-key merge/replace
+  -- link and blocklist are merged at the name level (user overlay has priority)
+  M.link = TYPE.extend({}, DEFAULTS.link, vimade.link)
+  M.blocklist = TYPE.extend({}, DEFAULTS.blocklist, vimade.blocklist)
+
   M.basebg = vimade.basebg ~= '' and vimade.basebg or DEFAULTS.basebg
-  M.blocklist = vimade.blocklist or DEFAULTS.blocklist --TODO this be a one-key merge/replace
   M.groupdiff = TYPE.num_to_bool(vimade.groupdiff, DEFAULTS.groupdiff)
   M.groupscrollbind = TYPE.num_to_bool(vimade.groupscrollbind, DEFAULTS.groupscrollbind)
   M.fademinimap = TYPE.num_to_bool(vimade.fademinimap, DEFAULTS.fademinimap)

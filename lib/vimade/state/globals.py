@@ -300,13 +300,15 @@ class Globals(object):
     ], vimade, self, self._DEFAULTS, self.SIGNS)
 
     ## handled in win state
+    # link and blocklist are merged at the name level (user overlay has priority)
+    self.link = TYPE.extend({}, self._DEFAULTS['link'], vimade.get('link',{}))
+    self.blocklist = TYPE.extend({}, self._DEFAULTS['blocklist'], vimade.get('blocklist',{}))
+
     self.style = vimade.get('style', self._DEFAULTS['style'])
     self.basegroups = vimade.get('basegroups', self._DEFAULTS['basegroups'])
     self.signsid = int(vimade.get('signsid', self._DEFAULTS['signsid']))
     self.signspriority = int(vimade.get('signspriority', self._DEFAULTS['signspriority']))
     self.signsretentionperiod = int(vimade.get('signsretentionperiod', self._DEFAULTS['signsretentionperiod']))
-    self.link = vimade.get('link', self._DEFAULTS['link']) # TODO this should be singlekey merge (allow users to override the default or add additional config)
-    self.blocklist = vimade.get('blocklist', self._DEFAULTS['blocklist']) # TODO this should be singlekey merge (allow users to override the default or add additional config)
     self.basebg = vimade.get('basebg', self._DEFAULTS['basebg']) # TODO empty string needed? 
     self.groupdiff = bool(int(vimade.get('groupdiff', self._DEFAULTS['groupdiff'])))
     self.groupscrollbind = bool(int(vimade.get('groupscrollbind', self._DEFAULTS['groupscrollbind'])))
