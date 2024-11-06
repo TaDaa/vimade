@@ -246,7 +246,8 @@ require('vimade').setup(Minimalist{animate = true})
 ```
 
 *<sub>::python:: [source](https://github.com/TaDaa/vimade/tree/master/lib/vimade/recipe/minimalist.py) (see here for additional params)</sub>*
-<sub>NOTE:Vvim users with wincolor, minimalist will link `no_visibility_highlights` to `Normal` so that they can be toggled per-window<sub>
+
+<sub>NOTE: For **vim** users with wincolor, minimalist will link the `no_visibility_highlights` to `Normal` so that they can completely fade-out per-window.<sub>
 ```python
 from vimade import vimade
 from vimade.recipe.minimalist import Minimalist
