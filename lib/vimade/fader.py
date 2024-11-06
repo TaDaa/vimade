@@ -1,8 +1,8 @@
 import sys
 import time
+import vim
 M = sys.modules[__name__]
 
-import vim
 from vimade.util.promise import Promise, all
 from vimade.style.value import animate as ANIMATE
 from vimade import animator as ANIMATOR
@@ -14,6 +14,7 @@ from vimade import highlighter as HIGHLIGHTER
 from vimade import signs as SIGNS
 from vimade.state import globals as GLOBALS
 from vimade.state import win as WIN_STATE
+from vimade.state import namespace as NAMESPACE
 from vimade.util import ipc as IPC
 
 def _pairs(input):
@@ -40,9 +41,13 @@ def _update(only_these_windows):
   # if highlights are invalidated at the global level, we need to 
   if (GLOBALS.RECALCULATE & GLOBALS.tick_state) > 0:
     HIGHLIGHTER.clear_base_cache()
-    HIGHLIGHTER.create_vimade_0()
     unhighlightAll(windows)
+    # This redraw is needed for basegroups in certain versions of Neovim
+    # Neovim async API breaks in certain scenarios and doesn't update the backing color mechanism
+    if GLOBALS.enablebasegroups:
+      vim.command('redraw!')
 
+  HIGHLIGHTER.refresh_vimade_0()
 
   for wininfo in windows:
     # we skip only_these_windows here because we need to know who the active window is
@@ -146,3 +151,4 @@ M.EXCLUDE.__init({'FADER': M, 'GLOBALS': GLOBALS})
 M.INCLUDE.__init({'FADER': M, 'GLOBALS': GLOBALS})
 M.IPC.__init({'FADER': M, 'GLOBALS': GLOBALS})
 M.WIN_STATE.__init({'FADER': M, 'GLOBALS': GLOBALS})
+M.HIGHLIGHTER.__init({'FADER': M, 'GLOBALS': GLOBALS, 'WIN': WIN_STATE, 'NAMESPACE': NAMESPACE})

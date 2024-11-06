@@ -512,7 +512,7 @@ class WinState(object):
     state = (self.state | GLOBALS.tick_state)
     if self.ns:
       if (GLOBALS.INVALIDATE_HIGHLIGHTS & state) > 0:
-        self.ns.invalidate_highlights()
+        self.ns.invalidate_highlights((GLOBALS.CHANGED & state) > 0)
       if (GLOBALS.INVALIDATE_BUFFER_CACHE & state) > 0:
         self.ns.invalidate_buffer_cache()
       if (GLOBALS.CHANGED & state) > 0:
@@ -526,5 +526,3 @@ class WinState(object):
           self.ns.add_signs()
         else:
           self.ns.remove_signs()
-
-HIGHLIGHTER.__initWinState(WinState)

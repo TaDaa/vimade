@@ -102,7 +102,6 @@ def Animate(**kwargs):
   _direction = _direction if _direction != None else DEFAULT_DIRECTION
   _reset = kwargs.get('reset')
   _reset = _reset if _reset != None else (_direction != DIRECTION.IN_OUT)
-  _reset = False
   def animate(style, state):
     id = None
     win = style.win

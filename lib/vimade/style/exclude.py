@@ -25,6 +25,7 @@ class Exclude():
     class __Exclude():
       def __init__(self, win, state):
         self.win = win
+        self._condition = _condition
         self.condition = None
         self.names = []
         self.style = [s.attach(win, state) for s in kwargs.get('style', [])]

@@ -8,13 +8,12 @@ from vimade.style import tint as TINT
 from vimade.util import type as TYPE
 
 def animate_default(**kwargs):
-  condition = None
-  direction = kwargs.get('direction')
+  condition = kwargs.get('condition')
   animation = {
     'duration': kwargs.get('duration'),
     'delay': kwargs.get('delay'),
     'ease': kwargs.get('ease'),
-    'direction': direction,
+    'direction': kwargs.get('direction'),
   }
   return [
     TINT.Tint(

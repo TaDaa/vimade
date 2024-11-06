@@ -245,6 +245,13 @@ local Minimalist = require('vimade.recipe.minimalist').Minimalist
 require('vimade').setup(Minimalist{animate = true})
 ```
 
+*<sub>::python:: [source](https://github.com/TaDaa/vimade/tree/master/lib/vimade/recipe/minimalist.py) (see here for additional params)</sub>*
+<sub>NOTE:Vvim users with wincolor, minimalist will link `no_visibility_highlights` to `Normal` so that they can be toggled per-window<sub>
+```python
+from vimade import vimade
+from vimade.recipe.minimalist import Minimalist
+vimade.setup(**Minimalist(animate = True))
+```
 
 ![](https://github.com/TaDaa/tadaa.github.io/blob/master/images/minimalist_recipe_animate2.gif)
 ---
@@ -304,15 +311,16 @@ require('vimade').setup(Minimalist{animate = true})
 
 | option        | values/type    | default | description                                                                                                                                                                                                                                                                                                                                         |
 | -             | -              | -       | -                                                                                                                                                                                                                                                                                                                                                   |
-| `enablesigns` | `0` `1` `bool` | `True`  | Whether or not to fade signs.  For **python** this has to be performed per-buffer.  If you want per-window signs, you will need to link your sign highlights to **Normal**.
-| `signsid` | `int` | `13100`  | The id that should be used to generate sign.  This is required to avoid collisions with other plugins.
-| `signsretentionperiod` | `int` | `4000`  | The amount of time after a window becomes inactive to check for sign updates.  Many plugins asynchronously update the buffer after switching windows, this helps ensure signs stay faded.
-| `fademinimap` | `0` `1` `bool` | `1`  | Enables a special fade effect for `severin-lemaignan/vim-minimap`.  Setting vimade.fademinimap to 0 disables the special fade.
-| `matchpriority` | `int` | `10`  | Controls the highlighting priority.  You may want to tweak this value to make Vimade play nicely with other highlighting plugins and behaviors.  For example, if you want hlsearch to show results on all buffers, you may want to lower this value to 0.
-| `disablebatch` | `0` `1` `bool` | `0`  | Disables IPC batching. Enabling this will greatly reduce performance, but allow you debug issues.
-| `enablebasegroups` | `0` `1` `bool` | `true`  | Only old **Neovim**. Allows winlocal winhl for the basegroups listed below.
-| `basegroups` | `string[]` | <sub>**every built-in highlight**</sub>  | Only old **Neovim**. Fades the listed highlights in addition to the buffer text.
-| `enabletreesitter` | `0` `1` `bool` | `0`  | Only old **Neovim**. Uses treesitter to directly query highlight groups instead of relying on `synID`.
+| `enablesigns`   | `0` `1` `bool`       | `True`    | Whether or not to fade signs.  For **python** this has to be performed per-buffer.  If you want per-window signs, you will need to link your sign highlights to **Normal**.
+| `signsid`       | `int`            | `13100`   | The id that should be used to generate sign.  This is required to avoid collisions with other plugins.
+| `signsretentionperiod` | `int`     | `4000`    | The amount of time after a window becomes inactive to check for sign updates.  Many plugins asynchronously update the buffer after switching windows, this helps ensure signs stay faded.
+| `fademinimap`   | `0` `1` `bool`       | `1`       | Enables a special fade effect for `severin-lemaignan/vim-minimap`.  Setting vimade.fademinimap to 0 disables the special fade.
+| `matchpriority` | `int`            | `10`      | Controls the highlighting priority.  You may want to tweak this value to make Vimade play nicely with other highlighting plugins and behaviors.  For example, if you want hlsearch to show results on all buffers, you may want to lower this value to 0.
+| `linkwincolor`  | `string[]`       | `[]`      | **Vim only** option when **wincolor** is supported. List of highlights that will be linked to `Normal`. `Normal` is highlighted using `setlocal wincolor`, which gives **Vim** some flexibility to target highlight groups (see minimalist recipe).
+| `disablebatch`  | `0` `1` `bool`       | `0`       | Disables IPC batching. Enabling this will greatly reduce performance, but allow you debug issues.
+| `enablebasegroups` | `0` `1` `bool`    | `true`    | Only old **Neovim**. Allows winlocal winhl for the basegroups listed below.
+| `basegroups`    | `string[]`       | <sub>**every built-in highlight**</sub>  | Only old **Neovim**. Fades the listed highlights in addition to the buffer text.
+| `enabletreesitter` | `0` `1` `bool`    | `0`       | Only old **Neovim**. Uses treesitter to directly query highlight groups instead of relying on `synID`.
 
   
 ---
@@ -376,7 +384,7 @@ If you find a feature gap, please file an issue or contribute!
 
 | Feature                                       | Vimade | Shade | Tint         | Sunglasses |
 | -                                             | -      | -     | -            | -          |
-| Fade buffers                                  | Yes    |    |           |         |
+| Fade buffers                                  | Yes    |       |              |            |
 | Fade windows                                  | Yes    | Yes   | Yes          | Yes        |
 | Group diffs                                   | Yes    |       | via function |            |
 | Links                                         | Yes    |       | via function |            |
@@ -384,7 +392,7 @@ If you find a feature gap, please file an issue or contribute!
 | Animations                                    | Yes    |       |              |            |
 | Recipes                                       | Yes    |       |              |            |
 | 256 colors                                    | Yes    |       |              |            |
-| Per-window config (e.g. fadelevel, tint, etc)                         | Yes    |       |              |            |
+| Per-window config (e.g. fadelevel, tint, etc) | Yes    |       |              |            |
 | Cleared highlights                            | Yes    | Yes   |              |            |
 | Supports **Vim** + All versions of **Neovim** | Yes    |       |              |            |
 

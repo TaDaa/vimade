@@ -18,7 +18,7 @@ M.include_id = 1
 #  'style': [Fade(0.4)] # style to run on all names that are include
 # }
 class Include():
-  def __init__(self, config):
+  def __init__(self, **kwargs):
     _condition = kwargs.get('condition')
     _condition = _condition if _condition != None else CONDITION.INACTIVE
     _names = kwargs.get('names', [])
@@ -26,8 +26,9 @@ class Include():
       def __init__(self, win, state):
         self.win = win
         self.condition = None
+        self._condition = _condition
         self.names = []
-        self.style = [s.attach(win, state) for s in config['style']]
+        self.style = [s.attach(win, state) for s in kwargs.get('style', [])]
         self.include = {}
         self._animating = False
       def before(self, win, state):

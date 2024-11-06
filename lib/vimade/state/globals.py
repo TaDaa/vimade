@@ -73,6 +73,7 @@ _DEFAULTS = TYPE.extend(DEFAULT_RECIPE.Default(), {
   'colbufsize': 0,
   'enablescroll': True,
   'enablesigns': True,
+  'linkwincolor': [],
   'signsid': 13100,
   'signspriority': 31,
   'signsretentionperiod': 4000,
@@ -136,6 +137,8 @@ class Globals(object):
       'enabletreesitter': False,
       'enablebasegroups': False,
       'basegroups': [],
+      'linkwincolor': [],
+      '_linkwincolor': '',
       'signsretentionperiod': 0,
       'signsid': None,
       'signspriority': None,
@@ -317,6 +320,18 @@ class Globals(object):
     fadelevel = vimade.get('fadelevel', self._DEFAULTS['fadelevel'])
     self.fadelevel = fadelevel if callable(fadelevel) else float(fadelevel)
     self.disablebatch = bool(int(vimade.get('disablebatch', self._DEFAULTS['disablebatch'])))
+    
+    # update wincolor links (this is a global change)
+    linkwincolor = vimade.get('linkwincolor', self._DEFAULTS['linkwincolor']) if bool(int(self.features['has_wincolor'])) else []
+    _linkwincolor = ','.join(linkwincolor)
+    if _linkwincolor != self._linkwincolor:
+      self.linkwincolor = linkwincolor
+      self._linkwincolor = _linkwincolor
+      eval_linkwincolor = []
+      if len(linkwincolor):
+        self.IPC.batch_command('function! VimadeCreateTemp()\n' + ('\n'.join([('hi! link ' + hi + ' Normal') for hi in linkwincolor])) + '\nendfunction \n call VimadeCreateTemp()')
+
+
 
     ## already checked
     self.nc_windows = self.ncmode == 'windows'

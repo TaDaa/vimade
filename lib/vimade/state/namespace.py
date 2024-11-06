@@ -31,7 +31,6 @@ UNLIMITED_MATCHADDPOS = bool(int(vim.eval('has("patch-9.0.0620") || has("nvim-0.
 def _goto_win(winid):
   vim.command('silent! noautocmd call win_gotoid('+str(winid)+')')
 
-
 # Namespaces manages both config per window, shared across multiple windows, and partially attached
 # to a buffer. This is unfortunately extremely complex.  Consider the following:
 # Buffer:
@@ -111,6 +110,7 @@ class Namespace:
           IPC.eval_and_return('settabwinvar(%s,%s,"&winhl","%s")' % (self.win.tabnr, self.win.winnr, replacement_winhl))
           # TODO this management aspect needs to be controlled within namespace not manipulating external variables
           self.win.vimade_winhl = True
+          self.win.winhl = replacement_winhl
       HIGHLIGHTER.create_highlights(self.win, targets).then(next)
 
   def remove_basegroups(self):
@@ -118,6 +118,7 @@ class Namespace:
       IPC.eval_and_return('settabwinvar(%s,%s,"&winhl","%s")' % (self.win.tabnr, self.win.winnr, self.win.original_winhl))
       # TODO this management aspect needs to be controlled within namespace not manipulating external variables
       self.win.vimade_winhl = None
+      self.win.winhl = self.win.original_winhl
       # TODO move this line below (required due some bizarre async behavior with how ns sets highlights)
       # essentially the wrong color codes are returned from winhl despite being unset.
       # redraw hack fixes the result, but costs performance so we only want to redraw when absolutely
@@ -139,19 +140,19 @@ class Namespace:
       del self.shared_state['coords'][self.win.coords_key]
 
   # remove matches on the win, basegroups, and clear the win from HIGHLIGHTER
-  def invalidate_highlights(self):
+  def invalidate_highlights(self, skip_wincolor_clear = False):
     # Additionally we need to clear the base win color from the highlighter
     # this needs to happen before unfading
     HIGHLIGHTER.clear_colors(self.win, [self.win.original_wincolor])
     HIGHLIGHTER.clear_win(self.win)
     SIGNS.clear_win(self.win)
+    self.unhighlight(False, skip_wincolor_clear)
 
-    self.unhighlight()
 
-
-  def unhighlight(self, cleanup = False):
+  def unhighlight(self, cleanup = False, skip_wincolor_clear = False):
     win = self.win
-    if not cleanup:
+    # allow skipping wincolor for Vim. Without this there can be flickering during animations
+    if not cleanup and not skip_wincolor_clear:
       if not GLOBALS.is_nvim and win.window and 'wincolor' in win.window.options:
         win.window.options['wincolor'] = win.original_wincolor or ''
     self.remove_basegroups()
@@ -187,7 +188,9 @@ class Namespace:
       if not GLOBALS.is_nvim and replacement_hl and win.wincolor != replacement_hl and win.window and 'wincolor' in win.window.options:
         win.window.options['wincolor'] = replacement_hl
       self.add_basegroups()
-    HIGHLIGHTER.create_highlights(win, [win.original_wincolor]).then(next)
+    # VimadeWC (VimadeWinColor) is a special highlight group that we'll include to allow Vim users to create pseudo per-window highlights.
+    # It can't be NormalNC otherwise it breaks compatibility assumptions for Neovim.
+    HIGHLIGHTER.create_highlights(win, [win.original_wincolor], False, 'VimadeWC').then(next)
 
   def add_signs(self):
     if GLOBALS.enablesigns and self.win.bufnr != None and self.visible_rows:

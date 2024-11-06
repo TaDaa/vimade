@@ -2,22 +2,52 @@ import sys
 import vim
 M = sys.modules[__name__]
 
-from vimade.state import globals as GLOBALS
 from vimade.util import color as COLOR_UTIL
 from vimade.style import fade as FADE
 from vimade.util import ipc as IPC
 from vimade.util import type as TYPE
 from vimade.util.promise import Promise
 
-IS_NVIM = GLOBALS.is_nvim
+GLOBALS = None
+NAMESPACE = None
+IS_NVIM = None
+HAS_NVIM_GET_HL = None
 
-def __initWinState(WinState):
-  M.global_win = WinState({'winid': -1})
+def __init(args):
+  global GLOBALS
+  global IS_NVIM
+  global HAS_NVIM_GET_HL
+  global NAMESPACE
+  NAMESPACE = args['NAMESPACE']
+  GLOBALS = args['GLOBALS']
+  IS_NVIM = GLOBALS.is_nvim
+  HAS_NVIM_GET_HL = bool(int(GLOBALS.features['has_nvim_get_hl']))
+  M.global_win = args['WIN'].WinState({'winid': -1})
   M.global_win.wincolorhl = None
   M.global_win.winhl = -1
-  M.global_win.original_wincolor = None
+  M.global_win.original_wincolor = 'NormalNC' if GLOBALS.is_nvim else 'Normal'
   M.global_win.hi_key = 'global'
-M.__initWinState = __initWinState
+  class GlobalNamespace(NAMESPACE.Namespace):
+    def __init__(self, win):
+      self.win = win
+    def invalidate_highlights(self, v = False):
+      clear_colors(self.win, [self.win.original_wincolor])
+      clear_win(self.win)
+    def invalidate_buffer_cache(self):
+      pass
+    def invalidate(self):
+      self.invalidate_highlights()
+    def highlight(self):
+      def next(replacement):
+        IPC.batch_command('hi! link vimade_0 vimade_' + str(replacement[0]))
+      create_highlights(M.global_win, [M.global_win.original_wincolor]).then(next)
+    def unhighlight(self, a , b):
+      pass
+    def add_signs():
+      pass
+    def remove_signs():
+      pass
+  M.global_win.ns = GlobalNamespace(M.global_win)
 
 M.next_id = 0
 M.free_ids = []
@@ -27,7 +57,6 @@ M.base_id_cache = {}
 M.vimade_id_cache = {}
 M.win_lookup = {}
 
-HAS_NVIM_GET_HL = bool(int(GLOBALS.features['has_nvim_get_hl']))
 _process_hl_results = None
 def _process_nvim_hl_results(results, ids):
   for i, value in enumerate(results):
@@ -187,20 +216,14 @@ def _get_hl_name_and_ids_for(win, to_process):
 
   return promise
 
-def create_vimade_0():
-  # TODO cleanup naming, provider the minimum data needed from win to create vimade_0
-  s = FADE.Default().attach(global_win, global_win.style_state)
-  s.before(global_win, global_win.style_state)
-  global_win.style = [s]
+def refresh_vimade_0():
   def next(value):
-    (wincolor, normal) = value
-    global_win.wincolorhl = defaultWincolorHi(wincolor, normal)
-    def next(replacement):
-      IPC.batch_command('hi! default link vimade_0 vimade_' + str(replacement[0]))
-    create_highlights(global_win, [GLOBALS.normalncid if IS_NVIM else GLOBALS.normalid]).then(next)
+    global_win.should_nc = True
+    global_win.wincolorhl = defaultWincolorHi(value[0], value[1])
+    global_win.finish()
   get_hl_for_ids(global_win, [GLOBALS.normalncid if IS_NVIM else GLOBALS.normalid, GLOBALS.normalid]) \
     .then(next)
- 
+
 def defaultHi(hi, default):
   if hi['ctermfg'] == None and default['ctermfg'] != None:
     hi['ctermfg'] = default['ctermfg']
@@ -227,7 +250,7 @@ def defaultWincolorHi(wincolorhl, normalhl):
     normalhl['sp'] = normalhl['fg']
   return defaultHi(wincolorhl, normalhl)
 
-def create_highlights(win, to_process, skip_transpose = False):
+def create_highlights(win, to_process, skip_transpose = False, name_override = None):
   promise = Promise()
   def next(to_process):
     wincolorhl = win['wincolorhl']
@@ -291,7 +314,7 @@ def create_highlights(win, to_process, skip_transpose = False):
       # selective copy (we cache other keys that should not be exposed)
       # copy the target for the style run
       hi_attrs = {
-          'name': base_hi['name'], # base name
+          'name': name_override if name_override else base_hi['name'], # base name
           'ctermfg': base_hi['ctermfg'],
           'ctermbg': base_hi['ctermbg'],
           'fg': base_hi['fg'],
@@ -335,7 +358,7 @@ def create_highlights(win, to_process, skip_transpose = False):
     if len(to_create):
       # non-blocking, but must execute before matchaddpos is called for Vim.  This happens naturally
       # due to the ordering of logic in IPC (command is explicitly called before eval)
-      IPC.batch_command('|'.join(to_create))
+      IPC.batch_command('function! VimadeCreateTemp()\n' + ('\n'.join(to_create)) + '\nendfunction \n call VimadeCreateTemp()')
     promise.resolve(result)
 
   _get_hl_name_and_ids_for(win, to_process).then(next)

@@ -84,27 +84,38 @@ function! vimade#GetFeatures()
     let g:vimade_features.has_gui = has('gui')
     let g:vimade_features.has_nvim = has('nvim')
     let g:vimade_features.has_vimr = has('gui_vimr')
-    let g:vimade_features.has_gui_version = !has('nvim') && (execute('version')=~"GUI version")
     let g:vimade_features.has_timer_start = exists('*timer_start')
     let g:vimade_features.has_sign_getplaced = exists('*sign_getplaced')
 
-    " Below are for lua renderer
+    if g:vimade_features.has_nvim
+      " Below are for lua renderer
 
-    " Required:
-    " Required: nvim_win_set_hl_ns
-    let g:vimade_features.has_nvim_win_set_hl_ns = exists('*nvim_win_set_hl_ns')
-    " Required:
-    " Either (preferred) nvim_get_hl
-    let g:vimade_features.has_nvim_get_hl = exists('*nvim_get_hl')
-    " Or (fallback) nvim__get_hl_defs + nvim_get_hl_by_name (assume supported)
-    let g:vimade_features.has__nvim_get_hl_defs = exists('*nvim__get_hl_defs')
-    
-    "Optional:
-    " preferred but not required nvim_get_hl_ns
-    " fallback is try and manually track (probably will have conflicts with some plugins)
-    let g:vimade_features.has_nvim_get_hl_ns = exists('*nvim_get_hl_ns')
+      " Required:
+      " Required: nvim_win_set_hl_ns
+      let g:vimade_features.has_nvim_win_set_hl_ns = exists('*nvim_win_set_hl_ns')
+      " Required:
+      " Either (preferred) nvim_get_hl
+      let g:vimade_features.has_nvim_get_hl = exists('*nvim_get_hl')
+      " Or (fallback) nvim__get_hl_defs + nvim_get_hl_by_name (assume supported)
+      let g:vimade_features.has__nvim_get_hl_defs = exists('*nvim__get_hl_defs')
+      
+      "Optional:
+      " preferred but not required nvim_get_hl_ns
+      " fallback is try and manually track (probably will have conflicts with some plugins)
+      let g:vimade_features.has_nvim_get_hl_ns = exists('*nvim_get_hl_ns')
 
-    let g:vimade_features.supports_lua_renderer = (g:vimade_features.has_nvim_get_hl || g:vimade_features.has__nvim_get_hl_defs) && g:vimade_features.has_nvim_win_set_hl_ns
+      let g:vimade_features.supports_lua_renderer = (g:vimade_features.has_nvim_get_hl || g:vimade_features.has__nvim_get_hl_defs) && g:vimade_features.has_nvim_win_set_hl_ns
+      let g:vimade_features.has_wincolor = 0
+      let g:vimade_features.has_gui_version = 0
+    else
+      let g:vimade_features.has_nvim_win_set_hl_ns = 0
+      let g:vimade_features.has_nvim_get_hl = 0
+      let g:vimade_features.has__nvim_get_hl_defs = 0
+      let g:vimade_features.has_nvim_get_hl_ns = 0
+      let g:vimade_features.supports_lua_renderer = 0
+      let g:vimade_features.has_wincolor = exists('&wincolor')
+      let g:vimade_features.has_gui_version = execute('version')=~"GUI version"
+    endif
 
     try
       sign define Vimade_Test text=1
