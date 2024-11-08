@@ -21,7 +21,7 @@ def _resolve_all_fn(obj, style, state):
   return obj
 
 def _tint_or_basebg(tint):
-  if type(tint) == 'dict':
+  if type(tint) == dict:
     return tint
   elif GLOBALS.basebg:
     return {
