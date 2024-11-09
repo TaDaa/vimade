@@ -3,7 +3,7 @@
 
 ### Fade, highlight, and customize your windows + buffers
 
-![](http://tadaa.github.io/images/minimalist_full.gif)
+![](https://tadaa.github.io/images/minimalist_full.gif)
 
 ## What is this?
 This plugin was created to help keep your attention focused on the active buffer especially in scenarios where you might have many windows open at the same time.  
@@ -152,7 +152,7 @@ You now know the basics for configuring **Vimade**!
 
 </details>
 
-<details>
+<details open>
 <summary>
 <a><ins>Highlight by active buffers or windows</ins></a>
  
@@ -161,7 +161,7 @@ You now know the basics for configuring **Vimade**!
 <b>Vimade</b> fades buffers by default. This is the primary and legacy behavior of this plugin. Some users may prefer fading by windows, toggling between windows and buffers, or creating their own conditions for determining when to fade or
 highlight a buffer. These are all possible.
 
-Most users should try both, there are inherit benefits to fading based on buffers as its easier to see which windows
+Most users should try each options below to see what they like best. For most, there are inherit benefits to fading based on buffers as its easier to see which windows
 are impacted by your edits or which windows you can cleanup.
 
 *<sub>::vimscript::</sub>*
@@ -173,6 +173,21 @@ are impacted by your edits or which windows you can cleanup.
   let g:vimade.ncmode = 'windows'
   ```
   
+Many users will already be familiar with the builtin **Neovim** highlight: *NormalNC*, which lets you change the *Normal* highlight on inactive windows.
+But what if you want to change the background color for inactive buffers, not just windows?  Well, you are in luck, **Vimade** can do this too
+(and yes for **Vim** as well)!
+
+<sub>::vimscript::</sub>
+``` vimscript
+let g:vimade.ncmode = 'buffers'
+let g:vimade.tint = {'bg': {'rgb': [0,0,0], 'intensity': 0.3}}
+```
+
+The code above adds additional darkness to the background inactive buffers. The image below shows only the inactive buffer faded.
+
+
+![](http://tadaa.github.io/images/buffers_bg_tint.png)
+
 ---
 </details>
 
@@ -225,7 +240,7 @@ from vimade.recipe.default import Default
 vimade.setup(**Default(animate=True))
 ```
 
-![](https://github.com/TaDaa/tadaa.github.io/blob/master/images/default_recipe_animate.gif)
+![](https://tadaa.github.io/images/default_recipe_animate.gif)
 ---
 </details>
 
@@ -254,7 +269,7 @@ from vimade.recipe.minimalist import Minimalist
 vimade.setup(**Minimalist(animate = True))
 ```
 
-![](https://github.com/TaDaa/tadaa.github.io/blob/master/images/minimalist_recipe_animate2.gif)
+![](https://tadaa.github.io/images/minimalist_recipe_animate2.gif)
 ---
 </details>
 
