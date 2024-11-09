@@ -84,11 +84,11 @@ local space = function()
       condition = CONDITION.INACTIVE,
       value = {
         fg = {
-          rgb = {235,0,217},
+          rgb = {192,0,255},
           intensity = 0.35
         },
         bg = {
-          rgb = {0,0,0},
+          rgb = {10,0,10},
           intensity = 1
         },
       },

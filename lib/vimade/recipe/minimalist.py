@@ -71,20 +71,21 @@ def animate_minimalist(config):
 def minimalist(config):
   condition = config.get('condition') 
   return [
+      TINT.Default(),
       Exclude(
         condition = condition,
         names = config.get('exclude_names'),
-        style = [TINT.Default(), FADE.Default()]
+        style = [FADE.Default()]
       ),
       Include(
         condition = condition,
         names = config.get('no_visibility_names'),
-        style = [TINT.Default(), FADE.Fade(value = 0)]
+        style = [FADE.Fade(value = 0)]
       ),
       Include(
         condition = condition,
         names = config.get('low_visibility_names'),
-        style = [TINT.Default(), FADE.Fade(value = config.get('low_visibility_fadelevel'))]
+        style = [FADE.Fade(value = config.get('low_visibility_fadelevel'))]
       ),
     ]
 

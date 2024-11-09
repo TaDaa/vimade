@@ -59,28 +59,29 @@ local animate_minimalist = function (config)
           })),
         })
       }
-    }),
+    })
   }
   return result
 end
 
 local minimalist = function (config)
   return {
+    TINT.Default(),
     Exclude({
       condition = config.condition,
       names = config.exclude_names,
-      style = {TINT.Default(), FADE.Default()}
+      style = {FADE.Default()}
     }),
     Include({
       condition = config.condition,
       names = config.no_visibility_names,
-      style = {TINT.Default(), FADE.Fade({value = 0})}
+      style = {FADE.Fade({value = 0})}
     }),
     Include({
       condition = config.condition,
       names = config.low_visibility_names,
-      style = {TINT.Default(), FADE.Fade({value = config.low_visibility_fadelevel})}
-    }),
+      style = {FADE.Fade({value = config.low_visibility_fadelevel})}
+    })
   }
 end
 

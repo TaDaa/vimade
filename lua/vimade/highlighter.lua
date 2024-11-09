@@ -138,8 +138,9 @@ M.set_highlights = function(win)
     normal.bg = normal_bg
   end
   -- run normal styles
+  local nt_copy = TYPE.deep_copy(normal_target)
   for i, s in ipairs(style) do
-    s.modify(normal, normal_target)
+    s.modify(normal, nt_copy)
   end
   -- clear name
   normal.name = nil
