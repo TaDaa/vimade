@@ -152,7 +152,7 @@ You now know the basics for configuring **Vimade**!
 
 </details>
 
-<details open>
+<details>
 <summary>
 <a><ins>Highlight by active buffers or windows</ins></a>
  
