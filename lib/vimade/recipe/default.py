@@ -30,8 +30,8 @@ def animate_default(**kwargs):
       }))
     )]
 
-def default():
-  return [TINT.Default(), FADE.Default()]
+def default(**kwargs):
+  return [TINT.Default(**kwargs), FADE.Default(**kwargs)]
 
 # @param **kwargs {
   # @optional animate: boolean = false
@@ -42,5 +42,5 @@ def default():
 # }
 def Default(**kwargs):
   return {
-    'style': animate_default(**kwargs) if kwargs.get('animate') else default(),
+    'style': animate_default(**kwargs) if kwargs.get('animate') else default(**kwargs),
   }

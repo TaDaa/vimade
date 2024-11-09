@@ -58,6 +58,7 @@ class Include():
       def modify(self, hl, to_hl):
         if self.condition == False:
           return
+        # we don't need to foce set the bg,ctermbg here for Vim as targetting works slightly differently
         if hl['name'] in self.include:
           for s in self.style:
             s.modify(hl, to_hl)

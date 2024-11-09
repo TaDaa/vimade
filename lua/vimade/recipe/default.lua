@@ -30,10 +30,10 @@ local animate_default = function (config)
   }
 end
 
-local default = function()
+local default = function(config)
   return {
-    TINT.Default(),
-    FADE.Default()
+    TINT.Default(config),
+    FADE.Default(config)
   }
 end
 

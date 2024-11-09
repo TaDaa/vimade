@@ -115,7 +115,7 @@ M.Tint = function(config)
 end
 
 M.Default = function (config)
-return M.Tint({
+return M.Tint(TYPE.extend({
   condition = CONDITION.INACTIVE,
   value = function (style, state)
   if type(GLOBALS.tint) == 'function' then
@@ -131,7 +131,7 @@ return M.Tint({
     }
   end
   return GLOBALS.tint
-end})
+end}, config))
 end
 
 return M

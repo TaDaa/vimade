@@ -3,6 +3,7 @@ M = sys.modules[__name__]
 
 from vimade.util import color as COLOR_UTIL
 from vimade.style.value import condition as CONDITION
+from vimade.util import type as TYPE
 GLOBALS = None
 
 def __init(args):
@@ -129,4 +130,7 @@ class Tint():
     return parent._value
 
 def Default(**kwargs):
-  return Tint(condition = CONDITION.INACTIVE, value = lambda style, state: GLOBALS.tint(style, state) if callable(GLOBALS.tint) else _tint_or_basebg(GLOBALS.tint))
+  return Tint(**TYPE.extend({
+    'condition': CONDITION.INACTIVE,
+    'value': lambda style, state: GLOBALS.tint(style, state) if callable(GLOBALS.tint) else _tint_or_basebg(GLOBALS.tint),
+  }, kwargs))

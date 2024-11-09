@@ -71,7 +71,7 @@ def animate_minimalist(config):
 def minimalist(config):
   condition = config.get('condition') 
   return [
-      TINT.Default(),
+      TINT.Default(**config),
       Exclude(
         condition = condition,
         names = config.get('exclude_names'),

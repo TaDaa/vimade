@@ -4,6 +4,7 @@ M = sys.modules[__name__]
 
 from vimade.util import color as COLOR_UTIL
 from vimade.style.value import condition as CONDITION
+from vimade.util import type as TYPE
 GLOBALS = None
 
 def __init(args):
@@ -57,6 +58,8 @@ class Fade():
       return parent
     return parent._value
 
-def Default(**kwardgs):
-  return Fade(condition = CONDITION.INACTIVE,
-    value = lambda style, state: GLOBALS.fadelevel(style, state) if callable(GLOBALS.fadelevel) else GLOBALS.fadelevel)
+def Default(**kwargs):
+  return Fade(**TYPE.extend({
+    'condition': CONDITION.INACTIVE,
+    'value': lambda style, state: GLOBALS.fadelevel(style, state) if callable(GLOBALS.fadelevel) else GLOBALS.fadelevel,
+  }, kwargs))

@@ -3,6 +3,7 @@ local math = require('math')
 local M = {}
 local CONDITION = require('vimade.style.value.condition')
 local COLOR_UTIL = require('vimade.util.color')
+local TYPE = require('vimade.util.type')
 local GLOBALS
 
 M.__init = function (args)
@@ -86,7 +87,7 @@ M.Fade = function(config)
 end
 
 M.Default = function (config)
-return M.Fade({
+return M.Fade(TYPE.extend({
   condition = CONDITION.INACTIVE,
   value = function (style, state)
     if type(GLOBALS.fadelevel) == 'function' then
@@ -94,7 +95,7 @@ return M.Fade({
     end
     return GLOBALS.fadelevel
   end
-})
+}, config))
 end
 
 return M

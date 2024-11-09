@@ -66,7 +66,7 @@ end
 
 local minimalist = function (config)
   return {
-    TINT.Default(),
+    TINT.Default(config),
     Exclude({
       condition = config.condition,
       names = config.exclude_names,
