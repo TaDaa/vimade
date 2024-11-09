@@ -183,7 +183,7 @@ let g:vimade.ncmode = 'buffers'
 let g:vimade.tint = {'bg': {'rgb': [0,0,0], 'intensity': 0.3}}
 ```
 
-The code above adds additional darkness to the background inactive buffers. The image below shows only the inactive buffer faded.
+The code above adds additional darkness to the background of only the inactive buffers. See the image below for the result:
 
 
 ![](http://tadaa.github.io/images/buffers_bg_tint.png)
