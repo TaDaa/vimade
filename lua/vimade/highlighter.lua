@@ -127,6 +127,9 @@ M.set_highlights = function(win)
   local link_cache = {}
 
   -- default normal properties
+  -- ensure that bg is unset for transparent backgrounds (cterm/guibg=NONE)
+  local reset_bg = normal.bg == nil
+  local reset_ctermbg = normal.ctermbg == nil
   normal.name = 'Normal'
   if normal.fg == nil then
     normal.fg = normal_fg
@@ -141,6 +144,12 @@ M.set_highlights = function(win)
   local nt_copy = TYPE.deep_copy(normal_target)
   for i, s in ipairs(style) do
     s.modify(normal, nt_copy)
+    if reset_bg then
+      normal.bg = nil
+    end
+    if reset_ctermbg then
+      normal.ctermbg = nil
+    end
   end
   -- clear name
   normal.name = nil
@@ -213,6 +222,12 @@ M.set_highlights = function(win)
 
       for i, s in ipairs(style) do
         s.modify(hi, hi_target)
+        if reset_bg then
+          hi.bg = nil
+        end
+        if reset_ctermbg then
+          hi.ctermbg = nil
+        end
       end
 
       hi.name = nil
