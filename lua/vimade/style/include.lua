@@ -16,6 +16,7 @@ M.include_id = 1
 M.Include = function(config)
   local result = {}
   local _condition = config.condition or CONDITION.INACTIVE
+  result.tick = config.tick
   result.attach = function (win)
     local condition = _condition
     local names = config.names

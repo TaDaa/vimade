@@ -27,12 +27,17 @@ def get_next_id():
 M.EASE = EASE
 M.DIRECTION = DIRECTION 
 
+def _compare_eq(value, last):
+  return value == last
+
 def Number(**kwargs):
   kwargs['interpolate'] = COLOR_UTIL.interpolateFloat
+  kwargs['compare'] = _compare_eq
   return M.Animate(**kwargs)
 
 def Rgb(**kwargs):
   kwargs['interpolate'] = COLOR_UTIL.interpolateRgb
+  kwargs['compare'] = TYPE.shallow_compare
   return M.Animate(**kwargs)
 
 def Tint(**kwargs):
@@ -74,6 +79,7 @@ def Tint(**kwargs):
     return result
 
   kwargs['interpolate'] = interpolate
+  kwargs['compare'] = TYPE.deep_compare
   return M.Animate(**kwargs)
 
 # @param kwargs {
@@ -102,6 +108,7 @@ def Animate(**kwargs):
   _direction = _direction if _direction != None else DEFAULT_DIRECTION
   _reset = kwargs.get('reset')
   _reset = _reset if _reset != None else (_direction != DIRECTION.IN_OUT)
+  _compare = kwargs.get('compare')
   def animate(style, state):
     id = None
     win = style.win
@@ -115,12 +122,16 @@ def Animate(**kwargs):
       state[id] = {'value': None}
     state = state[id]
     to = _to(style, state) if callable(_to) else _to
+    compare = _compare(to, state.get('last_to')) if callable(_compare) else _compare
     start = _start(style, state) if callable(_start) else _start
     delay = _delay(style, state) if callable(_delay) else _delay
     duration = _duration(style, state) if callable(_duration) else _duration
     direction = _direction(style, state) if callable(_direction) else _direction
     reset = _reset(style, state) if callable(_reset) else _reset
-    time = (GLOBALS.now - (win.timestamps['nc'] + delay)) * 1000
+    if compare == False:
+      state['change_timestamp'] = GLOBALS.now
+    state['last_to'] = to
+    time = (GLOBALS.now - (max(win.timestamps['nc'], state.get('change_timestamp') or 0))) * 1000 - (delay or 0)
     # direction in and active means go towards 'to' value from start value
     # direction out and active means go towards start value when the window becomes inactive
     # otherwise the window should be on 'to' value
@@ -150,12 +161,15 @@ def Animate(**kwargs):
       state['value'] = start
       state['start'] = start
 
-    if time == 0:
-      state['start'] = start if reset == True else state['value']
-    elif time < 0:
-      state['value'] = start
-      style._animating = False
-      return start
+    if time <= 0:
+      if reset == True:
+        state['start'] = start
+        state['value'] = start
+      else:
+        state['start'] = state['value']
+      style._animating = True
+      ANIMATOR.schedule(win)
+      return state['start']
     if time >= duration:
       state['value'] = to
       style._animating = False

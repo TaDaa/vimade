@@ -79,6 +79,7 @@ class Tint():
     _condition = kwargs.get('condition')
     _condition = _condition if _condition != None else CONDITION.INACTIVE
     parent._value = kwargs.get('value')
+    parent.tick = kwargs.get('tick')
     class __Tint():
       def __init__(self, win, state):
         value = parent._value

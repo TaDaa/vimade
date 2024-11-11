@@ -1,6 +1,6 @@
 # TODO represent these as behaviors
 def ACTIVE (style, state):
-  return style.win.nc == False or style._animating == True
+  return style.win.nc != True or style._animating == True
 
 def INACTIVE (style, state):
   return style.win.nc == True or style._animating == True

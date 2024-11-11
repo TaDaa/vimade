@@ -17,6 +17,7 @@ M.Fade = function(config)
   local result = {}
   local _value = config.value
   local _condition = config.condition or CONDITION.INACTIVE
+  result.tick = config.tick
   result.attach = function (win)
     local fade = _value
     local condition = _condition

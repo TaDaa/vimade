@@ -1,4 +1,5 @@
 local M = {}
+local ANIMATE = require('vimade.style.value.animate')
 local ANIMATOR = require('vimade.animator')
 local COMPAT = require('vimade.util.compat')
 local EXCLUDE = require('vimade.style.exclude')
@@ -16,6 +17,13 @@ local update = function ()
   local windows = vim.fn.getwininfo()
   local current = GLOBALS.current
   local updated_cache = {}
+
+  local style = GLOBALS.style
+  for i, s in ipairs(style) do
+    if s.tick then
+      s.tick()
+    end
+  end
 
   for i, wininfo in pairs(windows) do
     -- we skip only_these_windows here because we need to know who the active window is
@@ -105,6 +113,7 @@ M.unhighlightAll = function ()
   end
 end
 
+ANIMATE.__init({FADER=M, GLOBALS=GLOBALS})
 ANIMATOR.__init({FADER=M, GLOBALS=GLOBALS})
 HIGHLIGHTER.__init({FADER=M, GLOBALS=GLOBALS})
 REAL_NAMESPACE.__init({FADER=M, GLOBALS=GLOBALS})

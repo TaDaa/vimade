@@ -22,6 +22,7 @@ class Include():
     _condition = kwargs.get('condition')
     _condition = _condition if _condition != None else CONDITION.INACTIVE
     _names = kwargs.get('names', [])
+    self.tick = kwargs.get('tick')
     class __Include():
       def __init__(self, win, state):
         self.win = win

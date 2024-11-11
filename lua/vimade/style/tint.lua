@@ -49,6 +49,7 @@ M.Tint = function(config)
   local result = {}
   local _value = config.value
   local _condition = config.condition or CONDITION.INACTIVE
+  result.tick = config.tick
   result.attach = function(win)
     local tint = _value
     local to_hl = nil

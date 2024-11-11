@@ -46,6 +46,11 @@ def _update(only_these_windows):
     # Neovim async API breaks in certain scenarios and doesn't update the backing color mechanism
     if GLOBALS.enablebasegroups:
       vim.command('redraw!')
+  
+  style = GLOBALS.style
+  for s in style:
+    if s.tick:
+      s.tick()
 
   HIGHLIGHTER.refresh_vimade_0()
 

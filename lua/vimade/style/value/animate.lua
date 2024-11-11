@@ -7,6 +7,11 @@ local COLOR_UTIL = require('vimade.util.color')
 local TYPE = require('vimade.util.type')
 local M = {}
 
+local GLOBALS
+M.__init = function (args)
+  GLOBALS = args.GLOBALS
+end
+
 local DEFAULT_DURATION = 300
 local DEFAULT_DELAY = 0
 local DEFAULT_EASE = EASE.OUT_QUART
@@ -33,12 +38,16 @@ M.DIRECTION = DIRECTION
 M.Number = function (config)
   config = TYPE.shallow_copy(config)
   config.interpolate = COLOR_UTIL.interpolateFloat
+  config.compare = function (value, last)
+    return value == last
+  end
   return M.Animate(config)
 end
 
 M.Rgb = function(config)
   config = TYPE.shallow_copy(config)
   config.interpolate = COLOR_UTIL.interpolateRgb
+  config.compare = TYPE.shallow_compare
   return M.Animate(config)
 end
 
@@ -83,6 +92,7 @@ M.Tint = function(config)
 
     return result
   end
+  config.compare = TYPE.deep_compare
   return M.Animate(config)
 end
 
@@ -108,6 +118,7 @@ M.Animate = function (config)
   local _ease = config.ease or DEFAULT_EASE
   local _direction = config.direction or DEFAULT_DIRECTION
   local _reset = config.reset or _direction ~= DIRECTION.IN_OUT
+  local _compare = config.compare or nil
   return function(style, state)
     local id
     local win = style.win
@@ -130,6 +141,14 @@ M.Animate = function (config)
     if type(to) == 'function' then
       to = to(style, state)
     end
+    local compare = _compare
+    if type(compare) == 'function' then
+      compare = compare(to, state['last_to'])
+    end
+    if compare == false then
+      state['change_timestamp'] = GLOBALS.now
+    end
+    state['last_to'] = to
     local start = _start
     if type(start) == 'function' then
       start = start(style, state)
@@ -151,7 +170,7 @@ M.Animate = function (config)
       reset = reset(style, state)
     end
     -- TODO this logic is nc specific and should be abstracted
-    local time = GLOBALS.now - (win.timestamps.nc + delay)
+    local time = GLOBALS.now - (math.max(win.timestamps.nc, state['change_timestamp'] or 0) + delay)
     if (direction == DIRECTION.OUT and style._condition == CONDITION.ACTIVE and style.win.nc == false)
       or (direction == DIRECTION.IN and style._condition == CONDITION.INACTIVE and style.win.nc == true) then
        state.value = to
@@ -178,17 +197,16 @@ M.Animate = function (config)
       state.value = start
       state.start = start
     end
-    if time == 0 then
+    if time <= 0 then
       if reset == true then
         state.start = start
         state.value = start
       else
         state.start = state.value
       end
-    elseif time < 0 then
-      state.value = start
-      style._animating = false
-      return start
+      style._animating = true
+      ANIMATOR.schedule(win)
+      return state.start
     end
     if time >= duration then
       state.value = to

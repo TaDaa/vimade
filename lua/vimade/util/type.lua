@@ -17,8 +17,8 @@ M.num_to_bool = function (maybe_num, default)
 end
 
 M.shallow_compare = function (left, right)
-  if (left == nil or right == nil) and left ~= right then
-    return false
+  if (left == nil or right == nil) then
+    return left == right
   end
   for k, v in pairs(left) do
     if right[k] ~= v then
@@ -34,8 +34,8 @@ M.shallow_compare = function (left, right)
 end
 
 M.deep_compare = function (left, right)
-  if (left == nil or right == nil) and left ~= right then
-    return false
+  if (left == nil or right == nil) then
+    return left == right
   end
   local copy = {}
   for key, value in pairs(left) do

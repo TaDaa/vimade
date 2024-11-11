@@ -15,6 +15,7 @@ M.exclude_id = 1
 M.Exclude = function(config)
   local result = {}
   local _condition = config.condition or CONDITION.INACTIVE
+  result.tick = config.tick
   result.attach = function (win)
     local names = config.names
     local condition = _condition

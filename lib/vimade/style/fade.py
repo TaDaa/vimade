@@ -17,6 +17,7 @@ class Fade():
     _condition = kwargs.get('condition')
     _condition = _condition if _condition != None else CONDITION.INACTIVE
     parent._value = kwargs.get('value')
+    parent.tick = kwargs.get('tick')
     class __Fade():
       def __init__(self, win, state):
         self.win = win

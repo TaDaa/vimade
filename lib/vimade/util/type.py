@@ -1,3 +1,62 @@
+def get(obj, key):
+  if type(obj) == dict:
+    return obj.get(key)
+  elif type(obj) == list:
+    if key < len(obj):
+      return obj(key)
+  return None
+
+def pairs(obj):
+  if type(obj) == dict:
+    return obj.items()
+  elif type(obj) in (list, tuple):
+    return enumerate(obj)
+  return enumerate([])
+
+def shallow_compare(left, right):
+  if left == None or right == None:
+    return left == right
+  for k, v in pairs(left):
+    if get(right, k) != v:
+      return False
+  for k, v in pairs(right):
+    if get(left, k) != v:
+      return False
+  return True
+
+def deep_compare(left, right):
+  if left == None or right == None:
+    return left == right
+  copy ={}
+  for key, value in pairs(left):
+    copy[key] = value
+  for key, value in pairs(right):
+    copy_value = get(copy, key)
+    if copy_value == None:
+      return False
+    elif type(copy_value) != type(value):
+      return False
+    elif type(value) in (dict, list, tuple):
+      if deep_compare(copy_value, value) == True:
+        del copy[key]
+      else:
+        return False
+    elif copy_value == value:
+      del copy[key]
+    else:
+      return False
+  if len(copy.keys()) > 0:
+    return False
+  return True
+
+  for k, v in pairs(left):
+    if get(right, k) != v:
+      return False
+  for k, v in pairs(right):
+    if get(left, k) != v:
+      return False
+    
+
 def deep_copy(obj):
   # disallow tuple
   if type(obj) in (list, tuple):
