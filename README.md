@@ -286,7 +286,7 @@ There are 4 core **styles**
 
   <details>
   <summary>
-  <ins>Fade</ins> -
+  <ins>Fade</ins>
   
   Fades each window based on the `value` (also referred to as `fadelevel`). Colors are modified against the
   background color.
@@ -318,7 +318,7 @@ There are 4 core **styles**
 
   <details>
   <summary>
-  <ins>Tint</ins> -
+  <ins>Tint</ins>
   
   Tints each window based on `fg`, `bg`, and `sp` inputs.
   </summary>
@@ -360,7 +360,7 @@ There are 4 core **styles**
 
   <details>
   <summary>
-  <ins>Include</ins> -
+  <ins>Include</ins>
   
   Runs nested style modifiers when the highlight is included in the `value`.
   </summary>
@@ -405,7 +405,7 @@ There are 4 core **styles**
 
   <details>
   <summary>
-  <ins>Exclude</ins> -
+  <ins>Exclude</ins>
   
   Runs nested style modifiers when the highlight is **not** included in the `value`.
   </summary>
