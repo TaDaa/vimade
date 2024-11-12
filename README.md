@@ -59,10 +59,21 @@ Any plugin manager will work.
 ```lua
 require('lazy').setup({spec = {'tadaa/vimade'}})
 ```
+  
+  <details open>
+  <summary>
+    <ins>For Lua users:</ins>
+    
+    
+  This is just here to remind you that you don't need to do anything!
+    
+  </summary>
+
+  </details>
 
   <details open>
   <summary>
-    <ins>For python users:</ins>
+    <ins>For Python users:</ins>
     
     
   If you are using **vim** or older **neovim** and want to configure using **python**, you will need to bind your setup to `Vimade#PythonReady`. This ensures that **Vimade** has been added to the python path before your configuration runs. Here's an example that sets up the *Minimalist* recipe.
