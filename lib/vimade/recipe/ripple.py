@@ -81,7 +81,6 @@ def _ripple_to_tint(style, state):
   if not style.win.winid in M._win_infos:
     return to
   if to:
-    to = TYPE.deep_copy(to)
     for color in to.values():
       if color.get('rgb'):
         if color.get('intensity') == None:
@@ -96,7 +95,6 @@ def _ripple_to_fade(style, state):
 def _ripple_start_tint(style, state):
   start = TINT.Default().value()(style, state)
   if start:
-    start = TYPE.deep_copy(start)
     for color in start.values():
       color['intensity'] = 0
   return start

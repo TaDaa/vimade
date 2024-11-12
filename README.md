@@ -51,9 +51,64 @@ Any plugin manager will work.
 </summary>
 
 *<sub>::vimscript::plug::</sub>*
-  ```vimscript
+```vim
   Plug 'TaDaa/vimade'
+```
+  
+*<sub>::lua::lazy::</sub>*
+```lua
+require('lazy').setup({spec = {'tadaa/vimade'}})
+```
+
+  <details open>
+  <summary>
+    <ins>For python users:</ins>
+    
+    
+  If you are using **vim** or older **neovim** and want to configure using **python**, you will need to bind your setup to `Vimade#PythonReady`. This ensures that **Vimade** has been added to the python path before your configuration runs. Here's an example that sets up the *Minimalist* recipe.
+    
+  </summary>
+
+  ```vim
+  function! SetupMyVimadeConfig()
+    python << EOF
+      from vimade import vimade
+      from vimade.recipe.minimalist import Minimalist
+      vimade.setup(**TYPE.extend(Minimalist(animate=True)))
+    EOF
+  endfunction
+  au! User Vimade#PythonReady call SetupMyVimadeConfig()
   ```
+  </details>
+  
+---
+
+</details>
+
+<details>
+<summary>
+<a><ins>Lazy loading</ins></a>
+<br>
+</summary>
+<br>
+
+- For **Lua/Neovim**, you can use **lazy.nvim** and your event of choice:
+
+    *<sub>::lua::lazy::</sub>*
+    ```lua
+    require('lazy').setup({spec = {'tadaa/vimade', event = 'VeryLazy'}})
+    ```
+
+- For full control and **Vim**, enable `vimade.lazy` and then call `vimade#Load()`.  Here's an example:
+
+  &nbsp;  *<sub>::vimscript::</sub>*
+     ```vim
+     let g:vimade = {}
+     let g:vimade.lazy = 1
+     
+     au WinEnter * ++once call vimade#Load()
+     ```
+
   
 ---
 
@@ -73,7 +128,7 @@ It can also be configured with Lua and Python if you prefer a specific config or
 If you are configuring **Vimade** directly in your vimrc, add the following at the start:
 
 *<sub>::vimscript::</sub>*
-```vimscript
+```vim
 let g:vimade = {}
 ```
 
@@ -83,7 +138,7 @@ the default values, so don't worry about adding every option.
 Now you can start customizing vimade:
 
 *<sub>::vimscript::</sub>*
-```vimscript
+```vim
 let g:vimade.fadelevel = 0.5
 ```
 
@@ -93,7 +148,7 @@ Let's add a blue tint:
 
 
 *<sub>::vimscript::</sub>*
-```vimscript
+```vim
 let g:vimade.tint = {'fg':{'rgb':[0,0,255], 'intensity': 0.5}}
 ```
 
@@ -165,11 +220,11 @@ Most users should try each options below to see what they like best. For most, t
 are impacted by your edits or which windows you can cleanup.
 
 *<sub>::vimscript::</sub>*
-  ```vimscript
+  ```vim
   let g:vimade.ncmode = 'buffers'
   ```
 
-  ```vimscript
+  ```vim
   let g:vimade.ncmode = 'windows'
   ```
   
@@ -193,27 +248,303 @@ The code above adds additional darkness to the background of only the inactive b
 
 <details open>
 <summary>
+<a><ins>Blocklists and linking</ins></a>
+ 
+</summary>
+<br>
+
+Sorry, tutorial not ready yet! See config options for usage.
+
+---
+</details>
+
+
+<details>
+<summary>
 <a><ins>Style modifiers</ins></a>
 </summary>
 
 <br>
 
-Sorry this section will be updated soon.
+**Styles** are the core functionality of **Vimade**.  Each **style** decides how to manipulate the highlighting process based on their own input.
+**Styles** can be combined, nested, or transpose other styles, it's up to the user to decide how they should be used together
+(and what order they should be in)!
+
+
+There are 4 core **styles**
+
+  <details>
+  <summary>
+  <ins>Fade</ins> -
+  
+  Fades each window based on the `value` (also referred to as `fadelevel`). Colors are modified against the
+  background color.
+  </summary>
+
+  <sub>*::lua::*</sub>
+  ```lua
+  local Fade = require('vimade.style.fade').Fade
+  vimade.setup{
+    style = {
+      Fade{value = 0.4}
+    }
+  }
+  ```
+  <sub>*::python::*</sub>
+  ```python
+  from vimade import vimade
+  from vimade.style.fade import Fade
+  vimade.setup(style = [
+    Fade(value = 0.4)
+  ])
+  ```
+  | option | values/type | default | description |
+  | -      | -           | -       | -           |
+  | `value` | `number` `function(style,state)=>number` | `nil` |  The target fadelevel. Value ranges from `0 to 1`, where `0` is completely faded and `1` is unfaded.
+  | `tick` | `function()=>void` | `nil` |  A function that is run once per frame. Useful if you need to do expensive pre-computation that shouldn't occur once per-window.
+
+  </details>
+
+  <details>
+  <summary>
+  <ins>Tint</ins> -
+  
+  Tints each window based on `fg`, `bg`, and `sp` inputs.
+  </summary>
+
+  <sub>*::lua::*</sub>
+  ```lua
+  local Tint = require('vimade.style.Tint').Tint
+  vimade.setup{
+    style = {
+      Tint{
+        value = {
+          fg = {rgb = {0,0,0}, intensity = 0.5},
+          bg = {rgb = {0,0,0}, intensity = 0.5},
+          sp = {rgb = {0,0,0}, intensity = 0.5},
+        }
+      }
+    }
+  }
+  ```
+  <sub>*::python::*</sub>
+  ```python
+  from vimade import vimade
+  from vimade.style.tint import Tint
+  vimade.setup(style = [
+    Tint(value = {
+      'fg': { 'rgb': [0,0,0], 'intensity': 0.5 },
+      'bg': { 'rgb': [0,0,0], 'intensity': 0.5 },
+      'sp': { 'rgb': [0,0,0], 'intensity': 0.5 },
+    })
+  ])
+  ```
+  
+  | option | values/type | default | description |
+  | -      | -           | -       | -           |
+  | `value` | <pre><sub>`{fg:{rgb:[num,num,num],intensity:num},`<br>` bg:{rgb:[num,num,num],intensity:num},`</sub><br><sub>` sp:{rgb:[num,num,num],intensity:num}}`</sub></pre> <sub>`function(style,state)=any`(functions can be used for any part of the tint config object)</sub> | `nil` |  The target tint colors. Intensity is the inverse of fadelevel. `1` is full intensity, while `0` is not applied.
+  | `tick` | `function()=>void` | `nil` |  A function that is run once per frame. Useful if you need to do expensive pre-computation that shouldn't occur once per-window.
+
+  </details>
+
+  <details>
+  <summary>
+  <ins>Include</ins> -
+  
+  Runs nested style modifiers when the highlight is included in the `value`.
+  </summary>
+
+  <sub>*::lua::*</sub>
+  ```lua
+  local Fade = require('vimade.style.fade').Fade
+  local Include = require('vimade.style.include').Include
+  vimade.setup{
+    style = {
+      Include{
+        value = ['WinSeparator', 'VertSplit', 'LineNr', 'LineNrAbove', 'LineNrBelow'],
+        style = {
+          Fade { value = 0.4 }
+        }
+      }
+    }
+  }
+  ```
+  <sub>*::python::*</sub>
+  ```python
+  from vimade import vimade
+  from vimade.style.fade import Fade
+  from vimade.style.include import Include
+  vimade.setup(style = [
+    Include(
+      value = ['Normal', 'Comment'],
+      style = [
+        Fade(value = 0.4)
+      ]
+    )
+  ])
+  ```
+  
+  | option | values/type | default | description |
+  | -      | -           | -       | -           |
+  | `value` | `string[]` | `nil` |  The list of highlight names that the nested styles will execute modifies on.
+  | `style` | `Style[]` | `nil` |  The list of styles that are run when highlights are included.
+  | `tick` | `function()=>void` | `nil` |  A function that is run once per frame. Useful if you need to do expensive pre-computation that shouldn't occur once per-window.
+
+  </details>
+
+  <details>
+  <summary>
+  <ins>Exclude</ins> -
+  
+  Runs nested style modifiers when the highlight is **not** included in the `value`.
+  </summary>
+
+  <sub>*::lua::*</sub>
+  ```lua
+  local Fade = require('vimade.style.fade').Fade
+  local Exclude = require('vimade.style.exclude').Exclude
+  vimade.setup{
+    style = {
+      Exclude{
+        value = ['WinSeparator', 'VertSplit', 'LineNr', 'LineNrAbove', 'LineNrBelow'],
+        style = {
+          Fade { value = 0.4 }
+        }
+      }
+    }
+  }
+  ```
+  <sub>*::python::*</sub>
+  ```python
+  from vimade import vimade
+  from vimade.style.fade import Fade
+  from vimade.style.exclude import Exclude
+  vimade.setup(style = [
+    Exclude(
+      value = ['Normal', 'Comment'],
+      style = [
+        Fade(value = 0.4)
+      ]
+    )
+  ])
+  ```
+  
+  | option | values/type | default | description |
+  | -      | -           | -       | -           |
+  | `value` | `string[]` | `nil` |  The list of highlight names that the nested styles will execute modifies on.
+  | `style` | `Style[]` | `nil` |  The list of styles that are run when highlights are included.
+  | `tick` | `function()=>void` | `nil` |  A function that is run once per frame. Useful if you need to do expensive pre-computation that shouldn't occur once per-window.
+
+  </details>
 
 ---
 </details>
 
-<details open>
+<details>
 <summary>
 <a><ins>Animations</ins></a>
 </summary>
 
 <br>
 
-Sorry this section will be updated soon.
+**Vimade** supports animations through value functions.
+The section below will look at using a custom animation value within a **style**, so please read the **style** section before proceeding!
+
+
+Animations are functions that mutate values over time.  **Vimade** includes a number of
+helpers that alter the interpolation process. 
+ Animations can only be added using **lua** or **python**. 
+
+ Let's look at an example:
+
+<sub>::lua:: 
+```lua
+local Fade = require('vimade.style.fade').Fade
+local animate = require('vimade.style.value.animate')
+require('vimade').setup{style = {
+  Fade {
+    value = animate.Number {
+      start = 1,
+      to = 0.2
+    }
+  }
+}}
+```
+
+<sub>::python::
+```python
+from vimade import vimade
+from vimade.style import fade
+from vimade.style.value import animate
+vimade.setup(style = [
+  Fade(value = animate.Number(
+    start = 1,
+    to = 0.2,
+  )),
+])
+```
+
+The example above uses `animate.Number` to fade inactive windows from no-fade `start = 1` to almost completely faded `to = 0.2`.
+
+The animation can be further customized by overriding any of the default values:
+
+<sub>::lua:: 
+```lua
+local Fade = require('vimade.style.fade').Fade
+local direction = require('vimade.style.value.direction')
+local ease = require('vimade.style.value.ease')
+local animate = require('vimade.style.value.animate')
+require('vimade').setup{style = {
+  Fade {
+    value = animate.Number {
+      start = 1,
+      to = 0.2,
+      direction = direction.IN_OUT,
+      ease = ease.OUT_BOUNCE,
+      duration = 1000,
+      delay = 100,
+    }
+  }
+}}
+```
+
+<sub>::python::
+```python
+from vimade import vimade
+from vimade.style import fade
+from vimade.style.value import animate
+from vimade style.value import direction
+from vimade style.value import ease
+vimade.setup(style = [
+  Fade(value = animate.Number(
+    start = 1,
+    to = 0.2,
+    direction = direction.IN_OUT,
+    ease = ease.OUT_BOUNCE,
+    duration = 1000,
+    delay = 100,
+  )),
+])
+```
+
+Every value type can be animated included tints and nested values in complex objects.  See the recipe source for more examples.
+
+
+
+| option | values/type | default | description |
+| -      | -           | -       | -           |
+| `start` | `any` `function(style,state)=>any` | `nil` |  The starting value that the animation begins at.  If `direction=IN_OUT`, then the starting value is only used one time when the value is uninitialized.
+| `to` | `any` `function(style,state)=>any` | `nil` |  The ending value that the animation ends at. 
+| `direction` | `IN` `OUT` `IN_OUT` | `OUT` |  These are specialized functions and **MUST** be used from the exported `vimade.style.value.direction` enum.  `OUT` is a outward animation, which should typically be associated with "leaving" something. `IN` is an inward animation that should be associated with "entering".  `IN_OUT` tracks the value and performs both `IN` and `OUT` behaviors.
+| `ease` | `LINEAR` `OUT_QUART` `IN_QUART` `IN_OUT_QUART` `IN_CUBIC` `OUT_CUBIC` ... | `OUT_QUART` |  These are functions and **can** be used from `vimade.style.value.ease`.  You can also use your own custom `function(time)=>percent_time`.  Easing functions change the animation behavior by mutating `percent_time`.  See source for examples: [lua](https://github.com/TaDaa/vimade/blob/master/lua/vimade/style/value/ease.lua) \| [python](https://github.com/TaDaa/vimade/blob/master/lib/vimade/style/value/ease.py).
+| `duration` | `number` `function(state,state)=>number`   | `300` |  The duration of the animation in milliseconds.
+| `delay` | `number` `function(style,state)=>number` | `0` |  How long to wait before starting the animation.
+
+
 
 ---
 </details>
+
 
 <details open>
 <summary>
@@ -284,13 +615,13 @@ vimade.setup(**Minimalist(animate = True))
 
 | option | values/type | default | description |
 | -      | -           | -       | -           |
-| `renderer` | `'auto'` `'python'` `'lua'` | `'auto'` | `auto` automatically assigns **vim** users to **python** and detects if **neovim**  users have the requires features for **lua**.  For **neovim** users on **lua** mode, the **python** logic is never run. **Neovim** users with missing features will be set to **python** and need **pynvim** installed.
-  | `ncmode` | `'windows'` `'buffers'` | `'buffers'` | highlight or unhighlight `buffers` or `windows` together
-| `fadelevel` | `float [0-1]` `function(style,state)->float` | `0.4` | The amount of fade opacity that should be applied to fg-text (`0` is invisible and `1` is no fading)
+| `renderer` | `'auto'` `'python'` `'lua'` <br> | `'auto'` | `auto` automatically assigns **vim** users to **python** and detects if **neovim**  users have the requires features for **lua**.  For **neovim** users on **lua** mode, the **python** logic is never run. **Neovim** users with missing features will be set to **python** and need **pynvim** installed.
+| `ncmode` | `'windows'` `'buffers'` | `'buffers'` | highlight or unhighlight `buffers` or `windows` together
+| `fadelevel` | `float [0-1]` `function(style,state)=>float` | `0.4` | The amount of fade opacity that should be applied to fg-text (`0` is invisible and `1` is no fading)
 | `tint` | <sub>When set via **lua** or **python**, each object or number can also be a function that returns the corresponding value component</sub><br><br><sub>`{'fg':{'rgb':[255,255,255], 'intensity':1, 'bg':{'rgb':[0,0,0], 'intensity':1}, 'sp':{'fg':[0,0,255], 'intensity':0.5}}}`</sub> | `nil` | The amount of tint that can be applied against each highlight component (fg, bg, sp). Intensity is a float value [0-1], where 1 is the most intense and 0 is not tinted.  See the tinting tutorial for more details (TODO link).
 | `basebg` | <sub> `'#FFFFFF'` `[255,255,255]` `0xFFFFFF` </sub> | `nil` | Setting this value automatically changes the `fg` **tint** in the config object above. It is named this way for legacy reasons, prefer using the **tint** object above.
-| `blocklist` | <sub>When set via **lua** or **python**, the top level named object can be a `(win) -> bool function`. Each nested object or value can also be a function `(relative_config) -> bool`.  `True` indicates blocked, `False` not linked, `nil` indeterminate.</sub><br><br><sub>`{[key:string]: {'buf_opts': {[key]:string: value}, 'buf_vars': {...}, 'win_opts': {...}, 'win_vars': 'win_config': {...}}}`</sub> | <sub>`{'default': {'buf_opts': {'buftype': ['prompt', 'terminal', 'popup']}, 'win_config': {'relative': 1}}}`</sub> | If the window is determined to be blocked, **Vimade** highlights will be removed and it will skip the styling process. See the block and linking section for more details (TODO link).
-| `link` | <sub>When set via **lua** or **python**, the top level named object can be a `(win, active_win)-> bool`. Each nested object or value can also be a function `(relative_win_obj, active_win_obj) -> bool`.  `True` indicates linked, `False` not linked, `nil` indeterminate.</sub><br><br> | `nil` | Determines whether the current window should be linked and unhighlighted with the active window.  `groupdiff` and `groupscrollbind` tie into the default behavior of this object behind the scenes to unlink diffs.  See the block and linking section for more details (TODO link).
+| `blocklist` | <sub>When set via **lua** or **python**, the top level named object can be a `function(win)=>bool`. Each nested object or value can also be a `function(relative_config)=>bool`.  `True` indicates blocked, `False` not linked, `nil` indeterminate.</sub><br><br><sub>`{[key:string]: {'buf_opts': {[key]:string: value}, 'buf_vars': {...}, 'win_opts': {...}, 'win_vars': 'win_config': {...}}}`</sub> | <sub> ```{'default':{'buf_opts': {'buftype':['prompt', 'terminal', 'popup']}, 'win_config': {'relative': 1}}}```</sub> | If the window is determined to be blocked, **Vimade** highlights will be removed and it will skip the styling process. See the block and linking section for more details (TODO link).
+| `link` | <sub>When set via **lua** or **python**, the top level named object can be a `function(win, active_win)=>bool`. Each nested object or value can also be a `function(relative_win_obj,active_win_obj)=>bool`.  `True` indicates linked, `False` not linked, `nil` indeterminate.</sub><br><br> | `nil` | Determines whether the current window should be linked and unhighlighted with the active window.  `groupdiff` and `groupscrollbind` tie into the default behavior of this object behind the scenes to unlink diffs.  See the block and linking section for more details (TODO link).
 | `groupdiff` | `0` `1` `bool` | `1` | highlights and unhighlights diff windows together.
 | `groupscrollbind` | `0` `1` `bool` | `0` | highlights and unhighlights scrolllbound windows together.
 | `checkinterval` | `int` | `100`-`500` | Time in milliseconds before re-checking windows. Default varies depending on **Neovim**, **terminals**, and **gui vim**.

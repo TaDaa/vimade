@@ -122,7 +122,7 @@ return M.Tint(TYPE.extend({
   if type(GLOBALS.tint) == 'function' then
     return GLOBALS.tint(style, state)
   elseif type(GLOBALS.tint) == 'table' then
-    return GLOBALS.tint
+    return TYPE.deep_copy(GLOBALS.tint)
   elseif GLOBALS.basebg then
     return {
       fg = {

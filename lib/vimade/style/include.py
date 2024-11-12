@@ -14,14 +14,14 @@ M.__init = __init
 M.include_names = {}
 M.include_id = 1
 # @param config = {
-#  'names': ['Folded', 'VertSplit', 'Normal', ...], # list of names that should be skipped on the style array
+#  'value': ['Folded', 'VertSplit', 'Normal', ...], # list of names that should be skipped on the style array
 #  'style': [Fade(0.4)] # style to run on all names that are include
 # }
 class Include():
   def __init__(self, **kwargs):
     _condition = kwargs.get('condition')
     _condition = _condition if _condition != None else CONDITION.INACTIVE
-    _names = kwargs.get('names', [])
+    _names = kwargs.get('value', [])
     self.tick = kwargs.get('tick')
     class __Include():
       def __init__(self, win, state):

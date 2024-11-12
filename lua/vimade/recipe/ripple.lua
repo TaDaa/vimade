@@ -82,7 +82,6 @@ local ripple_to_tint = function (style, state)
     m_dist = 1
   end
   if to then
-    to = TYPE.deep_copy(to)
     for i, color in pairs(to) do
       if color.rgb then
         if color.intensity == nil then
@@ -111,7 +110,6 @@ local animate_ripple = function (config)
         start = function (style, state)
           local start = TINT.Default().value()(style, state)
           if start then
-            start = TYPE.deep_copy(start)
             for i, color in pairs(start) do
               color.intensity = 0
             end

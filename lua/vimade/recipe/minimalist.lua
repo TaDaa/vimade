@@ -26,7 +26,7 @@ local animate_minimalist = function (config)
     }),
     Exclude({
       condition = config.condition,
-      names = config.exclude_names,
+      value = config.exclude_names,
       style = {
         FADE.Fade({
           value = ANIMATE.Number(TYPE.extend({}, animation, {
@@ -38,7 +38,7 @@ local animate_minimalist = function (config)
     }),
     Include({
       condition = config.condition,
-      names = config.no_visibility_names,
+      value = config.no_visibility_names,
       style = {
         FADE.Fade({
           value = ANIMATE.Number(TYPE.extend({}, animation, {
@@ -50,7 +50,7 @@ local animate_minimalist = function (config)
     }),
     Include({
       condition = config.condition,
-      names = config.low_visibility_names,
+      value = config.low_visibility_names,
       style = {
         FADE.Fade({
           value = ANIMATE.Number(TYPE.extend({}, animation, {
@@ -69,17 +69,17 @@ local minimalist = function (config)
     TINT.Default(config),
     Exclude({
       condition = config.condition,
-      names = config.exclude_names,
+      value = config.exclude_names,
       style = {FADE.Default()}
     }),
     Include({
       condition = config.condition,
-      names = config.no_visibility_names,
+      value = config.no_visibility_names,
       style = {FADE.Fade({value = 0})}
     }),
     Include({
       condition = config.condition,
-      names = config.low_visibility_names,
+      value = config.low_visibility_names,
       style = {FADE.Fade({value = config.low_visibility_fadelevel})}
     })
   }

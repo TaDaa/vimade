@@ -1,3 +1,8 @@
+let g:vimade_loaded = 1
+function! vimade#Load()
+  " empty hook to initiate loading
+endfunction
+
 function! vimade#Empty()
 endfunction
 

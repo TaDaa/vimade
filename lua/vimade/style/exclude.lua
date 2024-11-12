@@ -9,7 +9,7 @@ M.exclude_names = {}
 M.exclude_id = 1
 
 -- @param config = {
---  names= {'Folded', 'VertSplit', 'Normal', ...}, # list of names that should be skipped on the style array
+--  value= {'Folded', 'VertSplit', 'Normal', ...}, # list of names that should be skipped on the style array
 --  style = {Fade(0.4)} # styles to run on all names that aren't excluded
 --}
 M.Exclude = function(config)
@@ -17,7 +17,7 @@ M.Exclude = function(config)
   local _condition = config.condition or CONDITION.INACTIVE
   result.tick = config.tick
   result.attach = function (win)
-    local names = config.names
+    local names = config.value
     local condition = _condition
     local children = {}
     for i, s in ipairs(config.style) do

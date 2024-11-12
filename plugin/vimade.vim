@@ -9,9 +9,6 @@ if !exists('g:vimade')
 endif
 
 
-let g:vimade_plugin_current_directory = resolve(expand('<sfile>:p:h').'/../lib')
-
-
 ""Enables Vimade
 command! VimadeEnable call vimade#Enable()
 
@@ -88,13 +85,15 @@ command! VimadeOverrideEndOfBuffer call vimade#OverrideEndOfBuffer()
 "highlights that are distracting in faded windows.
 command! VimadeOverrideAll call vimade#OverrideAll()
 
-if (!exists('g:vimade_running') || g:vimade_running != 0)
-  if v:vim_did_enter 
-    call vimade#Empty()
+let g:vimade_plugin_current_directory = resolve(expand('<sfile>:p:h').'/../lib')
+
+if (!exists('g:vimade.lazy') || !g:vimade.lazy) && !exists('g::vimade_loaded')
+  if v:vim_did_enter
+    call vimade#Load()
   else
     augroup vimade
       au!
-      au VimEnter * call vimade#Empty()
+      au VimEnter * call vimade#Load()
     augroup END
   endif
 endif

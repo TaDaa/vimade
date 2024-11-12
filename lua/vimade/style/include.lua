@@ -10,7 +10,7 @@ M.include_names = {}
 M.include_id = 1
 
 -- @param config = {
---  names= {'Folded', 'VertSplit', 'Normal', ...}, # list of names that should be skipped on the style array
+--  value= {'Folded', 'VertSplit', 'Normal', ...}, # list of names that should be skipped on the style array
 --  style = {Fade(0.4)} # style to run on all names that aren included
 --}
 M.Include = function(config)
@@ -19,7 +19,7 @@ M.Include = function(config)
   result.tick = config.tick
   result.attach = function (win)
     local condition = _condition
-    local names = config.names
+    local names = config.value
     local children = {}
     for i, s in ipairs(config.style) do
       table.insert(children, s.attach(win))

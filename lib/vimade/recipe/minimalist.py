@@ -32,7 +32,7 @@ def animate_minimalist(config):
     ),
     Exclude(
       condition = condition,
-      names = config.get('exclude_names'),
+      value = config.get('exclude_names'),
       style = [
         FADE.Fade(
           value = ANIMATE.Number(**TYPE.extend({}, animation, {
@@ -44,7 +44,7 @@ def animate_minimalist(config):
     ),
     Include(
       condition = condition,
-      names = config.get('no_visibility_names'),
+      value = config.get('no_visibility_names'),
       style = [
         FADE.Fade(
           value = ANIMATE.Number(**TYPE.extend({}, animation, {
@@ -56,7 +56,7 @@ def animate_minimalist(config):
     ),
     Include(
       condition = condition,
-      names = config.get('low_visibility_names'),
+      value = config.get('low_visibility_names'),
       style = [
         FADE.Fade(
           value = ANIMATE.Number(**TYPE.extend({}, animation, {
@@ -74,17 +74,17 @@ def minimalist(config):
       TINT.Default(**config),
       Exclude(
         condition = condition,
-        names = config.get('exclude_names'),
+        value = config.get('exclude_names'),
         style = [FADE.Default()]
       ),
       Include(
         condition = condition,
-        names = config.get('no_visibility_names'),
+        value = config.get('no_visibility_names'),
         style = [FADE.Fade(value = 0)]
       ),
       Include(
         condition = condition,
-        names = config.get('low_visibility_names'),
+        value = config.get('low_visibility_names'),
         style = [FADE.Fade(value = config.get('low_visibility_fadelevel'))]
       ),
     ]

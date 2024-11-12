@@ -23,7 +23,7 @@ def _resolve_all_fn(obj, style, state):
 
 def _tint_or_basebg(tint):
   if type(tint) == dict:
-    return tint
+    return TYPE.deep_copy(tint)
   elif GLOBALS.basebg:
     return {
       'fg': {
