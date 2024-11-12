@@ -74,7 +74,7 @@ require('lazy').setup({spec = {'tadaa/vimade'}})
     python << EOF
       from vimade import vimade
       from vimade.recipe.minimalist import Minimalist
-      vimade.setup(**TYPE.extend(Minimalist(animate=True)))
+      vimade.setup(**Minimalist(animate=True))
     EOF
   endfunction
   au! User Vimade#PythonReady call SetupMyVimadeConfig()
