@@ -98,14 +98,6 @@ M.Include = function(config)
         if hl.link then
           hl.link = nil
         end
-        -- force include our bg if it hasn't been included since we are intending
-        -- to highlight these
-        if hl.bg == nil and to_hl.bg ~= nil then
-          hl.bg = to_hl.bg
-        end
-        if hl.ctermbg == nil and to_hl.ctermbg ~= nil then
-          hl.ctermbg = to_hl.ctermbg
-        end
         for i, s in ipairs(children) do
           s.modify(hl, to_hl)
         end

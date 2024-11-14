@@ -123,13 +123,6 @@ return M.Tint(TYPE.extend({
     return GLOBALS.tint(style, state)
   elseif type(GLOBALS.tint) == 'table' then
     return TYPE.deep_copy(GLOBALS.tint)
-  elseif GLOBALS.basebg then
-    return {
-      fg = {
-        rgb = COLOR_UTIL.toRgb(GLOBALS.basebg),
-        intensity = 0.5
-      }
-    }
   end
   return GLOBALS.tint
 end}, config))

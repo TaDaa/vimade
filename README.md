@@ -218,6 +218,47 @@ You now know the basics for configuring **Vimade**!
 
 </details>
 
+
+<details>
+
+<summary>
+<a><ins>Preparing a transparent terminal</ins></a>
+
+
+</summary>
+
+When using a transparent terminal, your *Normal* highlights are set `guibg=NONE` and **Vimade** won't know what the exact target colors.  In this scenario,
+**Vimade** will assume the target is `black` or `white` depending on background settings.
+For decent transparent color accuracy, you can set `basebg` to a good target value.  If you already know the color, you
+you can either manually calculate a reasonable value or perform the following steps if it is unknown:
+
+1. Prepare a pure `white` background (it must be exactly `#FFFFFF`).
+2. Place your terminal over the background
+3. Use a color picker tool and obtain the exact color value of your terminal.  This value is the color code that your terminal
+considers *transparent*.
+4. Set `fadebg` to whatever the color value is in your **Vimade** config. For example:
+ 
+    <sub>::vimscript::</sub>
+    ```vim
+    let g:vimade.basebg=[11,11,11]
+    ```
+    <sub>::lua::</sub>
+    ```vim
+    require('vimade').setup{basebg={11,11,11}}
+    ```
+    <sub>::python::</sub>
+    ```vim
+    from vimade import vimade
+    vimade.setup(basebg=[11,11,11])
+    ```
+
+<br>
+
+---
+
+</details>
+
+
 <details>
 <summary>
 <a><ins>Highlight by active buffers or windows</ins></a>
@@ -253,6 +294,18 @@ The code above adds additional darkness to the background of only the inactive b
 
 
 ![](http://tadaa.github.io/images/buffers_bg_tint.png)
+
+---
+</details>
+
+<details open>
+<summary>
+<a><ins>Tinting</ins></a>
+ 
+</summary>
+<br>
+
+Sorry, tutorial not ready yet! See config options for usage.
 
 ---
 </details>
@@ -630,7 +683,7 @@ vimade.setup(**Minimalist(animate = True))
 | `ncmode` | `'windows'` `'buffers'` | `'buffers'` | highlight or unhighlight `buffers` or `windows` together
 | `fadelevel` | `float [0-1]` `function(style,state)=>float` | `0.4` | The amount of fade opacity that should be applied to fg-text (`0` is invisible and `1` is no fading)
 | `tint` | <sub>When set via **lua** or **python**, each object or number can also be a function that returns the corresponding value component</sub><br><br><sub>`{'fg':{'rgb':[255,255,255], 'intensity':1, 'bg':{'rgb':[0,0,0], 'intensity':1}, 'sp':{'fg':[0,0,255], 'intensity':0.5}}}`</sub> | `nil` | The amount of tint that can be applied against each highlight component (fg, bg, sp). Intensity is a float value [0-1], where 1 is the most intense and 0 is not tinted.  See the tinting tutorial for more details (TODO link).
-| `basebg` | <sub> `'#FFFFFF'` `[255,255,255]` `0xFFFFFF` </sub> | `nil` | Setting this value automatically changes the `fg` **tint** in the config object above. It is named this way for legacy reasons, prefer using the **tint** object above.
+| `basebg` | <sub> `'#FFFFFF'` `[255,255,255]` `0xFFFFFF` </sub> | `nil` | This value manipulates the target background color. This is most useful for transparent windows, where the *Normal* bg is *NONE*.  Set this value to a good target value to improve fading accuracy.
 | `blocklist` | <sub>When set via **lua** or **python**, the top level named object can be a `function(win)=>bool`. Each nested object or value can also be a `function(relative_config)=>bool`.  `True` indicates blocked, `False` not linked, `nil` indeterminate.</sub><br><br><sub>`{[key:string]: {'buf_opts': {[key]:string: value}, 'buf_vars': {...}, 'win_opts': {...}, 'win_vars': 'win_config': {...}}}`</sub> | <sub> ```{'default':{'buf_opts': {'buftype':['prompt', 'terminal', 'popup']}, 'win_config': {'relative': 1}}}```</sub> | If the window is determined to be blocked, **Vimade** highlights will be removed and it will skip the styling process. See the block and linking section for more details (TODO link).
 | `link` | <sub>When set via **lua** or **python**, the top level named object can be a `function(win, active_win)=>bool`. Each nested object or value can also be a `function(relative_win_obj,active_win_obj)=>bool`.  `True` indicates linked, `False` not linked, `nil` indeterminate.</sub><br><br> | `nil` | Determines whether the current window should be linked and unhighlighted with the active window.  `groupdiff` and `groupscrollbind` tie into the default behavior of this object behind the scenes to unlink diffs.  See the block and linking section for more details (TODO link).
 | `groupdiff` | `0` `1` `bool` | `1` | highlights and unhighlights diff windows together.
@@ -640,6 +693,7 @@ vimade.setup(**Minimalist(animate = True))
 | `enablefocusfading` | `0` `1` `bool` | `0` | Highlight the active window on application focus and blur events.  This can be [desirable](desirable) when switching applications, but requires additional setup for terminal and tmux.  See enablefocusfading section for more details (TODO link)
 | `normalid` | `int` | nil | The id of the Normal highlight.  **Vimade** will automatically set this, so you don't need to worry about it. You can override it though if you just want to play around.
 | `normalncid` | `int` | nil | The id of the NormalNC highlight.  **Vimade** will automatically set this, so you don't need to worry about it. You can override it though if you just want to play around.
+| `lazy` | `1` `0` | nil | When set to `1` **Vimade** is disabled at startup. You will need to manually call `vimade#Load()`.  See lazy loading section for more details.
 
 
 ---

@@ -3,7 +3,9 @@ local NAMESPACE = require('vimade.state.namespace')
 local LINK = require('vimade.config_helpers.link')
 local BLOCKLIST = require('vimade.config_helpers.blocklist')
 local HIGHLIGHTER = require('vimade.highlighter')
+local COLOR_UTIL = require('vimade.util.color')
 local COMPAT = require('vimade.util.compat')
+local TYPE = require('vimade.util.type')
 local GLOBALS
 local FADER
 
@@ -195,6 +197,22 @@ M.refresh = function (wininfo, skip_link)
     nc = should_nc
   }, win, GLOBALS.CHANGED))
 
+  local basebg = GLOBALS.basebg
+  local basebg_key = ''
+  if type(basebg) == 'function' then
+    basebg = basebg(win, M.current)
+  end
+  if basebg then
+    basebg = COLOR_UTIL.to24b(basebg)
+    basebg_key = 'bg(' .. basebg .. ')'
+  end
+  if type(basebg) == 'number' then
+    win.basebg = basebg
+  else
+    win.basebg = nil
+  end
+
+
   local rerun_style = false
   if #win._global_style ~= #GLOBALS.style then
     rerun_style = true
@@ -221,6 +239,7 @@ M.refresh = function (wininfo, skip_link)
   else
     hi_key = 'nc:' .. hi_key
   end
+  hi_key = hi_key .. ':' .. basebg_key
 
   -- this is to separate out the logic for inactive vs active.  we can use this for highlighting
   -- the active ns in the future

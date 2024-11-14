@@ -1,4 +1,5 @@
 local M = {}
+local COLOR_UTIL = require('vimade.util.color')
 local TYPE = require('vimade.util.type')
 
 local GLOBALS
@@ -64,6 +65,7 @@ M.set_highlights = function(win)
   local default_sp = default_fg
   local default_ctermfg = GLOBALS.is_dark and 231 or 0
   local default_ctermbg = GLOBALS.is_dark and 0 or 231
+  local basebg = win.basebg or nil
   local highlights = win.ns.real.complete_highlights
   local normal_nc = TYPE.deep_copy(highlights.NormalNC or {})
   local normal = TYPE.deep_copy(highlights.Normal or {})
@@ -102,19 +104,20 @@ M.set_highlights = function(win)
     end
   end
 
-  local normal_fg = normal.fg or default_fg
   local normal_bg = normal.bg or default_bg
-  local normal_sp = normal.sp or default_sp
+  local normal_fg = normal.fg or default_fg
+  local normal_sp = normal.sp or normal.fg or default_sp
   local normal_ctermfg = normal.ctermfg or default_ctermfg
   local normal_ctermbg = normal.ctermbg or default_ctermbg
 
   local normal_target = {
     name = '',
     fg = normal_fg,
-    bg = normal_bg,
+    bg = basebg or normal_bg,
     sp = normal_sp,
     ctermfg = normal_ctermfg,
-    ctermbg = normal_ctermbg,
+    ctermbg = basebg and COLOR_UTIL.toRgb(basebg) or normal_ctermbg,
+    normal_bg = normal.bg
   }
 
   local style = win.style
@@ -128,8 +131,6 @@ M.set_highlights = function(win)
 
   -- default normal properties
   -- ensure that bg is unset for transparent backgrounds (cterm/guibg=NONE)
-  local reset_bg = normal.bg == nil
-  local reset_ctermbg = normal.ctermbg == nil
   normal.name = 'Normal'
   if normal.fg == nil then
     normal.fg = normal_fg
@@ -137,19 +138,10 @@ M.set_highlights = function(win)
   if normal.ctermfg == nil then
     normal.ctermfg = normal_ctermfg
   end
-  if normal.bg == nil then
-    normal.bg = normal_bg
-  end
   -- run normal styles
   local nt_copy = TYPE.deep_copy(normal_target)
   for i, s in ipairs(style) do
     s.modify(normal, nt_copy)
-    if reset_bg then
-      normal.bg = nil
-    end
-    if reset_ctermbg then
-      normal.ctermbg = nil
-    end
   end
   -- clear name
   normal.name = nil
@@ -222,12 +214,6 @@ M.set_highlights = function(win)
 
       for i, s in ipairs(style) do
         s.modify(hi, hi_target)
-        if reset_bg then
-          hi.bg = nil
-        end
-        if reset_ctermbg then
-          hi.ctermbg = nil
-        end
       end
 
       hi.name = nil

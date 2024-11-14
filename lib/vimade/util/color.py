@@ -26,15 +26,16 @@ def to24b(color, is256 = False):
   elif type(color) == str and color[0] == '#':
     color = '0x' + color[1:]
     return int(color, 16) or 0
-  else:
+  elif type(color) in (int, float):
     return int(color or 0)
+  return None
 
 def toRgb(color, is256 = False):
   r = 0
   g = 0
   b = 0
 
-  if type(color) == str and color[0] == '#':
+  if type(color) == str and len(color) > 0 and color[0] == '#':
     color = int('0x'+color[1:], 16) or 0
   if type(color) == int:
     if is256:

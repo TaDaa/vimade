@@ -21,16 +21,10 @@ def _resolve_all_fn(obj, style, state):
     return copy
   return obj
 
-def _tint_or_basebg(tint):
+def _tint_or_global(tint):
   if type(tint) == dict:
     return TYPE.deep_copy(tint)
-  elif GLOBALS.basebg:
-    return {
-      'fg': {
-        'rgb': COLOR_UTIL.toRgb(GLOBALS.basebg),
-        'intensity': 0.5
-      }
-    }
+  return GLOBALS.tint
 
 def _create_to_hl(tint):
   if not tint:
@@ -133,5 +127,5 @@ class Tint():
 def Default(**kwargs):
   return Tint(**TYPE.extend({
     'condition': CONDITION.INACTIVE,
-    'value': lambda style, state: GLOBALS.tint(style, state) if callable(GLOBALS.tint) else _tint_or_basebg(GLOBALS.tint),
+    'value': lambda style, state: GLOBALS.tint(style, state) if callable(GLOBALS.tint) else _tint_or_global(GLOBALS.tint),
   }, kwargs))

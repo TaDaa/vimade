@@ -9,6 +9,7 @@ from vimade.state import globals as GLOBALS
 from vimade.state import namespace as NAMESPACE
 from vimade.config_helpers import link as LINK
 from vimade.config_helpers import blocklist as BLOCKLIST
+from vimade.util import color as COLOR_UTIL
 from vimade.util import ipc as IPC
 from vimade.util.promise import Promise,all
 
@@ -264,7 +265,6 @@ class WinState(object):
     self.winnr = winnr = int(wininfo['winnr'])
     self.tabnr = tabnr = int(wininfo['tabnr'])
     self.bufnr = bufnr = int(wininfo['bufnr'])
-    self.basebg = GLOBALS.basebg
 
     is_active_win = GLOBALS.current['winid'] == self.winid
     is_active_buf = GLOBALS.current['bufnr'] == self.bufnr
@@ -453,6 +453,15 @@ class WinState(object):
       'nc': self.should_nc == True,
     }, self, GLOBALS.CHANGED)
 
+    basebg = GLOBALS.basebg
+    basebg_key = ''
+    if callable(basebg):
+      basebg = basebg(win, M.current)
+    if basebg:
+      basebg = COLOR_UTIL.to24b(basebg)
+      basebg_key = 'bg(' + str(basebg) + ')'
+    self.basebg = basebg if type(basebg) == int else None
+
     rerun_style = False
     style = self.style
     global_style = GLOBALS.style
@@ -493,7 +502,7 @@ class WinState(object):
     # calculated based on a number of window criteria such as fadelevel, tint
     # wincolor.
 
-    hi_key = '-'.join([str(x if x != None else 'N') for x in self.wincolorhl.values()]) + ':' + hi_key
+    hi_key = '-'.join([str(x if x != None else 'N') for x in self.wincolorhl.values()]) + ':' + hi_key + ':' + basebg_key
 
     # INVALIDATE matches to be readded, free highlights, and get new synID
     self.state |= _update_state({

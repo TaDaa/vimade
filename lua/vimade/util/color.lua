@@ -26,8 +26,8 @@ M.to24b = function(color, is256)
   elseif type(color) == 'string' and string.sub(color, 1, 1) == '#' then
     color = '0x' .. string.sub(color, 2, string.len(color))
     return tonumber(color) or 0
-  else
-    return tonumber(color) or 0
+  elseif type(color) == 'number' then
+    return color
   end
 end
 

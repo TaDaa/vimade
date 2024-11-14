@@ -254,6 +254,7 @@ def create_highlights(win, to_process, skip_transpose = False, name_override = N
   promise = Promise()
   def next(to_process):
     wincolorhl = win['wincolorhl']
+    basebg = win['basebg']
     normal_fg = wincolorhl['fg']
     normal_bg = wincolorhl['bg']
     normal_sp = wincolorhl['sp']
@@ -279,9 +280,9 @@ def create_highlights(win, to_process, skip_transpose = False, name_override = N
     target = {
       'name': '',
       'ctermfg': normal_ctermfg,
-      'ctermbg': normal_ctermbg,
+      'ctermbg': normal_ctermbg if basebg == None else COLOR_UTIL.toRgb(basebg),
       'fg': normal_fg,
-      'bg': normal_bg,
+      'bg': normal_bg if basebg == None else basebg,
       'sp': normal_sp }
 
     result = []
@@ -321,6 +322,10 @@ def create_highlights(win, to_process, skip_transpose = False, name_override = N
           'bg': base_hi['bg'],
           'sp': base_hi['sp'] }
       hi_target = TYPE.shallow_copy(target)
+      ### below logic prevents basebg from applying to VimadeWC (otherwise background is altered for Vim)
+      if hi_attrs['name'] == 'Normal':
+        hi_attrs['ctermbg'] = None
+        hi_attrs['bg'] = None
       for s in style:
         s.modify(hi_attrs, hi_target)
       cache_key = win['hi_key'] + ':' + base['base_key'] + ':' + str(hi_attrs['ctermfg']) + ',' + str(hi_attrs['ctermbg']) + ',' + str(hi_attrs['fg']) + ',' + str(hi_attrs['bg']) + ',' + str(hi_attrs['sp'])
