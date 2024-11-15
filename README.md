@@ -6,16 +6,17 @@
 ![](https://tadaa.github.io/images/minimalist_full.gif)
 
 ## What is this?
-This plugin was created to help keep your attention focused on the active buffer especially in scenarios where you might have many windows open at the same time.  
 
-Previously **Vimade** faded just the inactive buffers.  Vimade has now transitioned into a plugin that is fully customizable and you can highlight any window/buffer however you see fit.  The old "just fade/dim" functionality is a small subset of the new features!
+**Vimade** keeps your attention focused on the active part of the screen especially in scenarios where you might have many windows open!
+You can customize, highlight, fade, tint, and animate the colors in your windows and buffers.
+
 
 
 ## What is required?
 
-For Neovim 0.8.0+ nothing. This plugin supports a lua-only code path, you are all set!
+**Neovim 0.8.0+**: This plugin supports a lua-only code path, you are all set!
 
-Vim7.4+ and Neovim < 0.8.0 require Python or Python3 support. For older versions of Neovim, you will need to install `pynvim`.
+**Vim7.4+** and **Neovim < 0.8.0** require Python or Python3 support. In these older versions of Neovim, you will need to install `pynvim`.
 
 ## Features
 - [X] Fade or highlight windows or buffers.
@@ -76,19 +77,21 @@ require('lazy').setup({spec = {'tadaa/vimade'}})
     <ins>For Python users:</ins>
     
     
-  If you are using **vim** or older **neovim** and want to configure using **python**, you will need to bind your setup to `Vimade#PythonReady`. This ensures that **Vimade** has been added to the python path before your configuration runs. Here's an example that sets up the *Minimalist* recipe.
+  If you are using **vim** or older versions of **neovim** and want to configure using **python**, you need to bind your setup to `Vimade#PythonReady`.
+  This ensures that **Vimade** has been added to the python path before your configuration runs. Here's an example that sets up
+  the *Minimalist* recipe.
     
   </summary>
 
   ```vim
-  function! SetupMyVimadeConfig()
-    python << EOF
-      from vimade import vimade
-      from vimade.recipe.minimalist import Minimalist
-      vimade.setup(**Minimalist(animate=True))
-    EOF
-  endfunction
-  au! User Vimade#PythonReady call SetupMyVimadeConfig()
+function! SetupMyVimadeConfig()
+python << EOF
+from vimade import vimade
+from vimade.recipe.minimalist import Minimalist
+vimade.setup(**Minimalist(animate=True))
+EOF
+endfunction
+au! User Vimade#PythonReady call SetupMyVimadeConfig()
   ```
   </details>
   
@@ -103,14 +106,14 @@ require('lazy').setup({spec = {'tadaa/vimade'}})
 </summary>
 <br>
 
-- For **Lua/Neovim**, you can use **lazy.nvim** and your event of choice:
+- In **Neovim** 0.8.0+, you can just use **lazy.nvim** and the event of choice:
 
     *<sub>::lua::lazy::</sub>*
     ```lua
     require('lazy').setup({spec = {'tadaa/vimade', event = 'VeryLazy'}})
     ```
 
-- For full control and **Vim**, enable `vimade.lazy` and then call `vimade#Load()`.  Here's an example:
+- If you want more granular control or are using **Vim**, just enable `vimade.lazy` and then call `vimade#Load()`.  Here's an example:
 
   &nbsp;  *<sub>::vimscript::</sub>*
      ```vim
@@ -132,19 +135,20 @@ require('lazy').setup({spec = {'tadaa/vimade'}})
 </summary>
 <br>
 
-There are a number of ways to specify the configuration for **Vimade** . Most users will be interested in manipulating the fadelevel and/or tint.
-**Vimade** can be configured via vimscript if you prefer a general config that is compatibile with both Neovim and Vim.
-It can also be configured with Lua and Python if you prefer a specific config or want an advanced configuration that includes animations, recipes, or conditional functions.
+There are a number of options and ways to configure **Vimade**. Most users will only be interested in manipulating the fadelevel
+and tint. **Vimade** can be configured using vimscript if you prefer a general config that is compatibile with both Neovim and Vim.
+It can also be configured with Lua or Python specific configurations, which allow you to enable animations, recipes, and conditional
+functions.
 
-If you are configuring **Vimade** directly in your vimrc, add the following at the start:
+If you are configuring **Vimade** using vimscript in your vimrc, add the following:
 
 *<sub>::vimscript::</sub>*
 ```vim
 let g:vimade = {}
 ```
 
-The initialization above will ensure that you have a vimade object initialized regardless of where you need it.  **Vimade** will initialize its own if it doesn't find one.  This object is automatically extended with
-the default values, so don't worry about adding every option.
+The initialization above ensures that you have a vimade object initialized regardless of where you need it.  **Vimade** will initialize
+its own if it doesn't find one.  This object is automatically extended with the default values, so don't worry about adding every option.
 
 Now you can start customizing vimade:
 
@@ -153,7 +157,8 @@ Now you can start customizing vimade:
 let g:vimade.fadelevel = 0.5
 ```
 
-Simple right? the above code changes the opacity.  You can choose any value between **0 and 1**.  You can change any option at any time and **Vimade** will automatically react to those changes.
+Simple right? the above code changes the opacity.  You can choose any value between **0 and 1**.  You can change any option at any time
+and **Vimade** will automatically react to those changes.
 
 Let's add a blue tint:
 
@@ -164,9 +169,11 @@ let g:vimade.tint = {'fg':{'rgb':[0,0,255], 'intensity': 0.5}}
 ```
 
 
-You should notice that your text color has changed.  By default **tint** is applied before **fade**, but don't worry you can change that but that's going to be in a later section (**styles not documented yet**).
+You should notice that your text color has changed. The *tint* option lets manipulate `fg`, `bg`, and `sp` attributes. Changing `vimade.tint.bg`
+lets you customize the background color of windows as well.
 
-Let's make the above example a bit more complicated, suppose we have a filetree that we don't want to dim as extremely as our other windows.
+
+Let's try something a bit more complicated, suppose we have a filetree that we don't want to dim as extremely as our other windows.
 You may remember that I said we need to configure functions directly in **python** or **lua**, so let's take a look:
 
 
@@ -227,16 +234,16 @@ You now know the basics for configuring **Vimade**!
 
 </summary>
 
-When using a transparent terminal, your *Normal* highlights are set `guibg=NONE` and **Vimade** won't know what the exact target colors.  In this scenario,
-**Vimade** will assume the target is `black` or `white` depending on background settings.
-For decent transparent color accuracy, you can set `basebg` to a good target value.  If you already know the color, you
-you can either manually calculate a reasonable value or perform the following steps if it is unknown:
+When using a transparent terminal, your *Normal* background highlights are set to `guibg=NONE`  and the exact target colors are unknown.
+In this scenario, **Vimade** by default assumes that the target color is either `black` or `white` depending on background settings.
+For better color accuracy with transparent terminals, you can set `basebg` to a good target value.  If you aren't sure what the background
+to use, you can perform the following steps:
 
 1. Prepare a pure `white` background (it must be exactly `#FFFFFF`).
 2. Place your terminal over the background
 3. Use a color picker tool and obtain the exact color value of your terminal.  This value is the color code that your terminal
 considers *transparent*.
-4. Set `fadebg` to whatever the color value is in your **Vimade** config. For example:
+4. Set `basebg` to whatever the color value is in your **Vimade** config. For example:
  
     <sub>::vimscript::</sub>
     ```vim
@@ -261,15 +268,13 @@ considers *transparent*.
 
 <details>
 <summary>
-<a><ins>Highlight by active buffers or windows</ins></a>
+<a><ins>Buffers or windows</ins></a>
  
 </summary>
 <br>
-<b>Vimade</b> fades buffers by default. This is the primary and legacy behavior of this plugin. Some users may prefer fading by windows, toggling between windows and buffers, or creating their own conditions for determining when to fade or
-highlight a buffer. These are all possible.
 
-Most users should try each options below to see what they like best. For most, there are inherit benefits to fading based on buffers as its easier to see which windows
-are impacted by your edits or which windows you can cleanup.
+The primary and legacy behavior of **Vimade** is to fade and tint inactive buffers.  You can also enable window fading if you prefer!
+
 
 *<sub>::vimscript::</sub>*
   ```vim
@@ -279,33 +284,76 @@ are impacted by your edits or which windows you can cleanup.
   ```vim
   let g:vimade.ncmode = 'windows'
   ```
-  
-Many users will already be familiar with the builtin **Neovim** highlight: *NormalNC*, which lets you change the *Normal* highlight on inactive windows.
-But what if you want to change the background color for inactive buffers, not just windows?  Well, you are in luck, **Vimade** can do this too
-(and yes for **Vim** as well)!
-
-<sub>::vimscript::</sub>
-``` vimscript
-let g:vimade.ncmode = 'buffers'
-let g:vimade.tint = {'bg': {'rgb': [0,0,0], 'intensity': 0.3}}
-```
-
-The code above adds additional darkness to the background of only the inactive buffers. See the image below for the result:
 
 
-![](http://tadaa.github.io/images/buffers_bg_tint.png)
+Most users should try each option to see what they like best. For most, there are inherit benefits to fading based on buffers
+as its easier to see which windows are impacted by your edits or which windows you can cleanup.
+
 
 ---
 </details>
 
-<details open>
+<details>
 <summary>
 <a><ins>Tinting</ins></a>
  
 </summary>
 <br>
 
-Sorry, tutorial not ready yet! See config options for usage.
+There are lots of ways that you can configure tinting.  Tinting influences the color of `fg`, `bg`, and `sp` for every highlight group.
+Every option allows you specify `intensity`, which determines how much color to add.
+
+Changing the `fg` alters the text color. Let's give our inactive windows some yoda spunk:
+
+*<sub>::vimscript::</sub>*
+```vim
+let g:vimade.tint = {'fg':{'rgb':[0,255,0], 'intensity': 0.3}}
+```
+
+![](http://tadaa.github.io/images/tint_section_fg_green.png)
+
+The more that you raise the intensity, the closer each highlight will be the specified `rgb` value.  So let's say you want to disable
+`syntax` highlighting on inactive windows, all you need to do is set the `intensity` to the value `1`.
+
+
+*<sub>::vimscript::</sub>*
+```vim
+let g:vimade.tint = {'fg':{'rgb':[200,200,200], 'intensity': 1}}
+```
+
+![](http://tadaa.github.io/images/tint_section_fg_full_intensity.png)
+
+
+`bg` directly impacts the window background color. It also indirectly impacts the `fg` color if you have fading enabled because
+fades are performed against the background color.
+
+*<sub>::vimscript::</sub>*
+```vim
+let g:vimade.tint = {'bg':{'rgb':[0,0,0], 'intensity': 0.15}}
+```
+
+![](http://tadaa.github.io/images/tint_section_bg_black.png)
+
+ `bg` and all `tint` attributes have different effects depending on the value of `vimade.ncmode`.  When using `let g:vimade.ncmode='buffers'`,
+ tints only impact inactive *buffers*.  When using `let g:vimade.ncmode='windows'` they affect windows, see the screenshots below for a
+ comparison that also combines our changes above.
+ 
+<sub>::vimscript::</sub>
+``` vimscript
+let g:vimade.ncmode = 'buffers'
+let g:vimade.tint = {'fg':{'rgb':[0,255,0], 'intensity': 0.3},'bg': {'rgb': [0,0,0], 'intensity': 0.15}}
+```
+
+![](http://tadaa.github.io/images/tint_section_combined_buffers.png)
+
+<sub>::vimscript::</sub>
+``` vimscript
+let g:vimade.ncmode = 'windows'
+let g:vimade.tint = {'fg':{'rgb':[0,0,255], 'intensity': 0.3},'bg': {'rgb': [12,12,22], 'intensity': 0.2}}
+```
+
+![](http://tadaa.github.io/images/tint_section_combined_windows.png)
+
 
 ---
 </details>
@@ -330,12 +378,10 @@ Sorry, tutorial not ready yet! See config options for usage.
 
 <br>
 
-**Styles** are the core functionality of **Vimade**.  Each **style** decides how to manipulate the highlighting process based on their own input.
-**Styles** can be combined, nested, or transpose other styles, it's up to the user to decide how they should be used together
-(and what order they should be in)!
-
-
-There are 4 core **styles**
+**Styles** are the core functions that drive **Vimade**.  Each **style** decides how to manipulate the highlights based on their own input.
+**Styles** can be combined, nested, or transpose each other, the process itself is configurable and its up to you to decide how to use
+them. This section is intended for advanced customizations or users who want to build their own recipes. You are also more than welcome to
+build your own style and add it into **Vimade**.
 
   <details>
   <summary>
@@ -500,9 +546,18 @@ There are 4 core **styles**
   | `tick` | `function()=>void` | `nil` |  A function that is run once per frame. Useful if you need to do expensive pre-computation that shouldn't occur once per-window.
 
   </details>
+  
+  <details open>
+  <summary>
+  <ins>Combining styles</ins>
+  
+  This section is not ready yet!
+  </summary>
+  </details>
 
 ---
 </details>
+
 
 <details>
 <summary>
@@ -511,13 +566,13 @@ There are 4 core **styles**
 
 <br>
 
-**Vimade** supports animations through value functions.
 The section below will look at using a custom animation value within a **style**, so please read the **style** section before proceeding!
 
 
-Animations are functions that mutate values over time.  **Vimade** includes a number of
-helpers that alter the interpolation process. 
- Animations can only be added using **lua** or **python**. 
+Animations are functions that mutate values over time.  **Vimade** includes a number of helpers that alter the interpolation process. 
+
+> [!NOTE]
+> Animations can only be added using **lua** or **python**. 
 
  Let's look at an example:
 
