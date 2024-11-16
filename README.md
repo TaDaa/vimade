@@ -123,7 +123,7 @@ buffers.
 
 <details>
 <summary>
-<a><ins>Basic tutorial</ins></a>
+<a><ins>Configuring Vimade (a basic guide)</ins></a>
  
 </summary>
 <br>
@@ -219,6 +219,185 @@ You now know the basics for configuring **Vimade**!
 
 </details>
 
+</details>
+
+
+<details open>
+<summary>
+<a><ins><b>Full list of options and default values</b></ins></a>
+ 
+</summary>
+
+
+<details>
+<summary><ins>Vimscript</ins></summary>
+
+<sub>::vimscript::</sub>
+```vim
+let g:vimade = {
+\   " common options below
+\   'renderer': 'auto',
+\   'ncmode': 'buffers',
+\   'fadelevel': 0.4,
+\   'tint': '',
+\   'basebg': '',
+\   'blocklist': {
+\     'default': {
+\       'buf_opts': {
+\         'buftype': lua ? ['prompt', 'terminal'] : ['popup', 'prompt']
+\       },
+\       'win_config':{
+\         'relative': v:true
+\       },
+\     }
+\   },
+\   'link': {},
+\   'groupdiff': 1,
+\   'groupscrollbind': 0,
+\   'checkinterval': g:vimade_features.has_gui_running && !(g:vimade_features.has_nvim) ? 100 : 500,
+\   'usecursorhold': g:vimade_features.has_gui_running && !g:vimade_features.has_nvim && g:vimade_features.has_gui_version,
+\   'enablefocusfading': 0,
+\   'normalid': '',
+\   'normalncid': '',
+\   'lazy': 0,
+\   " python-only options below
+\   'basegroups': ['Folded', 'Search', 'SignColumn', 'CursorLine', 'CursorLineNr', 'DiffAdd', 'DiffChange', 'DiffDelete', 'DiffText', 'FoldColumn', 'Whitespace', 'NonText', 'SpecialKey', 'Conceal', 'EndOfBuffer', 'WinSeparator', 'LineNr', 'LineNrAbove', 'LineNrBelow'],
+\   'enablebasegroups': 1,
+\   'enablesigns': 1,
+\   'signsid': 13100,
+\   'signsretentionperiod': 4000,
+\   'signspriority': 31,
+\   'fademinimap': 1,
+\   'fadepriority': 10,
+\   'disablebatch': 0,
+\   " lua only options below
+\   'nohlcheck': 1,
+\ }
+```
+</details>
+
+<details>
+<summary><ins>Lua</ins></summary>
+
+<sub>::lua::</sub>
+```lua
+vimade.setup{
+  style = require(vimade.style.default).Default().style,
+  ncmode = 'buffers',
+  fadelevel = 0.4,
+  tint = {},
+  basebg = '',
+  blocklist = {
+    buf_opts = { buftype = ['prompt', 'terminal'] },
+    win_config { relative = true },
+  },
+  link = {},
+  groupdiff = 1,
+  groupscrollbind = 0,
+  enablefocusfading = 0,
+  normalid = '',
+  normalncid = '',
+  nohlcheck = 1,
+}
+```
+
+</details>
+
+<details>
+<summary><ins>Python</ins></summary>
+
+<sub>::python::</sub>
+```python
+from vimade import vimade
+from vimade.recipe.default import Default
+vimade.setup(
+  style = Default()['style'],
+  ncmode = 'buffers',
+  fadelevel = 0.4,
+  tint = None,
+  basebg = '',
+  blocklist = {
+    'buf_opts': { 'buftype': ['popup', 'prompt'] },
+    'win_config': { 'relative': True },
+  },
+  link = {},
+  groupdiff = 1,
+  groupscrollind = 0
+  enablefocusfading = 0
+  normalid = '',
+  normalncid = '',
+  basegroups = ['Folded', 'Search', 'SignColumn', 'CursorLine', 'CursorLineNr', 'DiffAdd', 'DiffChange', 'DiffDelete', 'DiffText', 'FoldColumn', 'Whitespace', 'NonText', 'SpecialKey', 'Conceal', 'EndOfBuffer', 'WinSeparator', 'LineNr', 'LineNrAbove', 'LineNrBelow'],
+  enablebasegroups = 1,
+  enablesigns = 1,
+  signsid = 13100,
+  signsretentionperiod = 4000,
+  signspriority = 31,
+  fademinimap = 1,
+  fadepriority = 10,
+  disablebatch = 0,
+)
+```
+
+</details>
+
+<details>
+<summary>
+<ins>Option docs & descriptions</ins>
+ 
+</summary>
+<br>
+
+**Options for Lua, Python, and Vimscript**
+
+
+| option | values/type | default | description |
+| -      | -           | -       | -           |
+| `renderer` | `'auto'` `'python'` `'lua'` <br> | `'auto'` | `auto` automatically assigns **vim** users to **python** and detects if **neovim**  users have the requires features for **lua**.  For **neovim** users on **lua** mode, the **python** logic is never run. **Neovim** users with missing features will be set to **python** and need **pynvim** installed.
+| `ncmode` | `'windows'` `'buffers'` | `'buffers'` | highlight or unhighlight `buffers` or `windows` together
+| `fadelevel` | `float [0-1]` `function(style,state)=>float` | `0.4` | The amount of fade opacity that should be applied to fg-text (`0` is invisible and `1` is no fading)
+| `tint` | <sub>When set via **lua** or **python**, each object or number can also be a function that returns the corresponding value component</sub><br><br><sub>`{'fg':{'rgb':[255,255,255], 'intensity':1, 'bg':{'rgb':[0,0,0], 'intensity':1}, 'sp':{'fg':[0,0,255], 'intensity':0.5}}}`</sub> | `nil` | The amount of tint that can be applied against each highlight component (fg, bg, sp). Intensity is a float value [0-1], where 1 is the most intense and 0 is not tinted.  See the tinting tutorial for more details.
+| `basebg` | <sub> `'#FFFFFF'` `[255,255,255]` `0xFFFFFF` </sub> | `nil` | This value manipulates the target background color. This is most useful for transparent windows, where the *Normal* bg is *NONE*.  Set this value to a good target value to improve fading accuracy.
+| `blocklist` | <sub>When set via **lua** or **python**, the top level named object can be a `function(win)=>bool`. Each nested object or value can also be a `function(relative_config)=>bool`.  `True` indicates blocked, `False` not linked, `nil` indeterminate.</sub><br><br><sub>`{[key:string]: {'buf_opts': {[key]:string: value}, 'buf_vars': {...}, 'win_opts': {...}, 'win_vars': 'win_config': {...}}}`</sub> | <sub> ```{'default':{'buf_opts': {'buftype':['prompt', 'terminal', 'popup']}, 'win_config': {'relative': 1}}}```</sub> | If the window is determined to be blocked, **Vimade** highlights will be removed and it will skip the styling process. See the block and linking section for more details.
+| `link` | <sub>When set via **lua** or **python**, the top level named object can be a `function(win, active_win)=>bool`. Each nested object or value can also be a `function(relative_win_obj,active_win_obj)=>bool`.  `True` indicates linked, `False` not linked, `nil` indeterminate.</sub><br><br> | `nil` | Determines whether the current window should be linked and unhighlighted with the active window.  `groupdiff` and `groupscrollbind` tie into the default behavior of this object behind the scenes to unlink diffs.  See the block and linking section for more details.
+| `groupdiff` | `0` `1` `bool` | `1` | highlights and unhighlights diff windows together.
+| `groupscrollbind` | `0` `1` `bool` | `0` | highlights and unhighlights scrolllbound windows together.
+| `checkinterval` | `int` | `100`-`500` | Time in milliseconds before re-checking windows. Default varies depending on **Neovim**, **terminals**, and **gui vim**.
+| `usecursorhold` | `0` `1` `bool` | `0` | Whether to use cursorhold events instead of async timer. Setting this option **disables the timer**. This option defaults to `0` for most editor versions.  **gvim** defaults to `1` due to async timers breaking visual selections.  If you use this value, remember to set `:set updatetime` appropriately.
+| `enablefocusfading` | `0` `1` `bool` | `0` | Highlight the active window on application focus and blur events.  This can be [desirable](desirable) when switching applications, but requires additional setup for terminal and tmux.  See enablefocusfading section for more details (TODO link)
+| `normalid` | `int` | nil | The id of the Normal highlight.  **Vimade** will automatically set this, so you don't need to worry about it. You can override it though if you just want to play around.
+| `normalncid` | `int` | nil | The id of the NormalNC highlight.  **Vimade** will automatically set this, so you don't need to worry about it. You can override it though if you just want to play around.
+| `lazy` | `1` `0` | nil | When set to `1` **Vimade** is disabled at startup. You will need to manually call `vimade#Load()`.  See lazy loading section for more details.
+
+
+**Options only for Lua**
+
+| option      | values/type | default | description                                                                                                                                                                                                                                                                                                                                         |
+| -           | -           | -       | -                                                                                                                                                                                                                                                                                                                                                   |
+| `nohlcheck` | `bool`      | `true`  | When set to `false`, **Vimade** will recompute namespaces each frame.  This is useful if you have a plugin that dynamically changes highlights periodically.  When to `true` **Vimade** only recomputes namespaces when you switch between buffers/windows.  Performance isn't an issue either way as the recomputation process is sub-millisecond. |
+
+
+**Options only for python**
+ 
+
+| option        | values/type    | default | description                                                                                                                                                                                                                                                                                                                                         |
+| -             | -              | -       | -                                                                                                                                                                                                                                                                                                                                                   |
+| `enablesigns`   | `0` `1` `bool`       | `True`    | Whether or not to fade signs.  For **python** this has to be performed per-buffer.  If you want per-window signs, you will need to link your sign highlights to **Normal**.
+| `signsid`       | `int`            | `13100`   | The id that should be used to generate sign.  This is required to avoid collisions with other plugins.
+| `signsretentionperiod` | `int`     | `4000`    | The amount of time after a window becomes inactive to check for sign updates.  Many plugins asynchronously update the buffer after switching windows, this helps ensure signs stay faded.
+| `fademinimap`   | `0` `1` `bool`       | `1`       | Enables a special fade effect for `severin-lemaignan/vim-minimap`.  Setting vimade.fademinimap to 0 disables the special fade.
+| `matchpriority` | `int`            | `10`      | Controls the highlighting priority.  You may want to tweak this value to make Vimade play nicely with other highlighting plugins and behaviors.  For example, if you want hlsearch to show results on all buffers, you may want to lower this value to 0.
+| `linkwincolor`  | `string[]`       | `[]`      | **Vim only** option when **wincolor** is supported. List of highlights that will be linked to `Normal`. `Normal` is highlighted using `setlocal wincolor`, which gives **Vim** some flexibility to target highlight groups (see minimalist recipe).
+| `disablebatch`  | `0` `1` `bool`       | `0`       | Disables IPC batching. Enabling this will greatly reduce performance, but allow you debug issues.
+| `enablebasegroups` | `0` `1` `bool`    | `true`    | Only old **Neovim**. Allows winlocal winhl for the basegroups listed below.
+| `basegroups`    | `string[]`       | <sub>**every built-in highlight**</sub>  | Only old **Neovim**. Fades the listed highlights in addition to the buffer text.
+| `enabletreesitter` | `0` `1` `bool`    | `0`       | Only old **Neovim**. Uses treesitter to directly query highlight groups instead of relying on `synID`.
+
+</details>
+  
+---
+
+</details>
+
 
 <details>
 
@@ -228,15 +407,14 @@ You now know the basics for configuring **Vimade**!
 </summary>
 
 <br>
-When using a transparent terminal, your *Normal* background highlights are set to `guibg=NONE`  and the exact target colors are unknown.
-In this scenario, **Vimade** by default assumes that the target color is either `black` or `white` depending on background settings.
-For better color accuracy with transparent terminals, you can set `basebg` to a good target value.  If you aren't sure what the background
-to use, you can perform the following steps:
+
+When using a transparent terminal, your *Normal* highlight is set to `NONE`.  Plugins like **Vimade** don't know the real
+color. **Vimade** will assume that your background is either `black` or `white` depending on the value of `echo &background`.
+For better color accuracy:
 
 1. Prepare a pure `white` background (it must be exactly `#FFFFFF`).
 2. Place your terminal over the background
-3. Use a color picker tool and obtain the exact color value of your terminal.  This value is the color code that your terminal
-considers *transparent*.
+3. Use a color picker tool to obtain the exact color value.  This value is typically a good starting point.
 4. Set `basebg` to whatever the color value is in your **Vimade** config. For example:
  
     <sub>::vimscript::</sub>
@@ -252,6 +430,7 @@ considers *transparent*.
     from vimade import vimade
     vimade.setup(basebg=[11,11,11])
     ```
+5. Repeat step 4, but darken `basebg` until you find a value that suits your preferences.
 
 <br>
 
@@ -881,191 +1060,6 @@ vimade.setup(**Minimalist(animate = True))
 | `VimadeFadePriority [0+]` |  Sets the FadePriority config and forces an immediate redraw.
 
   
----
-</details>
-
-<details>
-<summary>
-<a><ins>Configuration options for <b>lua</b>, <b>python</b>, and <b>vimscript</b></ins></a>
- 
-</summary>
-<br>
-
-| option | values/type | default | description |
-| -      | -           | -       | -           |
-| `renderer` | `'auto'` `'python'` `'lua'` <br> | `'auto'` | `auto` automatically assigns **vim** users to **python** and detects if **neovim**  users have the requires features for **lua**.  For **neovim** users on **lua** mode, the **python** logic is never run. **Neovim** users with missing features will be set to **python** and need **pynvim** installed.
-| `ncmode` | `'windows'` `'buffers'` | `'buffers'` | highlight or unhighlight `buffers` or `windows` together
-| `fadelevel` | `float [0-1]` `function(style,state)=>float` | `0.4` | The amount of fade opacity that should be applied to fg-text (`0` is invisible and `1` is no fading)
-| `tint` | <sub>When set via **lua** or **python**, each object or number can also be a function that returns the corresponding value component</sub><br><br><sub>`{'fg':{'rgb':[255,255,255], 'intensity':1, 'bg':{'rgb':[0,0,0], 'intensity':1}, 'sp':{'fg':[0,0,255], 'intensity':0.5}}}`</sub> | `nil` | The amount of tint that can be applied against each highlight component (fg, bg, sp). Intensity is a float value [0-1], where 1 is the most intense and 0 is not tinted.  See the tinting tutorial for more details (TODO link).
-| `basebg` | <sub> `'#FFFFFF'` `[255,255,255]` `0xFFFFFF` </sub> | `nil` | This value manipulates the target background color. This is most useful for transparent windows, where the *Normal* bg is *NONE*.  Set this value to a good target value to improve fading accuracy.
-| `blocklist` | <sub>When set via **lua** or **python**, the top level named object can be a `function(win)=>bool`. Each nested object or value can also be a `function(relative_config)=>bool`.  `True` indicates blocked, `False` not linked, `nil` indeterminate.</sub><br><br><sub>`{[key:string]: {'buf_opts': {[key]:string: value}, 'buf_vars': {...}, 'win_opts': {...}, 'win_vars': 'win_config': {...}}}`</sub> | <sub> ```{'default':{'buf_opts': {'buftype':['prompt', 'terminal', 'popup']}, 'win_config': {'relative': 1}}}```</sub> | If the window is determined to be blocked, **Vimade** highlights will be removed and it will skip the styling process. See the block and linking section for more details (TODO link).
-| `link` | <sub>When set via **lua** or **python**, the top level named object can be a `function(win, active_win)=>bool`. Each nested object or value can also be a `function(relative_win_obj,active_win_obj)=>bool`.  `True` indicates linked, `False` not linked, `nil` indeterminate.</sub><br><br> | `nil` | Determines whether the current window should be linked and unhighlighted with the active window.  `groupdiff` and `groupscrollbind` tie into the default behavior of this object behind the scenes to unlink diffs.  See the block and linking section for more details (TODO link).
-| `groupdiff` | `0` `1` `bool` | `1` | highlights and unhighlights diff windows together.
-| `groupscrollbind` | `0` `1` `bool` | `0` | highlights and unhighlights scrolllbound windows together.
-| `checkinterval` | `int` | `100`-`500` | Time in milliseconds before re-checking windows. Default varies depending on **Neovim**, **terminals**, and **gui vim**.
-| `usecursorhold` | `0` `1` `bool` | `0` | Whether to use cursorhold events instead of async timer. Setting this option **disables the timer**. This option defaults to `0` for most editor versions.  **gvim** defaults to `1` due to async timers breaking visual selections.  If you use this value, remember to set `:set updatetime` appropriately.
-| `enablefocusfading` | `0` `1` `bool` | `0` | Highlight the active window on application focus and blur events.  This can be [desirable](desirable) when switching applications, but requires additional setup for terminal and tmux.  See enablefocusfading section for more details (TODO link)
-| `normalid` | `int` | nil | The id of the Normal highlight.  **Vimade** will automatically set this, so you don't need to worry about it. You can override it though if you just want to play around.
-| `normalncid` | `int` | nil | The id of the NormalNC highlight.  **Vimade** will automatically set this, so you don't need to worry about it. You can override it though if you just want to play around.
-| `lazy` | `1` `0` | nil | When set to `1` **Vimade** is disabled at startup. You will need to manually call `vimade#Load()`.  See lazy loading section for more details.
-
-
----
-</details>
-
-<details>
-<summary>
-<a><ins>Configuration options only for <b>lua</b></ins></a>
- 
-</summary>
-<br>
-
-| option      | values/type | default | description                                                                                                                                                                                                                                                                                                                                         |
-| -           | -           | -       | -                                                                                                                                                                                                                                                                                                                                                   |
-| `nohlcheck` | `bool`      | `true`  | When set to `false`, **Vimade** will recompute namespaces each frame.  This is useful if you have a plugin that dynamically changes highlights periodically.  When to `true` **Vimade** only recomputes namespaces when you switch between buffers/windows.  Performance isn't an issue either way as the recomputation process is sub-millisecond. |
-
-  
----
-</details>
-
-<details>
-<summary>
-<a><ins>Configuration options only for <b>python</b></ins></a>
- 
-</summary>
-<br>
-
-| option        | values/type    | default | description                                                                                                                                                                                                                                                                                                                                         |
-| -             | -              | -       | -                                                                                                                                                                                                                                                                                                                                                   |
-| `enablesigns`   | `0` `1` `bool`       | `True`    | Whether or not to fade signs.  For **python** this has to be performed per-buffer.  If you want per-window signs, you will need to link your sign highlights to **Normal**.
-| `signsid`       | `int`            | `13100`   | The id that should be used to generate sign.  This is required to avoid collisions with other plugins.
-| `signsretentionperiod` | `int`     | `4000`    | The amount of time after a window becomes inactive to check for sign updates.  Many plugins asynchronously update the buffer after switching windows, this helps ensure signs stay faded.
-| `fademinimap`   | `0` `1` `bool`       | `1`       | Enables a special fade effect for `severin-lemaignan/vim-minimap`.  Setting vimade.fademinimap to 0 disables the special fade.
-| `matchpriority` | `int`            | `10`      | Controls the highlighting priority.  You may want to tweak this value to make Vimade play nicely with other highlighting plugins and behaviors.  For example, if you want hlsearch to show results on all buffers, you may want to lower this value to 0.
-| `linkwincolor`  | `string[]`       | `[]`      | **Vim only** option when **wincolor** is supported. List of highlights that will be linked to `Normal`. `Normal` is highlighted using `setlocal wincolor`, which gives **Vim** some flexibility to target highlight groups (see minimalist recipe).
-| `disablebatch`  | `0` `1` `bool`       | `0`       | Disables IPC batching. Enabling this will greatly reduce performance, but allow you debug issues.
-| `enablebasegroups` | `0` `1` `bool`    | `true`    | Only old **Neovim**. Allows winlocal winhl for the basegroups listed below.
-| `basegroups`    | `string[]`       | <sub>**every built-in highlight**</sub>  | Only old **Neovim**. Fades the listed highlights in addition to the buffer text.
-| `enabletreesitter` | `0` `1` `bool`    | `0`       | Only old **Neovim**. Uses treesitter to directly query highlight groups instead of relying on `synID`.
-
-  
----
-</details>
-
-
-<details>
-
-<summary>
-<a><ins>Default configuration</ins></a>
-</summary>
-
-<br>
-<br>
-
-**Vimade** can be initialized through *vimscript*, *lua*, or *python*. Each equivalent configuration is found below:
-<br>
-
-<sub>::vimscript::</sub>
-```vim
-let g:vimade = {
-\   " common options below
-\   'renderer': 'auto',
-\   'ncmode': 'buffers',
-\   'fadelevel': 0.4,
-\   'tint': '',
-\   'basebg': '',
-\   'blocklist': {
-\     'default': {
-\       'buf_opts': {
-\         'buftype': lua ? ['prompt', 'terminal'] : ['popup', 'prompt']
-\       },
-\       'win_config':{
-\         'relative': v:true
-\       },
-\     }
-\   },
-\   'link': {},
-\   'groupdiff': 1,
-\   'groupscrollbind': 0,
-\   'checkinterval': g:vimade_features.has_gui_running && !(g:vimade_features.has_nvim) ? 100 : 500,
-\   'usecursorhold': g:vimade_features.has_gui_running && !g:vimade_features.has_nvim && g:vimade_features.has_gui_version,
-\   'enablefocusfading': 0,
-\   'normalid': '',
-\   'normalncid': '',
-\   'lazy': 0,
-\   " python-only options below
-\   'basegroups': ['Folded', 'Search', 'SignColumn', 'CursorLine', 'CursorLineNr', 'DiffAdd', 'DiffChange', 'DiffDelete', 'DiffText', 'FoldColumn', 'Whitespace', 'NonText', 'SpecialKey', 'Conceal', 'EndOfBuffer', 'WinSeparator', 'LineNr', 'LineNrAbove', 'LineNrBelow'],
-\   'enablebasegroups': 1,
-\   'enablesigns': 1,
-\   'signsid': 13100,
-\   'signsretentionperiod': 4000,
-\   'signspriority': 31,
-\   'fademinimap': 1,
-\   'fadepriority': 10,
-\   'disablebatch': 0,
-\   " lua only options below
-\   'nohlcheck': 1,
-\ }
-```
-
-
-<sub>::lua::</sub>
-```lua
-vimade.setup{
-  style = require(vimade.style.default).Default().style,
-  ncmode = 'buffers',
-  fadelevel = 0.4,
-  tint = {},
-  basebg = '',
-  blocklist = {
-    buf_opts = { buftype = ['prompt', 'terminal'] },
-    win_config { relative = true },
-  },
-  link = {},
-  groupdiff = 1,
-  groupscrollbind = 0,
-  enablefocusfading = 0,
-  normalid = '',
-  normalncid = '',
-  nohlcheck = 1,
-}
-```
-
-<sub>::python::</sub>
-```python
-from vimade import vimade
-from vimade.recipe.default import Default
-vimade.setup(
-  style = Default()['style'],
-  ncmode = 'buffers',
-  fadelevel = 0.4,
-  tint = None,
-  basebg = '',
-  blocklist = {
-    'buf_opts': { 'buftype': ['popup', 'prompt'] },
-    'win_config': { 'relative': True },
-  },
-  link = {},
-  groupdiff = 1,
-  groupscrollind = 0
-  enablefocusfading = 0
-  normalid = '',
-  normalncid = '',
-  basegroups = ['Folded', 'Search', 'SignColumn', 'CursorLine', 'CursorLineNr', 'DiffAdd', 'DiffChange', 'DiffDelete', 'DiffText', 'FoldColumn', 'Whitespace', 'NonText', 'SpecialKey', 'Conceal', 'EndOfBuffer', 'WinSeparator', 'LineNr', 'LineNrAbove', 'LineNrBelow'],
-  enablebasegroups = 1,
-  enablesigns = 1,
-  signsid = 13100,
-  signsretentionperiod = 4000,
-  signspriority = 31,
-  fademinimap = 1,
-  fadepriority = 10,
-  disablebatch = 0,
-)
-```
- 
-</summary>
-<br>
-
 ---
 </details>
 
