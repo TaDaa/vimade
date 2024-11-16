@@ -1,43 +1,41 @@
 # vimade
 ([n]vim[f]ade)
 
-### Fade, highlight, and customize your windows + buffers
+### Fade, Highlight, and Customize Your Windows + Buffers
 
 ![](https://tadaa.github.io/images/minimalist_full.gif)
 
 ## What is this?
 
-**Vimade** keeps your attention focused on the active part of the screen especially in scenarios where you might have many windows open!
-You can customize, highlight, fade, tint, and animate the colors in your windows and buffers.
-
+**Vimade** helps you maintain focus on the active part of the screen, especially when working with many
+open windows. It allows you to customize, highlight, fade, tint, and animate colors in your windows and
+buffers.
 
 
 ## What is required?
 
 **Neovim 0.8.0+**: This plugin supports a lua-only code path, you are all set!
 
-**Vim7.4+** and **Neovim < 0.8.0** require Python or Python3 support. In these older versions of Neovim, you will need to install `pynvim`.
+**Vim7.4+** and **Neovim < 0.8.0**: Python or Python3 support is required. If using these older versions of Neovim, you'll need to install `pynvim`.
 
 ## Features
 - [X] Fade or highlight windows or buffers.
-- [X] Link windows so that change together (e.g. diffsplit)
-- [X] Blocklist
-- [X] Custom tints
-- [X] Prebuilt recipes
-- [X] Fully customizable (see styles and recipes for some of the possibilities)
-- [X] Animated transitions.
-- [X] Automatically adjusts to configuration changes.
-- [X] Helpers to make inactive built-ins look better
+- [X] Link windows so they change together (e.g. diffsplit)
+- [X] Blocklist specific windows or buffers from customization.
+- [X] Set Custom tints for a unique visual experience.
+- [X] Prebuilt recipes for quick and easy customization.
+- [X] Fully customizable (styles, recipes, and more).
+- [X] Animated transitions for a smooth visual experience.
+- [X] Automatically adjust to configuration changes.
+- [X] Helpers to make inactive built-in highlights look better
 - [X] Supports 256 color terminals and termguicolors.
-- [X] Sub milliscond Lua performance and highly optimized Python logic for Vim.
-- [X] Preconfigured commands such as (VimadeEnable, VimadeDisable, VimadeRedraw, etc)
+- [X] Sub-milliscond Lua performance and highly optimized Python logic for Vim.
+- [X] Preconfigured commands (VimadeEnable, VimadeDisable, VimadeRedraw, etc)
 - [X] Supports all versions of Neovim and Vim 7.4+
 - [X] Vim Documentation/Help
 
 #### Whats coming?
-- [ ] Some good stuff
-- [ ] Code cleanup
-- [ ] Tests
+- [ ] More awesome features and improvements! (details to be added later)
 
 
 
@@ -46,31 +44,26 @@ You can customize, highlight, fade, tint, and animate the colors in your windows
 
 <details open>
 <summary>
-<a><ins>Installation</ins></a> - 
-Any plugin manager will work.
+<a><ins>Installation</ins></a>
 <br>
 </summary>
 
-*<sub>::vimscript::plug::</sub>*
-```vim
-  Plug 'TaDaa/vimade'
-```
-  
-*<sub>::lua::lazy::</sub>*
-```lua
-require('lazy').setup({spec = {'tadaa/vimade'}})
-```
-  
-  <details open>
-  <summary>
-    <ins>For Lua users:</ins>
-    
-    
-  This is just here to remind you that you don't need to do anything!
-    
-  </summary>
+<br>
 
-  </details>
+- Any plugin manager will work. Here's an example using vim-plug:
+
+  *<sub>::vimscript::plug::</sub>*
+  ```vim
+    Plug 'TaDaa/vimade'
+  ```
+
+- And for Lua users using lazy.nvim:
+  
+  *<sub>::lua::lazy::</sub>*
+  ```lua
+    require('lazy').setup({spec = {'tadaa/vimade'}})
+  ```
+  
 
   <details open>
   <summary>
@@ -84,14 +77,14 @@ require('lazy').setup({spec = {'tadaa/vimade'}})
   </summary>
 
   ```vim
-function! SetupMyVimadeConfig()
-python << EOF
-from vimade import vimade
-from vimade.recipe.minimalist import Minimalist
-vimade.setup(**Minimalist(animate=True))
-EOF
-endfunction
-au! User Vimade#PythonReady call SetupMyVimadeConfig()
+  function! SetupMyVimadeConfig()
+  python << EOF
+  from vimade import vimade
+  from vimade.recipe.minimalist import Minimalist
+  vimade.setup(**Minimalist(animate=True))
+  EOF
+  endfunction
+  au! User Vimade#PythonReady call SetupMyVimadeConfig()
   ```
   </details>
   
@@ -106,14 +99,14 @@ au! User Vimade#PythonReady call SetupMyVimadeConfig()
 </summary>
 <br>
 
-- In **Neovim** 0.8.0+, you can just use **lazy.nvim** and the event of choice:
+- In **Neovim** 0.8.0+, use **lazy.nvim** or similar plugin manager and the event of choice:
 
     *<sub>::lua::lazy::</sub>*
     ```lua
     require('lazy').setup({spec = {'tadaa/vimade', event = 'VeryLazy'}})
     ```
 
-- If you want more granular control or are using **Vim**, just enable `vimade.lazy` and then call `vimade#Load()`.  Here's an example:
+- For **Vim** or more granular control, enable `vimade.lazy` and call `vimade#Load()`:
 
   &nbsp;  *<sub>::vimscript::</sub>*
      ```vim
@@ -135,30 +128,32 @@ au! User Vimade#PythonReady call SetupMyVimadeConfig()
 </summary>
 <br>
 
-There are a number of options and ways to configure **Vimade**. Most users will only be interested in manipulating the fadelevel
-and tint. **Vimade** can be configured using vimscript if you prefer a general config that is compatibile with both Neovim and Vim.
-It can also be configured with Lua or Python specific configurations, which allow you to enable animations, recipes, and conditional
-functions.
+**Vimade** works by just installing it and no configuration is required.  However, it also offers extensive
+customizations.  Most users may want to adjust the fadelevel and tint. You can configure **Vimade**
+using Vimscript, Lua, or Python.
 
-If you are configuring **Vimade** using vimscript in your vimrc, add the following:
+If you prefer a general configuration compatible with both Neovim and Vim, Vimscript is a good option.
+You can also apply the Lua and Python-specific parts on top of these options, so nothing is 
+mutually exclusive.
 
 *<sub>::vimscript::</sub>*
 ```vim
 let g:vimade = {}
 ```
 
-The initialization above ensures that you have a vimade object initialized regardless of where you need it.  **Vimade** will initialize
-its own if it doesn't find one.  This object is automatically extended with the default values, so don't worry about adding every option.
+This initializes a `vimade` object for configuration.  **Vimade** will automatically extend it with
+ default values.
+ 
+ Now let's start adding changes:
 
-Now you can start customizing vimade:
 
 *<sub>::vimscript::</sub>*
 ```vim
 let g:vimade.fadelevel = 0.5
 ```
 
-Simple right? the above code changes the opacity.  You can choose any value between **0 and 1**.  You can change any option at any time
-and **Vimade** will automatically react to those changes.
+This code changes the opacity of inactive windows.  You can choose any value between `0` (completely faded)
+and `1` (fully opaque).
 
 Let's add a blue tint:
 
@@ -169,8 +164,8 @@ let g:vimade.tint = {'fg':{'rgb':[0,0,255], 'intensity': 0.5}}
 ```
 
 
-You should notice that your text color has changed. The *tint* option lets manipulate `fg`, `bg`, and `sp` attributes. Changing `vimade.tint.bg`
-lets you customize the background color of windows as well.
+You should notice that your text color has changed. The *tint* option can manipulate `fg`, `bg`, and `sp` attributes. Changing `vimade.tint.bg`
+lets you customize the background color of inactive windows.
 
 
 Let's try something a bit more complicated, suppose we have a filetree that we don't want to dim as extremely as our other windows.
@@ -198,11 +193,10 @@ vimade.setup(
     else 0.4)
 ```
 
-Both languages use the same syntax and logic for configuration.
+Both languages use almost identitical syntax for configuration.
 
 
-> [!Note]
-> Advanced configurations in **python** and **lua** are treated as overlays, whatever you pass through the **setup** functions will overlay
+Advanced configurations in **python** and **lua** are treated as overlays, whatever you pass through the **setup** functions will overlay
 on top of your **vimscript** configuration. This means you won't be able to do an advanced configuration, then override it with
 a **vimscript** configuration after.  You'll need to unset the advanced configuration first, which can be done as seen below
  
