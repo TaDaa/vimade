@@ -221,16 +221,8 @@ You now know the basics for configuring **Vimade**!
 
 </details>
 
-
-<details open>
-<summary>
-<a><ins><b>Full list of options and default values</b></ins></a>
- 
-</summary>
-
-
 <details>
-<summary><ins>Vimscript</ins></summary>
+<summary><a><ins>Vimscript defaults</ins></a></summary>
 
 <sub>::vimscript::</sub>
 ```vim
@@ -277,7 +269,7 @@ let g:vimade = {
 </details>
 
 <details>
-<summary><ins>Lua</ins></summary>
+<summary><a><ins>Lua defaults</ins></a></summary>
 
 <sub>::lua::</sub>
 ```lua
@@ -304,7 +296,7 @@ vimade.setup{
 </details>
 
 <details>
-<summary><ins>Python</ins></summary>
+<summary><a><ins>Python defaults</ins></a></summary>
 
 <sub>::python::</sub>
 ```python
@@ -342,7 +334,7 @@ vimade.setup(
 
 <details>
 <summary>
-<ins>Option docs & descriptions</ins>
+<a><ins>Option docs & descriptions</ins></a>
  
 </summary>
 <br>
@@ -394,10 +386,6 @@ vimade.setup(
 
 </details>
   
----
-
-</details>
-
 
 <details>
 
