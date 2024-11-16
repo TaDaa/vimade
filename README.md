@@ -856,6 +856,39 @@ vimade.setup(**Minimalist(animate = True))
 ---
 </details>
 
+<details>
+<summary>
+<a><ins>Commands</ins></a>
+ 
+</summary>
+<br>
+
+| command |  description |
+| -       |  -           |
+| `VimadeEnable` |  Enables **Vimade**.  Not necessary to run unless you have explicitly disabled **Vimade**.
+| `VimadeDisable` |  Disable and remove all **Vimade** highlights.
+| `VimadeToggle` |  Toggle between enabled/disabled states.
+| `VimadeRedraw` |  Force vimade to recalculate and redraw every highlight.
+| `VimadeInfo` |  Provides debug information for Vimade.  Please include this info in bug reports.
+| `VimadeWinDisable` | Disables fading for the current window.
+| `VimadeWinEnable` | Enables fading for the current window.
+| `VimadeBufDisable` | Disables fading for the current buffer.
+| `VimadeBufEnable` | Enables fading for the current buffer.
+| `VimadeFadeActive` | Fades the current active window.
+| `VimadeUnfadeActive` | Unfades the current active window.
+| `VimadeOverrideFolded` | Overrides the Folded highlight by creating a link to the Vimade base fade.  This should produce acceptable results for colorschemes that include Folded highlights that are distracting in faded windows.
+| `VimadeOverrideSignColumn` | Overrides the SignColumn highlight by creating a link to the Vimade base fade.  This should produce acceptable results for colorschemes that include SignColumn highlights that are distracting in faded windows.
+| `VimadeOverrideLineNr` | Overrides the LineNr highlight by creating a link to the Vimade base fade.  This should produce acceptable results for colorschemes that include LineNr highlights that are distracting in faded windows.
+| `VimadeOverrideSplits` | Overrides the VertSplit highlight by creating a link to the Vimade base fade.  This should produce acceptable results for colorschemes that include VertSplit highlights that are distracting in faded windows.
+| `VimadeOverrideNonText` | Overrides the NonText highlight by creating a link to the Vimade base fade.  This should produce acceptable results for colorschemes that include NonText highlights that are distracting in faded windows.
+| `VimadeOverrideEndOfBuffer` | Overrides the EndOfBuffer highlight by creating a link to the Vimade base fade.  This should produce acceptable results for colorschemes that include EndOfBuffer highlights that are distracting in faded windows.
+| `VimadeOverrideAll` | Combines all VimadeOverride commands.
+| `VimadeFadeLevel [0.0-1.0]` |  Sets the FadeLevel config and forces an immediate redraw.
+| `VimadeFadePriority [0+]` |  Sets the FadePriority config and forces an immediate redraw.
+
+  
+---
+</details>
 
 <details>
 <summary>
@@ -863,7 +896,6 @@ vimade.setup(**Minimalist(animate = True))
  
 </summary>
 <br>
-
 
 | option | values/type | default | description |
 | -      | -           | -       | -           |
@@ -926,39 +958,123 @@ vimade.setup(**Minimalist(animate = True))
 ---
 </details>
 
+
 <details>
+
 <summary>
-<a><ins>Commands</ins></a>
+<a><ins>Default configuration</ins></a>
+</summary>
+
+<br>
+<br>
+
+**Vimade** can be initialized through *vimscript*, *lua*, or *python*. Each equivalent configuration is found below:
+<br>
+
+<sub>::vimscript::</sub>
+```vim
+let g:vimade = {
+\   " common options below
+\   'renderer': 'auto',
+\   'ncmode': 'buffers',
+\   'fadelevel': 0.4,
+\   'tint': '',
+\   'basebg': '',
+\   'blocklist': {
+\     'default': {
+\       'buf_opts': {
+\         'buftype': lua ? ['prompt', 'terminal'] : ['popup', 'prompt']
+\       },
+\       'win_config':{
+\         'relative': v:true
+\       },
+\     }
+\   },
+\   'link': {},
+\   'groupdiff': 1,
+\   'groupscrollbind': 0,
+\   'checkinterval': g:vimade_features.has_gui_running && !(g:vimade_features.has_nvim) ? 100 : 500,
+\   'usecursorhold': g:vimade_features.has_gui_running && !g:vimade_features.has_nvim && g:vimade_features.has_gui_version,
+\   'enablefocusfading': 0,
+\   'normalid': '',
+\   'normalncid': '',
+\   'lazy': 0,
+\   " python-only options below
+\   'basegroups': ['Folded', 'Search', 'SignColumn', 'CursorLine', 'CursorLineNr', 'DiffAdd', 'DiffChange', 'DiffDelete', 'DiffText', 'FoldColumn', 'Whitespace', 'NonText', 'SpecialKey', 'Conceal', 'EndOfBuffer', 'WinSeparator', 'LineNr', 'LineNrAbove', 'LineNrBelow'],
+\   'enablebasegroups': 1,
+\   'enablesigns': 1,
+\   'signsid': 13100,
+\   'signsretentionperiod': 4000,
+\   'signspriority': 31,
+\   'fademinimap': 1,
+\   'fadepriority': 10,
+\   'disablebatch': 0,
+\   " lua only options below
+\   'nohlcheck': 1,
+\ }
+```
+
+
+<sub>::lua::</sub>
+```lua
+vimade.setup{
+  style = require(vimade.style.default).Default().style,
+  ncmode = 'buffers',
+  fadelevel = 0.4,
+  tint = {},
+  basebg = '',
+  blocklist = {
+    buf_opts = { buftype = ['prompt', 'terminal'] },
+    win_config { relative = true },
+  },
+  link = {},
+  groupdiff = 1,
+  groupscrollbind = 0,
+  enablefocusfading = 0,
+  normalid = '',
+  normalncid = '',
+  nohlcheck = 1,
+}
+```
+
+<sub>::python::</sub>
+```python
+from vimade import vimade
+from vimade.recipe.default import Default
+vimade.setup(
+  style = Default()['style'],
+  ncmode = 'buffers',
+  fadelevel = 0.4,
+  tint = None,
+  basebg = '',
+  blocklist = {
+    'buf_opts': { 'buftype': ['popup', 'prompt'] },
+    'win_config': { 'relative': True },
+  },
+  link = {},
+  groupdiff = 1,
+  groupscrollind = 0
+  enablefocusfading = 0
+  normalid = '',
+  normalncid = '',
+  basegroups = ['Folded', 'Search', 'SignColumn', 'CursorLine', 'CursorLineNr', 'DiffAdd', 'DiffChange', 'DiffDelete', 'DiffText', 'FoldColumn', 'Whitespace', 'NonText', 'SpecialKey', 'Conceal', 'EndOfBuffer', 'WinSeparator', 'LineNr', 'LineNrAbove', 'LineNrBelow'],
+  enablebasegroups = 1,
+  enablesigns = 1,
+  signsid = 13100,
+  signsretentionperiod = 4000,
+  signspriority = 31,
+  fademinimap = 1,
+  fadepriority = 10,
+  disablebatch = 0,
+)
+```
  
 </summary>
 <br>
 
-| command |  description |
-| -       |  -           |
-| `VimadeEnable` |  Enables **Vimade**.  Not necessary to run unless you have explicitly disabled **Vimade**.
-| `VimadeDisable` |  Disable and remove all **Vimade** highlights.
-| `VimadeToggle` |  Toggle between enabled/disabled states.
-| `VimadeRedraw` |  Force vimade to recalculate and redraw every highlight.
-| `VimadeInfo` |  Provides debug information for Vimade.  Please include this info in bug reports.
-| `VimadeWinDisable` | Disables fading for the current window.
-| `VimadeWinEnable` | Enables fading for the current window.
-| `VimadeBufDisable` | Disables fading for the current buffer.
-| `VimadeBufEnable` | Enables fading for the current buffer.
-| `VimadeFadeActive` | Fades the current active window.
-| `VimadeUnfadeActive` | Unfades the current active window.
-| `VimadeOverrideFolded` | Overrides the Folded highlight by creating a link to the Vimade base fade.  This should produce acceptable results for colorschemes that include Folded highlights that are distracting in faded windows.
-| `VimadeOverrideSignColumn` | Overrides the SignColumn highlight by creating a link to the Vimade base fade.  This should produce acceptable results for colorschemes that include SignColumn highlights that are distracting in faded windows.
-| `VimadeOverrideLineNr` | Overrides the LineNr highlight by creating a link to the Vimade base fade.  This should produce acceptable results for colorschemes that include LineNr highlights that are distracting in faded windows.
-| `VimadeOverrideSplits` | Overrides the VertSplit highlight by creating a link to the Vimade base fade.  This should produce acceptable results for colorschemes that include VertSplit highlights that are distracting in faded windows.
-| `VimadeOverrideNonText` | Overrides the NonText highlight by creating a link to the Vimade base fade.  This should produce acceptable results for colorschemes that include NonText highlights that are distracting in faded windows.
-| `VimadeOverrideEndOfBuffer` | Overrides the EndOfBuffer highlight by creating a link to the Vimade base fade.  This should produce acceptable results for colorschemes that include EndOfBuffer highlights that are distracting in faded windows.
-| `VimadeOverrideAll` | Combines all VimadeOverride commands.
-| `VimadeFadeLevel [0.0-1.0]` |  Sets the FadeLevel config and forces an immediate redraw.
-| `VimadeFadePriority [0+]` |  Sets the FadePriority config and forces an immediate redraw.
-
-  
 ---
 </details>
+
 
 <details open>
 <summary>
