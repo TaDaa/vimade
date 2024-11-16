@@ -231,9 +231,9 @@ You now know the basics for configuring **Vimade**!
 <summary>
 <a><ins>Preparing a transparent terminal</ins></a>
 
-
 </summary>
 
+<br>
 When using a transparent terminal, your *Normal* background highlights are set to `guibg=NONE`  and the exact target colors are unknown.
 In this scenario, **Vimade** by default assumes that the target color is either `black` or `white` depending on background settings.
 For better color accuracy with transparent terminals, you can set `basebg` to a good target value.  If you aren't sure what the background
@@ -341,7 +341,9 @@ let g:vimade.tint = {'bg':{'rgb':[0,0,0], 'intensity': 0.15}}
 <sub>::vimscript::</sub>
 ``` vimscript
 let g:vimade.ncmode = 'buffers'
-let g:vimade.tint = {'fg':{'rgb':[0,255,0], 'intensity': 0.3},'bg': {'rgb': [0,0,0], 'intensity': 0.15}}
+let g:vimade.tint = {
+  \ 'fg': { 'rgb': [0,255,0], 'intensity': 0.3 },
+  \ 'bg': { 'rgb': [0,0,0], 'intensity': 0.15 }}
 ```
 
 ![](http://tadaa.github.io/images/tint_section_combined_buffers.png)
@@ -349,7 +351,9 @@ let g:vimade.tint = {'fg':{'rgb':[0,255,0], 'intensity': 0.3},'bg': {'rgb': [0,0
 <sub>::vimscript::</sub>
 ``` vimscript
 let g:vimade.ncmode = 'windows'
-let g:vimade.tint = {'fg':{'rgb':[0,0,255], 'intensity': 0.3},'bg': {'rgb': [12,12,22], 'intensity': 0.2}}
+let g:vimade.tint = {
+  \ 'fg': {'rgb': [0,255,0], 'intensity': 0.3 },
+  \ 'bg': {'rgb': [0,0,0], 'intensity': 0.15 }}
 ```
 
 ![](http://tadaa.github.io/images/tint_section_combined_windows.png)
@@ -358,14 +362,143 @@ let g:vimade.tint = {'fg':{'rgb':[0,0,255], 'intensity': 0.3},'bg': {'rgb': [12,
 ---
 </details>
 
-<details open>
+<details>
 <summary>
 <a><ins>Blocklists and linking</ins></a>
  
 </summary>
 <br>
 
-Sorry, tutorial not ready yet! See config options for usage.
+*Blocklists* and *linking* are conceptually similar processes. Blocklists prevent a window from being **styled**.  Linking
+on the other hand lets you bind other windows to the *active* window so that they **style** and **unstyle** together.
+
+You can specific any property in the following objects, or use a function that returns **true** when a condition is met.
+
+``` vim
+let g:vimade.blocklist = {
+ \ 'rule_name': {
+ \   'buf_names': [], " list of strings and/or functions to evaluate string comparison
+ \   'buf_opts': {}, " any buffer scoped option (e.g. buftype)
+ \   'buf_vars': {}, " any buffer variable (i.e. `let b:...`)
+ \   'win_opts': {}, " any window scoped option
+ \   'win_vars': {}, " any window variable (i.e `let w:...`)
+ \   'win_config': {}, " any window config item (see `help nvim_win_get_config`)
+ \ }
+}
+let g:vimade.link = {
+ \ 'rule_name': {
+ \   'buf_names': [], " list of strings and/or functions to evaluate string comparison
+ \   'buf_opts': {}, " any buffer scoped option (e.g. buftype)
+ \   'buf_vars': {}, " any buffer variable (i.e. `let b:...`)
+ \   'win_opts': {}, " any window scoped option
+ \   'win_vars': {}, " any window variable (i.e `let w:...`)
+ \   'win_config': {}, " any window config item (see `help nvim_win_get_config`)
+ \ }
+}
+```
+
+The `rule_name` in the config above is arbitrary, but don't use **`default`** unless you want to override **Vimade**'s
+default settings.
+
+For **lua** `defaults` are:
+```lua
+  blocklist = {
+    default = {
+      -- terminal is temporarily disabled until proper fading is added
+      buf_opts = {buftype = {'prompt', 'terminal'}},
+      win_config = {
+        relative = true
+      },
+    },
+  },
+
+```
+
+and **python**:
+```python
+'blocklist': {
+  'default': {
+    'buf_opts': {
+      'buftype': ['popup', 'prompt']
+    },
+    'win_config': {
+      'relative': True #block all floating windows # TODO we can make this more customized soon
+     },
+  }
+},
+```
+
+Each value for a property is a considered a value-matcher, you can use an *array-like* or exact value type.
+*Array-like* indicates that any value in the array is a match. Using boolean (true) indicates that any *truthy*
+value will match.
+
+Let's put this to the test and block all window variables with `'cool'` equal to `1` or `2`
+
+```vim
+let w:cool = 2
+let g:vimade.blocklist = {
+\  'demo_tutorial': {
+\    'win_vars': { 'cool': [1,2] },
+\  }
+\ }
+```
+
+Now when you navigate off the window, nothing happens.
+
+
+Let's replace the previous rule with a function that blocks everything except when a floating window is open:
+
+<sub>::lua::</sub>
+```lua
+require('vimade').setup({
+  blocklist = {
+    demo_tutorial = function (win, current)
+      -- current can be nil
+      if (win.win_config.relative == '') and (current and current.win_config.relative ~= '') then
+        return false
+      end
+      return true
+    end
+  }
+})
+```
+
+<sub>::python::</sub>
+```python
+def only_behind_float_windows (win, current):
+  # current can be None
+  if (win.win_config['relative'] == '') and (current and current.win_config['relative'] != ''):
+    return False
+  return True
+
+vimade.setup(blocklist = {
+    'demo_tutorial': only_behind_float_windows,
+})
+```
+
+Now nothing is faded except when you open a floating window, voilà!
+
+![](http://tadaa.github.io/images/only_when_floating.png)
+
+
+For a final step let's apply the same concepts to linking
+
+```vim
+let w:linked_window = 1
+let g:vimade.blocklist = {
+\  'demo_tutorial': {
+\    'win_vars': { 'linked_window': 1 },
+\  }
+\ }
+```
+
+Navigate to another window and also apply
+```
+let w:linked_window = 1
+```
+
+The windows are now bound together and will **style** and **unstyle** together. This is an extremely useful concept
+and **Vimade** uses it behind the scenes to ensure that diffs are visible in unison.
 
 ---
 </details>
