@@ -1064,6 +1064,8 @@ Tmux is not working!
 - If you also want windows to fade when switching between tmux panes:
   1. Enable focusfading `let g:vimade.enablefocusfading = 1`
   2. Add `set -g focus-events on` to your tmux.conf
+  3. (vim-only) On some environments, you still may need to install `tmux-plugins/vim-tmux-focus-events`.
+
 
 ---
 
