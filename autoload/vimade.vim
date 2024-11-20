@@ -646,7 +646,7 @@ endfunction
 function! vimade#DoAnimations(val)
   unlet g:vimade_animation_running
   call timer_pause(g:vimade_animation_timer, 1)
-  if g:vimade_running && g:vimade_paused == 0 && getcmdwintype() == ''
+  if g:vimade_running && getcmdwintype() == ''
     call g:vimade_active_renderer.animate()
   endif
 endfunction
@@ -750,13 +750,16 @@ endfunction
 
 function! vimade#FadeActive()
   "immediately fade current buffer
+  "deferred shouldn't be used here due to usage of pause in tmux flow
   let g:vimade_fade_active=1
-  call vimade#DeferredCheckWindows()
+  call vimade#CheckWindows()
 endfunction
 
 function! vimade#UnfadeActive()
+  "immediately unfade current buffer
+  "deferred shouldn't be used here due to usage of pause in tmux flow
   let g:vimade_fade_active=0
-  call vimade#DeferredCheckWindows()
+  call vimade#CheckWindows()
 endfunction
 
 function! vimade#GetNvimHi(id)

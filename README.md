@@ -1061,6 +1061,9 @@ vimade.setup(**Minimalist(animate = True))
 
 Tmux is not working!
 - *Vimade only works in a 256 or higher color mode and by default TMUX may set t_Co to 8.   it is recommended that you set `export TERM=xterm-256color` before starting vim.  You can also set `set termguicolors` inside vim if your term supports it for an even more accurate level of fading.*
+- If you also want windows to fade when switching between tmux panes:
+  1. Enable focusfading `let g:vimade.enablefocusfading = 1`
+  2. Add `set -g focus-events on` to your tmux.conf
 
 ---
 
