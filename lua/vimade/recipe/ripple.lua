@@ -3,6 +3,7 @@ local Include = require('vimade.style.include').Include
 local Exclude = require('vimade.style.exclude').Exclude
 local ANIMATE = require('vimade.style.value.animate')
 local DIRECTION = require('vimade.style.value.direction')
+local EASE = require('vimade.style.value.ease')
 local FADE = require('vimade.style.fade')
 local TINT = require('vimade.style.tint')
 local TYPE = require('vimade.util.type')
@@ -13,10 +14,10 @@ local get_win_infos = function ()
     return math.sqrt(math.pow(a1-b1, 2) + math.pow(a2-b2, 2))
   end
   local distance_between = function (info_a, info_b)
-    local left_a = info_a.wincol
-    local left_b = info_b.wincol
-    local right_a = info_a.wincol + info_a.width
-    local right_b = info_b.wincol + info_b.width
+    local left_a = info_a.wincol * 0.35
+    local left_b = info_b.wincol * 0.35
+    local right_a = info_a.wincol + info_a.width * 0.35
+    local right_b = info_b.wincol + info_b.width * 0.35
     local top_a = info_a.winrow
     local top_b = info_b.winrow
     local bottom_a = info_a.winrow + info_a.height
@@ -87,7 +88,7 @@ local ripple_to_tint = function (style, state)
         if color.intensity == nil then
           color.intensity = 1
         end
-        color.intensity = color.intensity * 0.5 + (win_infos[style.win.winid].dist / m_dist) * (color.intensity * 0.5)
+        color.intensity = (win_infos[style.win.winid].dist / m_dist) * color.intensity
       end
     end
   end
@@ -99,7 +100,13 @@ local ripple_to_fade = function (style, state)
   if m_dist == 0 then
     m_dist = 1
   end
-  return (to * 0.5) + (1 - win_infos[style.win.winid].dist / m_dist) * (to * 0.5)
+  return to + (1-win_infos[style.win.winid].dist / m_dist) * ((1-to) * 0.5)
+end
+local ripple_delay = function(style, state)
+  if max_distance == 0 then
+    return 0
+  end
+  return win_infos[style.win.winid].dist / (max_distance or 1) * 300
 end
 local animate_ripple = function (config)
   local result = {
@@ -117,21 +124,9 @@ local animate_ripple = function (config)
           return start
         end,
         to = ripple_to_tint,
-        direction = DIRECTION.IN_OUT,
-        duration = function (style, state)
-          local m_area = max_area
-          if m_area == 0 then
-            m_area = 1
-          end
-          return (win_infos[style.win.winid].area / m_area + 1) * 300
-        end,
-        delay = function (style, state)
-          local m_dist = max_distance
-          if m_dist == 0 then
-            m_dist = 1
-          end
-          return (win_infos[style.win.winid].dist / m_dist) * 25
-        end,
+        direction = config.direction,
+        duration = config.duration,
+        delay = config.delay,
         ease = config.ease,
       })
     }),
@@ -140,19 +135,9 @@ local animate_ripple = function (config)
       value = ANIMATE.Number({
         to = ripple_to_fade,
         start = 1,
-        direction = DIRECTION.IN_OUT,
-        duration = function (style, state)
-          if max_area == 0 then
-            return 300
-          end
-          return (win_infos[style.win.winid].area / max_area + 1) * 300
-        end,
-        delay = function (style, state)
-          if max_distance == 0 then
-            return 0
-          end
-          return (win_infos[style.win.winid].dist / max_distance) * 25
-        end,
+        direction = config.direction,
+        duration = config.duration,
+        delay = config.delay,
         ease = config.ease,
       }),
     })
@@ -176,12 +161,22 @@ end
 
 --@param config {
   -- @optional animate: boolean = false
+  -- @optional condition: CONDITION = CONDITION.INACTIVE
+  -- @optional delay: number = ANIMATE.DEFAULT_DELAY
+  -- @optional direction: DIRECTION = ANIMATE.DEFAULT_DIRECTION
+  -- @optional duration: number = ANIMATE.DEFAULT_DURATION
+  -- @optional ease: EASE = ANIMATE.DEFAULT_EASE
 --}
 M.Ripple = function(config)
   config = TYPE.shallow_copy(config)
+  config.direction = config.direction or DIRECTION.IN_OUT
+  config.delay = config.delay or ripple_delay
+  config.duration = config.duration or 300
+  config.ease = config.ease or EASE.LINEAR
+  config.ncmode = config.ncmode or 'windows'
   return {
     style = config.animate and animate_ripple(config) or ripple(config),
-    ncmode = 'windows'
+    ncmode = config.ncmode
   }
 end
 
