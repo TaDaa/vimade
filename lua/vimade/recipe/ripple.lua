@@ -14,10 +14,10 @@ local get_win_infos = function ()
     return math.sqrt(math.pow(a1-b1, 2) + math.pow(a2-b2, 2))
   end
   local distance_between = function (info_a, info_b)
-    local left_a = info_a.wincol * 0.35
-    local left_b = info_b.wincol * 0.35
-    local right_a = info_a.wincol + info_a.width * 0.35
-    local right_b = info_b.wincol + info_b.width * 0.35
+    local left_a = info_a.wincol * 0.75
+    local left_b = info_b.wincol * 0.75
+    local right_a = info_a.wincol + info_a.width * 0.75
+    local right_b = info_b.wincol + info_b.width * 0.75
     local top_a = info_a.winrow
     local top_b = info_b.winrow
     local bottom_a = info_a.winrow + info_a.height
@@ -102,11 +102,19 @@ local ripple_to_fade = function (style, state)
   end
   return to + (1-win_infos[style.win.winid].dist / m_dist) * ((1-to) * 0.5)
 end
-local ripple_delay = function(style, state)
-  if max_distance == 0 then
+local ripple_duration = function(style, state)
+  local m_dist = max_distance
+  if m_dist == 0 then
     return 0
   end
-  return win_infos[style.win.winid].dist / (max_distance or 1) * 300
+  return 100 + (win_infos[style.win.winid].dist / m_dist) * 200
+end
+local ripple_delay = function(style, state)
+  local m_dist = max_distance
+  if m_dist == 0 then
+    return 0
+  end
+  return (win_infos[style.win.winid].dist / m_dist) * 300
 end
 local animate_ripple = function (config)
   local result = {
@@ -171,7 +179,7 @@ M.Ripple = function(config)
   config = TYPE.shallow_copy(config)
   config.direction = config.direction or DIRECTION.IN_OUT
   config.delay = config.delay or ripple_delay
-  config.duration = config.duration or 300
+  config.duration = config.duration or ripple_duration
   config.ease = config.ease or EASE.LINEAR
   config.ncmode = config.ncmode or 'windows'
   return {

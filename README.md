@@ -461,8 +461,8 @@ as its easier to see which windows are impacted by your edits or which windows y
 </summary>
 <br>
 
-There are lots of ways that you can configure tinting.  Tinting influences the color of `fg`, `bg`, and `sp` for every highlight group.
-Every option allows you specify `intensity`, which determines how much color to add.
+Tinting influences the color of `fg`, `bg`, and `sp` for every highlight group. Every option allows you specify `intensity`,
+which determines how much color to add.
 
 Changing the `fg` alters the text color. Let's give our inactive windows some yoda spunk:
 
@@ -966,7 +966,7 @@ Every value type can be animated included tints and nested values in complex obj
 
 <br>
 
-This recipe is enabled by default, but you can re-apply it with additional customizations (e.g. animations).
+Enabled by default, but you can re-apply this recipe with additional customizations (e.g. animations).
 You can only enable **recipes** through a configuration overlay (**no vimscript**).
 
 *<sub>::lua:: [source](https://github.com/TaDaa/vimade/tree/master/lua/vimade/recipe/default.lua) (see here for additional params)</sub>*
@@ -1015,6 +1015,39 @@ vimade.setup(**Minimalist(animate = True))
 
 ![](https://tadaa.github.io/images/minimalist_recipe_animate2.gif)
 ---
+</details>
+
+<details>
+<summary>
+<a><ins>Recipe: Ripple</ins></a>
+</summary>
+
+<br>
+
+Gradually increases the fade and tint level based on distance from the current window. The maximum target values are equal to your `fadelevel` and `tint` settings.
+
+> [!NOTE]
+> 
+> This recipe fades by windows (`ncmode='windows'`)
+
+
+*<sub>::lua:: [source](https://github.com/TaDaa/vimade/tree/master/lua/vimade/recipe/ripple.lua) (see here for additional params)</sub>*
+
+```lua
+local Minimalist = require('vimade.recipe.ripple').Ripple
+require('vimade').setup(Ripple{animate = true})
+```
+
+*<sub>::python:: [source](https://github.com/TaDaa/vimade/tree/master/lib/vimade/recipe/ripple.py) (see here for additional params)</sub>*
+
+```python
+from vimade import vimade
+from vimade.recipe.ripple import Ripple
+vimade.setup(**Ripple(animate = True))
+```
+
+![](https://tadaa.github.io/images/ripple.gif)
+[---](---)
 </details>
 
 <details>

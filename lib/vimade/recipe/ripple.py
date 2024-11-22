@@ -17,10 +17,10 @@ def _get_win_infos():
   def distance(a1, a2, b1, b2):
     return math.sqrt(math.pow(a1-b1, 2) + math.pow(a2-b2, 2))
   def distance_between(info_a, info_b):
-    left_a = float(info_a['wincol']) * 0.35
-    left_b = float(info_b['wincol']) * 0.35
-    right_a = left_a + float(info_a['width']) * 0.35
-    right_b = left_b + float(info_b['width']) * 0.35
+    left_a = float(info_a['wincol']) * 0.75
+    left_b = float(info_b['wincol']) * 0.75
+    right_a = left_a + float(info_a['width']) * 0.75
+    right_b = left_b + float(info_b['width']) * 0.75
     top_a = info_a['winrow']
     top_b = info_b['winrow']
     bottom_a = top_a + info_a['height']
@@ -101,6 +101,14 @@ def _ripple_start_tint(style, state):
     for color in start.values():
       color['intensity'] = 0
   return start
+def _ripple_duration(style, state):
+  if M._max_distance == 0 or style.win.winid == -1:
+    return 0
+  return 100 + float(M._win_infos[style.win.winid]['dist']) / float(M._max_distance) * 200
+def _ripple_delay(style, state):
+  if M._max_distance == 0 or style.win.winid == -1:
+    return 0
+  return float(M._win_infos[style.win.winid]['dist']) / float(M._max_distance) * 300
 
 def animate_ripple(config):
   return [
@@ -152,8 +160,8 @@ def ripple(config):
 def Ripple(**kwargs):
   config = TYPE.shallow_copy(kwargs)
   config['direction'] = config['direction'] if config.get('direction') else DIRECTION.IN_OUT
-  config['delay'] = config['delay'] if config.get('delay') else 0
-  config['duration'] = config['duration'] if config.get('duration') else 300
+  config['delay'] = config['delay'] if config.get('delay') else _ripple_delay
+  config['duration'] = config['duration'] if config.get('duration') else _ripple_duration
   config['ease'] = config['ease'] if config.get('ease') else EASE.LINEAR
   config['ncmode'] = config['ncmode'] if config.get('ncmode') else 'windows'
   return {
