@@ -1034,7 +1034,7 @@ Gradually increases the fade and tint level based on distance from the current w
 *<sub>::lua:: [source](https://github.com/TaDaa/vimade/tree/master/lua/vimade/recipe/ripple.lua) (see here for additional params)</sub>*
 
 ```lua
-local Minimalist = require('vimade.recipe.ripple').Ripple
+local Ripple = require('vimade.recipe.ripple').Ripple
 require('vimade').setup(Ripple{animate = true})
 ```
 
@@ -1047,7 +1047,8 @@ vimade.setup(**Ripple(animate = True))
 ```
 
 ![](https://tadaa.github.io/images/ripple.gif)
-[---](---)
+
+---
 </details>
 
 <details>
