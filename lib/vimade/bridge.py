@@ -6,10 +6,6 @@ def setup(**kwargs):
 def getInfo():
   return FADER.getInfo()
 
-def detectTermColors():
-  #  TODO: NOT HAPPENING. Remove from v1 as well
-  pass
-
 def unhighlightAll():
   FADER.unhighlightAll()
 
