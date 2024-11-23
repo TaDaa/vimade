@@ -26,7 +26,7 @@ endfunction
 
 function! vimade#SetupRenderer()
   let l:next_renderer = g:vimade_active_renderer.name
-  if ((g:vimade.renderer == 'auto' || g:vimade_features.supports_python_renderer == 0) && g:vimade_features.supports_lua_renderer) || g:vimade.renderer == 'lua'
+  if (g:vimade.renderer == 'auto' && g:vimade_features.supports_lua_renderer) || g:vimade.renderer == 'lua'
     let l:next_renderer = 'lua'
   else
     if g:vimade_python_setup == 0
