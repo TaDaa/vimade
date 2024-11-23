@@ -1,7 +1,6 @@
-# vimade
-([n]vim[f]ade)
+# vim[f]ade
 
-### Fade, Highlight, and Customize Your Windows + Buffers
+### Dim, Fade, Tint, and Customize (Neo)vim
 
 ![](https://tadaa.github.io/images/minimalist_full.gif)
 
