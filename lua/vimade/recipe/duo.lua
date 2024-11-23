@@ -1,15 +1,11 @@
 local M = {}
-local Include = require('vimade.style.include').Include
-local Exclude = require('vimade.style.exclude').Exclude
 local ANIMATE = require('vimade.style.value.animate')
-local DIRECTION = require('vimade.style.value.direction')
-local EASE = require('vimade.style.value.ease')
 local FADE = require('vimade.style.fade')
 local TINT = require('vimade.style.tint')
 local TYPE = require('vimade.util.type')
 local GLOBALS = require('vimade.state.globals')
 
-local duo_to_tint = function (style, state)
+local duo_tint_to = function (style, state)
   local to = TINT.Default().value()(style, state)
   if to and style.win.tabnr == GLOBALS.current.tabnr and style.win.bufnr == GLOBALS.current.bufnr then
     for i, color in pairs(to) do
@@ -23,7 +19,7 @@ local duo_to_tint = function (style, state)
   end
   return to
 end
-local duo_to_fade = function (style, state)
+local duo_fade_to = function (style, state)
   local to = FADE.Default().value()(style, state)
   if to and style.win.tabnr == GLOBALS.current.tabnr and style.win.bufnr == GLOBALS.current.bufnr then
     return (1+to) * 0.5
@@ -44,7 +40,7 @@ local animate_duo = function (config)
           end
           return start
         end,
-        to = duo_to_tint,
+        to = duo_tint_to,
         direction = config.direction,
         duration = config.duration,
         delay = config.delay,
@@ -54,7 +50,7 @@ local animate_duo = function (config)
     FADE.Fade({
       condition = config.condition,
       value = ANIMATE.Number({
-        to = duo_to_fade,
+        to = duo_fade_to,
         start = 1,
         direction = config.direction,
         duration = config.duration,
@@ -70,11 +66,11 @@ local duo = function (config)
   return {
     TINT.Tint({
       condition = config.condition,
-      value = duo_to_tint,
+      value = duo_tint_to,
     }),
     FADE.Fade({
       condition = config.condition,
-      value = duo_to_fade,
+      value = duo_fade_to,
     }),
   }
 end
@@ -86,11 +82,11 @@ end
   -- @optional direction: DIRECTION = ANIMATE.DEFAULT_DIRECTION
   -- @optional duration: number = ANIMATE.DEFAULT_DURATION
   -- @optional ease: EASE = ANIMATE.DEFAULT_EASE
+  -- @optional ncmode: 'windows'|'buffers' = 'windows'
 --}
 M.Duo = function(config)
   config = TYPE.shallow_copy(config)
   config.ncmode = config.ncmode or 'windows'
-  --config.direction = config.direction or DIRECTION.IN_OUT
   return {
     style = config.animate and animate_duo(config) or duo(config),
     ncmode = config.ncmode
