@@ -8,7 +8,7 @@
 ## What is this?
 
 **Vimade** helps you maintain focus on the active part of the screen, especially when working with many
-open windows. It allows you to customize, highlight, fade, tint, and animate colors in your windows and
+open windows. It let's you dim, fade, tint, animate, and customize colors in your windows and
 buffers.
 
 
@@ -236,7 +236,7 @@ let g:vimade = {
 \   'blocklist': {
 \     'default': {
 \       'buf_opts': {
-\         'buftype': lua ? ['prompt', 'terminal'] : ['popup', 'prompt']
+\         'buftype': g:vimade_features.has_nvim ? ['prompt', 'terminal'] : ['popup', 'prompt']
 \       },
 \       'win_config':{
 \         'relative': v:true
@@ -355,7 +355,7 @@ vimade.setup(
 | `groupscrollbind` | `0` `1` `bool` | `0` | highlights and unhighlights scrolllbound windows together.
 | `checkinterval` | `int` | `100`-`500` | Time in milliseconds before re-checking windows. Default varies depending on **Neovim**, **terminals**, and **gui vim**.
 | `usecursorhold` | `0` `1` `bool` | `0` | Whether to use cursorhold events instead of async timer. Setting this option **disables the timer**. This option defaults to `0` for most editor versions.  **gvim** defaults to `1` due to async timers breaking visual selections.  If you use this value, remember to set `:set updatetime` appropriately.
-| `enablefocusfading` | `0` `1` `bool` | `0` | Highlight the active window on application focus and blur events.  This can be [desirable](desirable) when switching applications, but requires additional setup for terminal and tmux.  See enablefocusfading section for more details (TODO link)
+| `enablefocusfading` | `0` `1` `bool` | `0` | Highlight the active window on application focus and blur events.  This can be desirable when switching applications, but requires additional setup for terminal and tmux.  See enablefocusfading section for more details (TODO link)
 | `normalid` | `int` | nil | The id of the Normal highlight.  **Vimade** will automatically set this, so you don't need to worry about it. You can override it though if you just want to play around.
 | `normalncid` | `int` | nil | The id of the NormalNC highlight.  **Vimade** will automatically set this, so you don't need to worry about it. You can override it though if you just want to play around.
 | `lazy` | `1` `0` | nil | When set to `1` **Vimade** is disabled at startup. You will need to manually call `vimade#Load()`.  See lazy loading section for more details.

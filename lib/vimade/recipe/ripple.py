@@ -149,13 +149,14 @@ def ripple(config):
       ),
   ]
 
-#@param kwargs {
+#@param config {
   # @optional animate: boolean = false
   # @optional condition: CONDITION = CONDITION.INACTIVE
-  # @optional delay: number = ANIMATE.DEFAULT_DELAY
-  # @optional direction: DIRECTION = ANIMATE.DEFAULT_DIRECTION
-  # @optional duration: number = ANIMATE.DEFAULT_DURATION
-  # @optional ease: EASE = ANIMATE.DEFAULT_EASE
+  # @optional delay: number = function_gradual_based_on_dist
+  # @optional direction: DIRECTION = DIRECTION.IN_OUT
+  # @optional duration: number = function_gradual_based_on_dist
+  # @optional ease: EASE = EASE.LINEAR
+  # @optional ncmode: 'windows'|'buffers' = 'windows'
 #}
 def Ripple(**kwargs):
   config = TYPE.shallow_copy(kwargs)
