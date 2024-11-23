@@ -26,8 +26,7 @@ endfunction
 
 function! vimade#SetupRenderer()
   let l:next_renderer = g:vimade_active_renderer.name
-  " TODO remove python-legacy below when ready to release and switch to renderer='auto'
-  if ((g:vimade.renderer == 'auto' || (g:vimade.renderer == 'python-legacy' && g:vimade_features.supports_python_renderer == 0)) && g:vimade_features.supports_lua_renderer) || g:vimade.renderer == 'lua'
+  if ((g:vimade.renderer == 'auto' || g:vimade_features.supports_python_renderer == 0) && g:vimade_features.supports_lua_renderer) || g:vimade.renderer == 'lua'
     let l:next_renderer = 'lua'
   else
     if g:vimade_python_setup == 0
@@ -35,7 +34,7 @@ function! vimade#SetupRenderer()
     endif
     if g:vimade.renderer == 'auto'
       let l:next_renderer = 'python'
-    elseif g:vimade.renderer == 'python' || g:vimade.renderer == 'python-legacy'
+    elseif g:vimade.renderer == 'python'
       let l:next_renderer = g:vimade.renderer
     endif
   endif
@@ -48,8 +47,6 @@ function! vimade#SetupRenderer()
       let g:vimade_active_renderer = s:lua_renderer
     elseif l:next_renderer == 'python'
       let g:vimade_active_renderer = s:python_renderer
-    elseif l:next_renderer == 'python-legacy'
-      let g:vimade_active_renderer = s:python_legacy_renderer
     else
       let g:vimade_active_renderer = s:empty_renderer
     endif
@@ -151,12 +148,11 @@ function! vimade#GetDefaults()
     "Current options are:
     "  - 'auto' - Uses lua renderer if supported on your Neovim version. Otherwise, this option will automatically fallback to 'python'.
     "  - 'python' - Uses a new high performance renderer compatible with Vim and Neovim
-    "  - 'python-legacy' - Uses the legacy and stable python logic. This renderer is not as performant as the other options.
 
     let g:vimade_defaults.renderer = 'auto'
 
     ""@setting vimade.fadelevel
-    "Supported:     lua, python, python-legacy
+    "Supported:     lua, python
     "Amount of fading applied between text and basebg.  0 will make the text the same color as the background and 1 applies no fading.  The default value is 0.4.  If you are using terminal, you may need to tweak this value to get better results.
 
     let g:vimade_defaults.fadelevel = 0.4
@@ -185,13 +181,13 @@ function! vimade#GetDefaults()
     "})
 
     ""@setting vimade.basebg
-    "Supported:     lua, python, python-legacy
+    "Supported:     lua, python
     "basebg can be either be six digit hexidecimal color, rgb array [0-255,0-255,0-255], or cterm code (in terminal).  basebg is used as the color that text is faded against.  You can override this config with another hexidecimal color.  A cool feature of basebg is to use it to change the tint of faded text even if its not your background!
 
     let g:vimade_defaults.basebg = ''
 
     ""@setting vimade.ncmode
-    "Supported:     lua, python, python-legacy
+    "Supported:     lua, python
     "Whether to fade active windows or buffers.  Options are 'windows' or 'buffers'.  Defaults to 'buffers'.
 
     let g:vimade_defaults.ncmode = 'buffers'
@@ -212,14 +208,14 @@ function! vimade#GetDefaults()
 
 
     ""@setting vimade.groupdiff
-    "Supported:     lua, python, python-legacy
+    "Supported:     lua, python
     "Controls whether or not diffs will fade/unfade together.  If you want diffs
     "to be treated separately, set this value to 0. Default is 1
 
     let g:vimade_defaults.groupdiff = 1
 
     ""@setting vimade.groupscrollbind
-    "Supported:     lua, python, python-legacy
+    "Supported:     lua, python
     "Controls whether or not scrollbound windows will fade/unfade together.  If
     "you want scrollbound windows to unfade together, set this to 1.  Default is
     "0.
@@ -227,7 +223,7 @@ function! vimade#GetDefaults()
     let g:vimade_defaults.groupscrollbind = 0
 
     ""@setting vimade.enablefocusfading
-    "Supported:     lua, python, python-legacy
+    "Supported:     lua, python
     "Fades the current active window on focus blur and unfades when focus gained.
     "This can be desirable when switching applications or TMUX splits.
     "* Install 'tmux-plugins/vim-tmux-focus-events' using your preferred plugin manager
@@ -242,40 +238,40 @@ function! vimade#GetDefaults()
     let g:vimade_defaults.enablefocusfading = 0
    
     ""@setting vimade.normalid
-    "Supported:     lua, python, python-legacy
+    "Supported:     lua, python
     "If not specified, the normalid is determined when vimade is first loaded.  normalid provides the id of the "Normal" highlight which is used to calculate fading.  You can override this config with another highlight group.
     "You shouldn't really ever need to modify this.
 
     let g:vimade_defaults.normalid = ''
 
     ""@setting vimade.normalncid
-    "Supported:     lua, python, python-legacy
+    "Supported:     lua, python
     "If not specified, the normalncid is determined when vimade is first loaded.  normalncid provides the id of the "NormalNC" highlight which is used to calculate fading for inactive buffers in NVIM.  You can override this config with another highlight group.
     "You shouldn't really ever need to modify this.
 
     let g:vimade_defaults.normalncid = ''
 
     ""@setting vimade.checkinterval
-    "Supported:     lua, python, python-legacy
+    "Supported:     lua, python
     "The amount of time in milliseconds that vimade should check the screen for changes.  This config is mainly used to detect resize and scroll changes that occur on inactive windows. Checkinterval does nothing on gvim, if you want to control the refresh time, see 'h updatetime'. Default is 100 for gui vim and 500 for neovim/terminal.  
 
     let g:vimade_defaults.checkinterval = g:vimade_features.has_gui_running && !(g:vimade_features.has_nvim) ? 100 : 500
 
     ""@setting vimade.usecursorhold
-    "Supported:     lua, python, python-legacy
+    "Supported:     lua, python
     "Disables the timer running in the background and instead relies `OnCursorHold` and `updatetime` (see h:updatetime).  The default value is `0` except on Windows GVIM, which defaults to `1` due to the timer breaking movements.  If you find that the timer is causing performance problems or other issues you can disable it by setting this option to `1`. 
 
     let g:vimade_defaults.usecursorhold = g:vimade_features.has_gui_running && !g:vimade_features.has_nvim && g:vimade_features.has_gui_version
 
     ""@setting vimade.basegroups
-    "Supported:     python, python-legacy
+    "Supported:     python
     "lua uses namespaces and doesn't require this setting.
     "Neovim only setting that specifies the basegroups/built-in highlight groups that will be faded using winhl when switching windows
 
     let g:vimade_defaults.basegroups = ['Folded', 'Search', 'SignColumn', 'CursorLine', 'CursorLineNr', 'DiffAdd', 'DiffChange', 'DiffDelete', 'DiffText', 'FoldColumn', 'Whitespace', 'NonText', 'SpecialKey', 'Conceal', 'EndOfBuffer', 'WinSeparator', 'LineNr', 'LineNrAbove', 'LineNrBelow']
 
     ""@setting vimade.enablebasegroups
-    "Supported:     python, python-legacy
+    "Supported:     python
     "lua uses namespaces and doesn't require this setting.
     "Neovim only setting.  Enabled by default and allows basegroups/built-in highlight fading using winhl.  This allows fading of built-in highlights such as Folded, Search, etc.
 
@@ -283,14 +279,14 @@ function! vimade#GetDefaults()
 
 
     ""@setting vimade.enabletreesitter
-    "Supported:     python, python-legacy
+    "Supported:     python
     "lua uses namespaces and doesn't require this setting.
     "Neovim only setting.  Disabled by default and hooks vimade into the internals of treesitter.
 
     let g:vimade_defaults.enabletreesitter = 0
 
     ""@setting vimade.enablesigns
-    "Supported:     python, python-legacy
+    "Supported:     python
     "lua renderer doesn't require additional logic to fade signs.
     "Enabled by default for vim/nvim versions that support sign priority and causes signs to be faded when switching buffers.
     "Only visible signs are faded. This feature can cause performance issues
@@ -300,7 +296,7 @@ function! vimade#GetDefaults()
     let g:vimade_defaults.enablesigns = g:vimade_features.has_sign_priority
 
     ""@setting vimade.signsid
-    "Supported:     python, python-legacy
+    "Supported:     python
     "lua renderer doesn't require additional logic to fade signs.
     "The starting id that Vimade should use when creating new signs. By
     "default Vim requires numeric values to create signs and its possible that
@@ -310,15 +306,15 @@ function! vimade#GetDefaults()
     let g:vimade_defaults.signsid = 13100
 
     ""@setting vimade.signsretentionperiod
-    "Supported:     python, python-legacy
+    "Supported:     python
     "lua renderer doesn't require additional logic to fade signs.
-    " *python & python-legacy only*: Serves no purpose on lua renderer.
+    " *python*: Serves no purpose on lua renderer.
     "Amount of time in milliseconds that faded buffers should be tracked for sign changes.  Default value is 4000.
 
     let g:vimade_defaults.signsretentionperiod = 4000
 
     ""@setting vimade.signspriority
-    "Supported:     python, python-legacy
+    "Supported:     python
     "lua renderer doesn't require additional logic to fade signs.
     "Controls the signs fade priority.
     "You may need to change this value if you find that not all signs are fading properly.
@@ -328,14 +324,14 @@ function! vimade#GetDefaults()
     let g:vimade_defaults.signspriority = 31
 
     ""@setting vimade.fademinimap
-    "Supported:     lua, python, python-legacy
+    "Supported:     lua, python
     "Enables fading for `severin-lemaignan/vim-minimap`. Setting vimade.fademinimap to
     "0 disables the special fade.  Default is 1.
 
     let g:vimade_defaults.fademinimap = 1
 
     ""@setting vimade.fadepriority
-    "Supported:     python, python-legacy
+    "Supported:     python
     "lua uses namespaces and doesn't require priority settings
     "Controls the highlighting priority.
     "You may want to tweak this value to make Vimade play nicely with other highlighting plugins and behaviors.
@@ -349,46 +345,6 @@ function! vimade#GetDefaults()
     "Disables interprocess batching. Useful if you are seeing issues and need to debug an error.
 
     let g:vimade_defaults.disablebatch = 0
-
-    " ----------------------------------------------
-
-    " legacy only settings
-
-    ""@setting vimade.basefg
-    "Supported:     python-legacy
-    "lua and python renderers should use the *tint* config for better customization
-    "basefg can either be six digit hexidecimal color, rgb array [0-255,0-255,0-255], or cterm code (in terminal).  Basefg is only used to calculate the default fading that should be applied to Normal text.  By default basefg is calculated as the "Normal" highlight guifg or ctermfg.
-
-    let g:vimade_defaults.basefg = ''
-
-    ""@setting vimade.colbufsize
-    "Supported:     python-legacy
-    "lua and python renderers don't need to support this option.
-    "The number of cols left and right of the determined scroll area that should be precalculated. Reduce this value to improve performance. Default is 15 for gui vim and 5 for terminals/gvim.
-   
-    let g:vimade_defaults.colbufsize = g:vimade_features.has_gui_running && !(g:vimade_features.has_gui_version) ? 15 : 5
-
-    ""@setting vimade.rowbufsize
-    "Supported:     python-legacy
-    "lua and python renderers don't need to support this option.
-    "The number of rows above and below of the determined scroll area that should be precalculated. Reduce this value to improve performance Default is 15 for gui vim and 0 for terminals/gvim.
-
-    let g:vimade_defaults.rowbufsize = g:vimade_features.has_gui_running && !(g:vimade_features.has_gui_version) ? 15 : 0
-
-    ""@setting vimade.detecttermcolors
-    "Supported:     python-legacy
-    "lua and python renderers don't need to support this option.
-    "Detect the terminal background and foreground colors.  This will work for Vim8 + iTerm, Tilix, Kitty, Gnome, Rxvt, and other editors that support the following query (```\033]11;?\007``` or ```\033]11;?\033\\```).  Default is 0.  This feature can cause unwanted side effects during startup and should be enabled at your own risk
-
-    let g:vimade_defaults.detecttermcolors = 0
-
-    ""@setting vimade.enablescroll
-    "Supported:     python-legacy
-    "lua and python renderers don't need to support this option.
-    "Enables fading while scrolling inactive windows.  This is only useful in gui vim and does have a performance cost.  By default this setting is enabled in gui vim and disabled for terminals.
-
-    let g:vimade_defaults.enablescroll = ((g:vimade_features.has_gui_running || g:vimade_features.has_vimr) && !(g:vimade_features.has_gui_version))
-
 
     let g:vimade_defaults_keys = keys(g:vimade_defaults)
     if exists('g:vimade_detect_term_colors')
@@ -672,7 +628,6 @@ function! vimade#UpdateEvents()
       " TODO neovim is broken in many scenarios in v0.10. Python logic is not
       " executed properly when called directly off and autoevent. This is
       " easily reproduceable when using netrw...
-      " Using async here should work fine even in legacy.
       au WinEnter,BufEnter * call vimade#DeferredCheckWindows()
       au OptionSet diff call vimade#DeferredCheckWindows()
       au ColorScheme * call vimade#Redraw()
@@ -951,46 +906,5 @@ let s:python_renderer = {
   \ 'softInvalidateSigns': function('s:SoftInvalidateSigns_Python'),
   \ }
 " Python Renderer END
-
-" PythonLegacy Renderer START
-function! s:DetectTermColors_PythonLegacy()
-  exec g:vimade_py_cmd "from vimade.legacy import bridge; bridge.detectTermColors()"
-endfunction
-function! s:GetInfo_PythonLegacy()
-  exec g:vimade_py_cmd "from vimade.legacy import bridge; import vim; vim.vars['vimade_renderer_info'] = bridge.getInfo()"
-endfunction
-function! s:Recalculate_PythonLegacy()
-  exec g:vimade_py_cmd "from vimade.legacy import bridge; bridge.recalculate()"
-endfunction
-function! s:Redraw_PythonLegacy()
-  exec g:vimade_py_cmd "from vimade.legacy import bridge; bridge.unfadeAll(); bridge.recalculate()"
-  call vimade#CheckWindows()
-endfunction
-function! s:UnhighlightAll_PythonLegacy()
-  exec g:vimade_py_cmd "from vimade.legacy import bridge; bridge.unfadeAll()"
-endfunction
-function! s:Update_PythonLegacy()
-  exec g:vimade_py_cmd "from vimade.legacy import bridge; bridge.update({'activeBuffer': str(vim.current.buffer.number), 'activeTab': '".tabpagenr()."', 'activeWindow': '".win_getid(winnr())."'})"
-endfunction
-function! s:SoftInvalidateBuffer_PythonLegacy()
-  exec g:vimade_py_cmd "from vimade.legacy import bridge; bridge.softInvalidateBuffer('".a:bufnr."')"
-endfunction
-function! s:SoftInvalidateSigns_PythonLegacy()
-  exec g:vimade_py_cmd "from vimade.legacy import bridge; bridge.softInvalidateSigns()"
-endfunction
-let s:python_legacy_renderer = {
-  \ 'name': 'python_legacy',
-  \ 'animate': function('vimade#Empty'),
-  \ 'detectTermColors': function('s:DetectTermColors_PythonLegacy'),
-  \ 'getInfo': function('s:GetInfo_PythonLegacy'),
-  \ 'recalculate': function('s:Recalculate_PythonLegacy'),
-  \ 'redraw': function('s:Redraw_PythonLegacy'),
-  \ 'unhighlightAll': function('s:UnhighlightAll_PythonLegacy'),
-  \ 'update': function('s:Update_PythonLegacy'),
-  \ 'softInvalidateBuffer': function('s:SoftInvalidateBuffer_PythonLegacy'),
-  \ 'softInvalidateSigns': function('s:SoftInvalidateSigns_PythonLegacy'),
-  \ }
-" PythonLegacy Renderer END
-
 
 call vimade#Init()
