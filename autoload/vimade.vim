@@ -347,10 +347,6 @@ function! vimade#GetDefaults()
     let g:vimade_defaults.disablebatch = 0
 
     let g:vimade_defaults_keys = keys(g:vimade_defaults)
-    if exists('g:vimade_detect_term_colors')
-      let g:vimade.detecttermcolors = g:vimade_detect_term_colors
-    endif
-
     if exists('g:vimade_usecursorhold')
       let g:vimade.usecursorhold = g:vimade_usecursorhold
     endif
@@ -407,10 +403,6 @@ function! vimade#UnhighlightAll()
     return
   endif
   call g:vimade_active_renderer.unhighlightAll()
-endfunction
-
-function! vimade#DetectTermColors()
-  call g:vimade_active_renderer.detectTermColors()
 endfunction
 
 function! vimade#Toggle()
@@ -674,12 +666,6 @@ function! vimade#UpdateState()
     call vimade#StopTimer()
     call vimade#StartTimer()
   endif
-  if g:vimade.detecttermcolors != g:vimade.detecttermcolors
-    let g:vimade_last.detecttermcolors = g:vimade.detecttermcolors
-    if g:vimade.detecttermcolors
-      call vimade#DetectTermColors()
-    endif
-  endif
   let g:vimade.__background = &background
   let g:vimade.__colorscheme = exists('g:colors_name') ? g:colors_name : ""
   let g:vimade.__termguicolors = &termguicolors
@@ -778,10 +764,6 @@ function! vimade#Init()
 
   let g:vimade_last = extend({}, g:vimade)
 
-  if g:vimade.detecttermcolors
-    call vimade#DetectTermColors()
-  endif
-
   "check immediately
   if l:already_running == 0
     call vimade#DeferredCheckWindows()
@@ -808,7 +790,6 @@ let g:vimade_python_setup = 0
 "Empty Renderer START
 let s:empty_renderer = {
     \ 'name': 'empty',
-    \ 'detectTermColors': function('vimade#Empty'),
     \ 'getInfo': function('vimade#Empty'),
     \ 'recalculate': function('vimade#Empty'),
     \ 'redraw': function('vimade#Empty'),
@@ -822,10 +803,6 @@ let s:empty_renderer = {
 let g:vimade_active_renderer = s:empty_renderer 
 
 
-" Lua Renderer START
-function! s:DetectTermColors_Lua()
-  " empty
-endfunction
 function! s:Recalculate_Lua()
   lua require('vimade').redraw()
 endfunction
@@ -853,7 +830,6 @@ endfunction
 let s:lua_renderer = {
   \ 'name': 'lua',
   \ 'animate': function('s:Animate_Lua'),
-  \ 'detectTermColors': function('s:DetectTermColors_Lua'),
   \ 'getInfo': function('s:GetInfo_Lua'),
   \ 'recalculate': function('s:Recalculate_Lua'),
   \ 'redraw': function('s:Redraw_Lua'),
@@ -865,9 +841,6 @@ let s:lua_renderer = {
 " Lua Renderer END
 
 " Python Renderer START
-function! s:DetectTermColors_Python()
-  " empty
-endfunction
 function! s:GetInfo_Python()
   exec g:vimade_py_cmd "from vimade import bridge; import vim; vim.vars['vimade_renderer_info'] = bridge.getInfo()"
 endfunction
@@ -896,7 +869,6 @@ endfunction
 let s:python_renderer = {
   \ 'name': 'python',
   \ 'animate': function('s:Animate_Python'),
-  \ 'detectTermColors': function('s:DetectTermColors_Python'),
   \ 'getInfo': function('s:GetInfo_Python'),
   \ 'recalculate': function('s:Recalculate_Python'),
   \ 'redraw': function('s:Redraw_Python'),
