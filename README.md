@@ -1041,7 +1041,7 @@ from vimade.recipe.duo import Duo
 vimade.setup(**Duo(animate = True))
 ```
 
-![](https://tadaa.github.io/images/duo.gif)
+![](https://tadaa.github.io/images/duo-reduced.gif)
 ---
 </details>
 
