@@ -86,7 +86,7 @@ local duo = function (config)
 end
 
 --@param config {
-  -- @optional buffer_pct: number[0-1] = 0.618
+  -- @optional buffer_pct: number[0-1] = 0.382
   -- @optional window_pct: number[0-1] = 1
   -- @optional animate: boolean = false
   -- @optional condition: CONDITION = CONDITION.INACTIVE
@@ -99,7 +99,7 @@ end
 M.Duo = function(config)
   config = TYPE.shallow_copy(config)
   config.ncmode = config.ncmode or 'windows'
-  config.buffer_pct = config.buffer_pct or (1 - 0.382)
+  config.buffer_pct = config.buffer_pct or 0.382
   config.window_pct = config.window_pct or 1
   config.direction = config.direction or DIRECTION.IN_OUT
   return {

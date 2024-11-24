@@ -80,7 +80,7 @@ def duo(config):
   ]
 
 # @param **kwargs {
-  # @optional buffer_pct: number[0-1] = 0.618
+  # @optional buffer_pct: number[0-1] = 0.382
   # @optional window_pct: number[0-1] = 1
   # @optional animate: boolean = false
   # @optional ease: EASE = ANIMATE.DEFAULT_EASE
@@ -92,7 +92,7 @@ def duo(config):
 def Duo(**kwargs):
   config = TYPE.shallow_copy(kwargs)
   config['ncmode'] = config['ncmode'] if config.get('ncmode') != None else 'windows'
-  config['buffer_pct'] = config['buffer_pct'] if config.get('buffer_pct') != None else (1 - 0.382)
+  config['buffer_pct'] = config['buffer_pct'] if config.get('buffer_pct') != None else 0.382
   config['window_pct'] = config['window_pct'] if config.get('window_pct') != None else 1
   config['direction'] = config['direction'] if config.get('direction') != None else DIRECTION.IN_OUT
   return {
