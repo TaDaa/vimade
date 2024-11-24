@@ -419,6 +419,11 @@ For better color accuracy:
     ```
 5. Repeat step 4, but darken `basebg` until you find a value that suits your preferences.
 
+6. Once you have a good result it should look like this.  The example below uses the **Minimalist** recipe, which completely fades out
+   *EndOfBuffer* and *LineNr* highlights, notice how they aren't visible!
+
+    ![](http://tadaa.github.io/images/transparent_with_hlchunks.png)
+
 <br>
 
 ---
