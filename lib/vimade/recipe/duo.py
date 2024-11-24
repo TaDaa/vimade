@@ -38,7 +38,7 @@ def _duo_fade_to(config):
   def _duo_fade_result(style, state):
     to = FADE.Default().value()(style, state)
     pct = window_pct
-    if to and style.win.tabnr == GLOBALS.current['tabnr'] and style.win.bufnr == GLOBALS.current['bufnr']:
+    if to != None and style.win.tabnr == GLOBALS.current['tabnr'] and style.win.bufnr == GLOBALS.current['bufnr']:
       pct = buffer_pct
     return to + (1 - to) * (1 - pct)
   return _duo_fade_result
@@ -80,7 +80,7 @@ def duo(config):
   ]
 
 # @param **kwargs {
-  # @optional buffer_pct: number[0-1] = 0.382
+  # @optional buffer_pct: number[0-1] = 0.618
   # @optional window_pct: number[0-1] = 1
   # @optional animate: boolean = false
   # @optional ease: EASE = ANIMATE.DEFAULT_EASE
@@ -92,7 +92,7 @@ def duo(config):
 def Duo(**kwargs):
   config = TYPE.shallow_copy(kwargs)
   config['ncmode'] = config['ncmode'] if config.get('ncmode') != None else 'windows'
-  config['buffer_pct'] = config['buffer_pct'] if config.get('buffer_pct') != None else 0.382
+  config['buffer_pct'] = config['buffer_pct'] if config.get('buffer_pct') != None else (1 - 0.382)
   config['window_pct'] = config['window_pct'] if config.get('window_pct') != None else 1
   config['direction'] = config['direction'] if config.get('direction') != None else DIRECTION.IN_OUT
   return {
