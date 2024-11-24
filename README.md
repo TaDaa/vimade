@@ -1016,6 +1016,35 @@ vimade.setup(**Minimalist(animate = True))
 ---
 </details>
 
+<details open>
+<summary>
+<a><ins>Recipe: Duo</ins></a>
+</summary>
+
+<br>
+
+Looking for a balanced approach between *window* and *buffer* styles?  Duo applies full `fadelevel` and `tint` to inactive *buffers*
+and a fraction of the values to same-split *buffers*.
+
+*<sub>::lua:: [source](https://github.com/TaDaa/vimade/tree/master/lua/vimade/recipe/duo.lua) (see here for additional params)</sub>*
+
+```lua
+local Duo = require('vimade.recipe.duo').Duo
+require('vimade').setup(Duo{animate = true})
+```
+
+*<sub>::python:: [source](https://github.com/TaDaa/vimade/tree/master/lib/vimade/recipe/duo.py) (see here for additional params)</sub>*
+
+```python
+from vimade import vimade
+from vimade.recipe.duo import Duo
+vimade.setup(**Duo(animate = True))
+```
+
+![](https://tadaa.github.io/images/duo.gif)
+---
+</details>
+
 <details>
 <summary>
 <a><ins>Recipe: Ripple</ins></a>
@@ -1027,7 +1056,7 @@ Gradually increases the fade and tint level based on distance from the current w
 
 > [!NOTE]
 > 
-> This recipe fades by windows (`ncmode='windows'`)
+> This recipe requires and enables fading by windows (`ncmode='windows'`)
 
 
 *<sub>::lua:: [source](https://github.com/TaDaa/vimade/tree/master/lua/vimade/recipe/ripple.lua) (see here for additional params)</sub>*

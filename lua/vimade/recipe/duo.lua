@@ -1,30 +1,40 @@
 local M = {}
 local ANIMATE = require('vimade.style.value.animate')
+local DIRECTION = require('vimade.style.value.direction')
 local FADE = require('vimade.style.fade')
 local TINT = require('vimade.style.tint')
 local TYPE = require('vimade.util.type')
 local GLOBALS = require('vimade.state.globals')
 
-local duo_tint_to = function (style, state)
-  local to = TINT.Default().value()(style, state)
-  if to and style.win.tabnr == GLOBALS.current.tabnr and style.win.bufnr == GLOBALS.current.bufnr then
-    for i, color in pairs(to) do
-      if color.rgb then
-        if color.intensity == nil then
-          color.intensity = 1
+local duo_tint_to = function(config)
+  return function (style, state)
+    local to = TINT.Default().value()(style, state)
+    if to and style.win.tabnr == GLOBALS.current.tabnr then
+      local pct = config.window_pct
+      if style.win.bufnr == GLOBALS.current.bufnr then
+        pct = config.buffer_pct
+      end
+      for i, color in pairs(to) do
+        if color.rgb then
+          if color.intensity == nil then
+            color.intensity = 1
+          end
+          color.intensity = color.intensity * pct
         end
-        color.intensity = color.intensity * 0.5
       end
     end
+    return to
   end
-  return to
 end
-local duo_fade_to = function (style, state)
-  local to = FADE.Default().value()(style, state)
-  if to and style.win.tabnr == GLOBALS.current.tabnr and style.win.bufnr == GLOBALS.current.bufnr then
-    return (1+to) * 0.5
+local duo_fade_to = function(config)
+  return function (style, state)
+    local to = FADE.Default().value()(style, state)
+    local pct = config.window_pct
+    if to and style.win.tabnr == GLOBALS.current.tabnr and style.win.bufnr == GLOBALS.current.bufnr then
+      pct = config.buffer_pct
+    end
+    return to + (1 - to) * (1 - pct)
   end
-  return to
 end
 local animate_duo = function (config)
   local result = {
@@ -40,7 +50,7 @@ local animate_duo = function (config)
           end
           return start
         end,
-        to = duo_tint_to,
+        to = duo_tint_to(config),
         direction = config.direction,
         duration = config.duration,
         delay = config.delay,
@@ -50,7 +60,7 @@ local animate_duo = function (config)
     FADE.Fade({
       condition = config.condition,
       value = ANIMATE.Number({
-        to = duo_fade_to,
+        to = duo_fade_to(config),
         start = 1,
         direction = config.direction,
         duration = config.duration,
@@ -66,20 +76,22 @@ local duo = function (config)
   return {
     TINT.Tint({
       condition = config.condition,
-      value = duo_tint_to,
+      value = duo_tint_to(config),
     }),
     FADE.Fade({
       condition = config.condition,
-      value = duo_fade_to,
+      value = duo_fade_to(config),
     }),
   }
 end
 
 --@param config {
+  -- @optional buffer_pct: number[0-1] = 0.382
+  -- @optional window_pct: number[0-1] = 1
   -- @optional animate: boolean = false
   -- @optional condition: CONDITION = CONDITION.INACTIVE
   -- @optional delay: number = ANIMATE.DEFAULT_DELAY
-  -- @optional direction: DIRECTION = ANIMATE.DEFAULT_DIRECTION
+  -- @optional direction: DIRECTION = DIRECTION.IN_OUT
   -- @optional duration: number = ANIMATE.DEFAULT_DURATION
   -- @optional ease: EASE = ANIMATE.DEFAULT_EASE
   -- @optional ncmode: 'windows'|'buffers' = 'windows'
@@ -87,6 +99,9 @@ end
 M.Duo = function(config)
   config = TYPE.shallow_copy(config)
   config.ncmode = config.ncmode or 'windows'
+  config.buffer_pct = config.buffer_pct or 0.382
+  config.window_pct = config.window_pct or 1
+  config.direction = config.direction or DIRECTION.IN_OUT
   return {
     style = config.animate and animate_duo(config) or duo(config),
     ncmode = config.ncmode
