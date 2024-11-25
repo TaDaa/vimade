@@ -153,6 +153,13 @@ end
 
 M.setup = function (config)
   M.vimade_lua = TYPE.deep_copy(config)
+  local external_overlay = {}
+  for i, field in ipairs({'usecursorhold', 'checkinterval', 'enablefocusfading', 'normalid', 'normalncid'}) do
+    if config[field] ~= nil then
+      external_overlay[field] = config[field]
+    end
+  end
+  vim.g.vimade_overlay = external_overlay
 end
 
 M.getInfo = function ()

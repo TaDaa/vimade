@@ -199,6 +199,13 @@ class Globals(object):
 
   def setup(self, **kwargs):
     self.vimade_py = self.TYPE.deep_copy(kwargs)
+    external_overlay = {}
+    for field in ['usecursorhold', 'checkinterval', 'enablefocusfading', 'normalid', 'normalncid']:
+      value = kwargs.get(field)
+      if value != None:
+        external_overlay[field] = value
+    self.vim.vars['vimade_overlay'] = external_overlay
+
 
   def getInfo(self):
     info = self.__internal

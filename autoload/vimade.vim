@@ -22,6 +22,9 @@ function! vimade#CreateGlobals()
   if !exists('g:vimade')
     let g:vimade = {}
   endif
+  if !exists('g:vimade_overlay')
+    let g:vimade_overlay = {}
+  endif
 endfunction
 
 function! vimade#SetupRenderer()
@@ -463,13 +466,15 @@ function! vimade#FocusGained()
   call vimade#UpdateState()
   call vimade#Unpause()
   call vimade#InvalidateSigns()
-  if g:vimade.enablefocusfading
+  let enablefocusfading = vimade#GetMaybeFromOverlay('enablefocusfading')
+  if enablefocusfading
     call vimade#UnfadeActive()
   endif
 endfunction
 
 function! vimade#FocusLost()
-  if g:vimade.enablefocusfading
+  let enablefocusfading = vimade#GetMaybeFromOverlay('enablefocusfading')
+  if enablefocusfading
     call vimade#FadeActive()
   endif
   call vimade#Pause()
@@ -624,7 +629,8 @@ function! vimade#UpdateEvents()
       au OptionSet diff call vimade#DeferredCheckWindows()
       au ColorScheme * call vimade#Redraw()
       au FileChangedShellPost * call vimade#softInvalidateBuffer(expand("<abuf>"))
-      if g:vimade.usecursorhold
+      let usecursorhold = vimade#GetMaybeFromOverlay('usecursorhold')
+      if usecursorhold
         au CursorHold,CursorHoldI * call vimade#DeferredCheckWindows()
         au VimResized * call vimade#DeferredCheckWindows()
       endif
@@ -639,6 +645,14 @@ function! vimade#ExtendState()
   endfor
 endfunction
 
+function! vimade#GetMaybeFromOverlay(field)
+  if exists('g:vimade_overlay.' .. a:field)
+    return get(g:vimade_overlay, a:field)
+  else
+    return get(g:vimade, a:field)
+  endif
+endfunction
+
 function! vimade#UpdateState()
   if !exists('g:vimade')
     let g:vimade = {}
@@ -646,23 +660,27 @@ function! vimade#UpdateState()
   if !has_key(g:vimade, '$extended')
     call vimade#ExtendState()
   endif
-  if g:vimade.normalid == "" || g:vimade.normalid == 0
+  let normalid = vimade#GetMaybeFromOverlay('normalid')
+  if normalid == "" || normalid == 0 || normalid == v:null
     let g:vimade.normalid = hlID('Normal')
   endif
-  if g:vimade_features.has_nvim && (g:vimade.normalncid == "" || g:vimade.normalncid == 0)
+  let normalncid = vimade#GetMaybeFromOverlay('normalncid')
+  if g:vimade_features.has_nvim && (normalncid == "" || normalncid == 0 || normalncid == v:null)
     let g:vimade.normalncid = hlID('NormalNC')
   endif
-  if g:vimade.usecursorhold != g:vimade_last.usecursorhold
-    let g:vimade_last.usecursorhold = g:vimade.usecursorhold
-    if g:vimade.usecursorhold
+  let usecursorhold = vimade#GetMaybeFromOverlay('usecursorhold')
+  if usecursorhold != g:vimade_last.usecursorhold
+    let g:vimade_last.usecursorhold = usecursorhold
+    if usecursorhold
       call vimade#StopTimer()
     else
       call vimade#StartTimer()
     endif
     call vimade#UpdateEvents()
   endif
-  if g:vimade.checkinterval != g:vimade_last.checkinterval
-    let g:vimade_last.checkinterval = g:vimade.checkinterval
+  let checkinterval = vimade#GetMaybeFromOverlay('checkinterval')
+  if checkinterval != g:vimade_last.checkinterval
+    let g:vimade_last.checkinterval = checkinterval
     call vimade#StopTimer()
     call vimade#StartTimer()
   endif
@@ -739,8 +757,10 @@ endfunction
 
 function! vimade#StartTimer()
   "timer is disabled when usecursorhold=1
-  if !g:vimade.usecursorhold && !exists('g:vimade_timer') && g:vimade_running
-    let g:vimade_timer = timer_start(g:vimade.checkinterval, 'vimade#Tick', {'repeat': -1})
+  let usecursorhold = vimade#GetMaybeFromOverlay('usecursorhold')
+  if !usecursorhold && !exists('g:vimade_timer') && g:vimade_running
+    let checkinterval = vimade#GetMaybeFromOverlay('checkinterval')
+    let g:vimade_timer = timer_start(checkinterval, 'vimade#Tick', {'repeat': -1})
   endif
 endfunction
 function! vimade#StopTimer()
@@ -774,9 +794,11 @@ function! vimade#Init()
 
   "run the timer once during startup
   "we use try here to possibly support vim 7
-  if g:vimade.usecursorhold
+  let usecursorhold = vimade#GetMaybeFromOverlay('usecursorhold')
+  if usecursorhold
+    let checkinterval = vimade#GetMaybeFromOverlay('checkinterval')
     try
-      call timer_start(g:vimade.checkinterval, 'vimade#Tick')
+      call timer_start(checkinterval, 'vimade#Tick')
     catch
     endtry
   endif
