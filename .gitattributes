@@ -1,1 +1,1 @@
-lib/vimade/state/*.* linguist-detectable=false
+lib/vimade/state/*.* linguist-vendored
