@@ -2,7 +2,7 @@
 
 ### Dim, Fade, Tint, and Customize (Neo)vim
 
-![](https://tadaa.github.io/images/minimalist_full.gif)
+![main_minimalist_full](https://raw.githubusercontent.com/TaDaa/tadaa.github.io/refs/heads/master/images/minimalist_full.gif)
 
 ## What is this?
 
@@ -422,7 +422,7 @@ For better color accuracy:
 6. Once you have a good result it should look like this.  The example below uses the **Minimalist** recipe, which completely fades out
    *EndOfBuffer* and *LineNr* highlights, notice how they aren't visible!
 
-    ![](http://tadaa.github.io/images/transparent_with_hlchunks.png)
+    ![transparent_with_hlchunks](https://raw.githubusercontent.com/TaDaa/tadaa.github.io/refs/heads/master/images/transparent_with_hlchunks.png)
 
 <br>
 
@@ -475,7 +475,7 @@ Changing the `fg` alters the text color. Let's give our inactive windows some yo
 let g:vimade.tint = {'fg':{'rgb':[0,255,0], 'intensity': 0.3}}
 ```
 
-![](http://tadaa.github.io/images/tint_section_fg_green.png)
+![tint_fg_green](https://raw.githubusercontent.com/TaDaa/tadaa.github.io/refs/heads/master/images/tint_section_fg_green.png)
 
 The more that you raise the intensity, the closer each highlight will be the specified `rgb` value.  So let's say you want to disable
 `syntax` highlighting on inactive windows, all you need to do is set the `intensity` to the value `1`.
@@ -486,7 +486,7 @@ The more that you raise the intensity, the closer each highlight will be the spe
 let g:vimade.tint = {'fg':{'rgb':[200,200,200], 'intensity': 1}}
 ```
 
-![](http://tadaa.github.io/images/tint_section_fg_full_intensity.png)
+![tint_fg_full_intensity](https://raw.githubusercontent.com/TaDaa/tadaa.github.io/refs/heads/master/images/tint_section_fg_full_intensity.png)
 
 
 `bg` directly impacts the window background color. It also indirectly impacts the `fg` color if you have fading enabled because
@@ -497,7 +497,7 @@ fades are performed against the background color.
 let g:vimade.tint = {'bg':{'rgb':[0,0,0], 'intensity': 0.15}}
 ```
 
-![](http://tadaa.github.io/images/tint_section_bg_black.png)
+![tint_bg_black](https://raw.githubusercontent.com/TaDaa/tadaa.github.io/refs/heads/master/images/tint_section_bg_black.png)
 
  `bg` and all `tint` attributes have different effects depending on the value of `vimade.ncmode`.  When using `let g:vimade.ncmode='buffers'`,
  tints only impact inactive *buffers*.  When using `let g:vimade.ncmode='windows'` they affect windows, see the screenshots below for a
@@ -511,7 +511,7 @@ let g:vimade.tint = {
   \ 'bg': { 'rgb': [0,0,0], 'intensity': 0.15 }}
 ```
 
-![](http://tadaa.github.io/images/tint_section_combined_buffers.png)
+![tint_buffer_mode](https://raw.githubusercontent.com/TaDaa/tadaa.github.io/refs/heads/master/images/tint_section_combined_buffers.png)
 
 <sub>::vimscript::</sub>
 ``` vimscript
@@ -521,7 +521,7 @@ let g:vimade.tint = {
   \ 'bg': {'rgb': [0,0,0], 'intensity': 0.15 }}
 ```
 
-![](http://tadaa.github.io/images/tint_section_combined_windows.png)
+![tint_windows_mode](https://raw.githubusercontent.com/TaDaa/tadaa.github.io/refs/heads/master/images/tint_section_combined_windows.png)
 
 
 ---
@@ -643,7 +643,7 @@ vimade.setup(blocklist = {
 
 Now nothing is faded except when you open a floating window, voilà!
 
-![](http://tadaa.github.io/images/only_when_floating.png)
+![block_unless_floating](https://raw.githubusercontent.com/TaDaa/tadaa.github.io/refs/heads/master/images/only_when_floating.png)
 
 
 For a final step let's apply the same concepts to linking
@@ -988,7 +988,7 @@ from vimade.recipe.default import Default
 vimade.setup(**Default(animate=True))
 ```
 
-![](https://tadaa.github.io/images/default_recipe_animate.gif)
+![default_recipe](https://raw.githubusercontent.com/TaDaa/tadaa.github.io/refs/heads/master/images/default_recipe_animate.gif)
 ---
 </details>
 
@@ -1017,7 +1017,7 @@ from vimade.recipe.minimalist import Minimalist
 vimade.setup(**Minimalist(animate = True))
 ```
 
-![](https://tadaa.github.io/images/minimalist_recipe_animate2.gif)
+![minimalist_recipe](https://raw.githubusercontent.com/TaDaa/tadaa.github.io/refs/heads/master/images/minimalist_recipe_animate2.gif)
 ---
 </details>
 
@@ -1046,7 +1046,7 @@ from vimade.recipe.duo import Duo
 vimade.setup(**Duo(animate = True))
 ```
 
-![](https://tadaa.github.io/images/duo-reduced.gif)
+![duo_recipe](https://raw.githubusercontent.com/TaDaa/tadaa.github.io/refs/heads/master/images/duo-reduced.gif)
 ---
 </details>
 
@@ -1079,7 +1079,7 @@ from vimade.recipe.ripple import Ripple
 vimade.setup(**Ripple(animate = True))
 ```
 
-![](https://tadaa.github.io/images/ripple.gif)
+![ripple_recipe](https://raw.githubusercontent.com/TaDaa/tadaa.github.io/refs/heads/master/images/ripple.gif)
 
 ---
 </details>
