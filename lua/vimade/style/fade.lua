@@ -6,8 +6,20 @@ local COLOR_UTIL = require('vimade.util.color')
 local TYPE = require('vimade.util.type')
 local GLOBALS
 
-M.__init = function (args)
+M.__init = function(args)
   GLOBALS = args.GLOBALS
+end
+
+local validate_user_input = function(value)
+  if type(value) ~= 'number' then
+    value = tonumber(value)
+  end
+  if value == nil then
+    return 0.4
+  end
+  -- technically we can support values outside this range on Neovim.  However,
+  -- the behavior is unknown and might lead to errors in the future.
+  return math.min(math.max(value, 0), 1)
 end
 
 -- @param config {
@@ -29,6 +41,7 @@ M.Fade = function(config)
       if type(_value) == 'function' then
         fade = _value(style, state)
       end
+      fade = validate_user_input(fade)
       -- before any ops related to this module, we want to ensure we have the most up-to-date fade
       -- for the window
       if type(_condition) == 'function' then
@@ -91,10 +104,11 @@ M.Default = function (config)
 return M.Fade(TYPE.extend({
   condition = CONDITION.INACTIVE,
   value = function (style, state)
-    if type(GLOBALS.fadelevel) == 'function' then
-      return GLOBALS.fadelevel(style, state)
+    local value = GLOBALS.fadelevel
+    if type(value) == 'function' then
+      value = value(style, state)
     end
-    return GLOBALS.fadelevel
+    return validate_user_input(value)
   end
 }, config))
 end

@@ -35,8 +35,13 @@ M.schedule = function (win)
   -- this is also doable via lua code and then scheduling a vim-safe callback
   -- but there appears to be no benefit. Sharing the code across all supported
   -- versions seems much more maintainable currently
-  -- there also seems to be much less flickering with this approach
-  --queued_windows[win.winid] = true
+  -- there also seems to be much less flickering with this approach when compared
+  -- to the lua alternative.
+  --
+  -- the below queued_windows cannot be supported in lua at this time, but we should add
+  -- it consider adding it back once neovim fixes set_hl issues that break the entire
+  -- namespace (not setting each window is currently unsafe).
+  -- queued_windows[win.winid] = true
   M.scheduled = true
 end
 
