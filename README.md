@@ -78,8 +78,7 @@ buffers.
   function! SetupMyVimadeConfig()
   python << EOF
   from vimade import vimade
-  from vimade.recipe.minimalist import Minimalist
-  vimade.setup(**Minimalist(animate=True))
+  vimade.setup(recipe = ['Minimalist', {'animate':True}])
   EOF
   endfunction
   au! User Vimade#PythonReady call SetupMyVimadeConfig()
