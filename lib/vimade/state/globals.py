@@ -1,3 +1,4 @@
+from importlib import import_module
 import sys
 import time
 import vim
@@ -146,10 +147,12 @@ class Globals(object):
       'require_treesitter': False,
       'termguicolors': None,
       'disablebatch': False,
+      'recipe': [],
       'style': [],
       'now': None,
     }
     self.vim = vim
+    self.import_module = import_module
     self.time = time
     self.FADE = FADE
     self.TINT = TINT
@@ -198,14 +201,30 @@ class Globals(object):
     return tick_id
 
   def setup(self, **kwargs):
-    self.vimade_py = self.TYPE.deep_copy(kwargs)
+    overlay = {}
     external_overlay = {}
+    recipe = kwargs.get('recipe')
+    if recipe and len(recipe) > 0:
+      if type(recipe[0]) == str:
+        required = recipe[0].split(':')
+        file = required[0].lower()
+        name = required[1] if len(required) > 1 else file
+        if not file and name:
+          file = name.lower()
+        name = name[0].upper() + name[1:].lower()
+        module = self.import_module('vimade.recipe.' + file)
+        module = module.__getattribute__(name)
+        recipe = module(**(recipe[1] if len(recipe) > 1 else {}))
+        overlay = self.TYPE.extend(overlay, recipe)
+    if 'recipe' in kwargs:
+      del kwargs['recipe']
+    overlay = self.TYPE.extend(overlay, self.TYPE.deep_copy(kwargs))
     for field in ['usecursorhold', 'checkinterval', 'enablefocusfading', 'normalid', 'normalncid']:
-      value = kwargs.get(field)
+      value = overlay.get(field)
       if value != None:
         external_overlay[field] = value
+    self.vimade_py = overlay
     self.vim.vars['vimade_overlay'] = external_overlay
-
 
   def getInfo(self):
     info = self.__internal

@@ -152,13 +152,35 @@ local check_fields = function (fields, next, current, defaults, return_state)
 end
 
 M.setup = function (config)
-  M.vimade_lua = TYPE.deep_copy(config)
+  local overlay = {}
+  local recipe = config and config.recipe
+  if recipe and #recipe > 0 then
+    if type(recipe[1]) == 'string' then
+      local required = {}
+      for part in string.gmatch(recipe[1], '[^:]*') do
+        table.insert(required, part)
+      end
+      local file = string.lower(required[1]) 
+      local name = (required[2] and required[2] ~= '') and required[2] or file
+      if not file and name then
+        file = string.lower(name)
+      end
+      name = string.upper(string.sub(name,1,1)) .. string.lower(string.sub(name, 2))
+      local module = require('vimade.recipe.' .. file)
+      module = module[name]
+      recipe = module(recipe[2] or {})
+      overlay = TYPE.extend(overlay, recipe)
+    end
+  end
+  config.recipe = nil
+  overlay = TYPE.extend(overlay, TYPE.deep_copy(config))
   local external_overlay = {}
   for i, field in ipairs({'usecursorhold', 'checkinterval', 'enablefocusfading', 'normalid', 'normalncid'}) do
     if config[field] ~= nil then
       external_overlay[field] = config[field]
     end
   end
+  M.vimade_lua = overlay
   vim.g.vimade_overlay = external_overlay
 end
 

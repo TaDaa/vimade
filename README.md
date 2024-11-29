@@ -62,7 +62,6 @@ buffers.
   ```lua
     require('lazy').setup({spec = {'tadaa/vimade'}})
   ```
-  
 
   <details open>
   <summary>
@@ -273,7 +272,7 @@ let g:vimade = {
 <sub>::lua::</sub>
 ```lua
 vimade.setup{
-  style = require(vimade.style.default).Default().style,
+  recipe = {'Default', {animate=false}},
   ncmode = 'buffers',
   fadelevel = 0.4,
   tint = {},
@@ -302,7 +301,7 @@ vimade.setup{
 from vimade import vimade
 from vimade.recipe.default import Default
 vimade.setup(
-  style = Default()['style'],
+  recipe = ['Default', {'animate': False}],
   ncmode = 'buffers',
   fadelevel = 0.4,
   tint = None,
@@ -364,6 +363,7 @@ vimade.setup(
 
 | option      | values/type | default | description                                                                                                                                                                                                                                                                                                                                         |
 | -           | -           | -       | -                                                                                                                                                                                                                                                                                                                                                   |
+| `recipe` | `arraylike[name, recipe_options]` <sub><br>Example:<br> `{'Minimalist',{'animate':true}}`</sub> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; | '`{'Default'}`' | Recipe and recipe-specific options that will be imported and used. Any other configuration will overlay the recipe config.
 | `nohlcheck` | `bool`      | `true`  | When set to `false`, **Vimade** will recompute namespaces each frame.  This is useful if you have a plugin that dynamically changes highlights periodically.  When to `true` **Vimade** only recomputes namespaces when you switch between buffers/windows.  Performance isn't an issue either way as the recomputation process is sub-millisecond. |
 
 
@@ -372,6 +372,7 @@ vimade.setup(
 
 | option        | values/type    | default | description                                                                                                                                                                                                                                                                                                                                         |
 | -             | -              | -       | -                                                                                                                                                                                                                                                                                                                                                   |
+| `recipe` | `arraylike[name, recipe_options]` <sub><br>Example:<br> `['Minimalist',{'animate':True}]`</sub> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; | '`['Default']`' | Recipe and recipe-specific options that will be imported and used. Any other configuration will overlay the recipe config.
 | `enablesigns`   | `0` `1` `bool`       | `True`    | Whether or not to fade signs.  For **python** this has to be performed per-buffer.  If you want per-window signs, you will need to link your sign highlights to **Normal**.
 | `signsid`       | `int`            | `13100`   | The id that should be used to generate sign.  This is required to avoid collisions with other plugins.
 | `signsretentionperiod` | `int`     | `4000`    | The amount of time after a window becomes inactive to check for sign updates.  Many plugins asynchronously update the buffer after switching windows, this helps ensure signs stay faded.
@@ -976,16 +977,14 @@ You can only enable **recipes** through a configuration overlay (**no vimscript*
 *<sub>::lua:: [source](https://github.com/TaDaa/vimade/tree/master/lua/vimade/recipe/default.lua) (see here for additional params)</sub>*
 
 ```lua
-local Default = require('vimade.recipe.default').Default
-require('vimade').setup(Default(animate=true))
+require('vimade').setup({recipe = {'Default', {animate = true}}})
 ```
 
 
 *<sub>::python:: [source](https://github.com/TaDaa/vimade/tree/master/lua/vimade/recipe/default.lua) (see here for additional params)</sub>*
 ```python
 from vimade import vimade
-from vimade.recipe.default import Default
-vimade.setup(**Default(animate=True))
+vimade.setup(recipe = ['Default', {'animate': True}])
 ```
 
 ![default_recipe](https://raw.githubusercontent.com/TaDaa/tadaa.github.io/refs/heads/master/images/default_recipe_animate.gif)
@@ -1004,8 +1003,7 @@ This recipe hides low value built-in highlights on inactive windows such as numb
 *<sub>::lua:: [source](https://github.com/TaDaa/vimade/tree/master/lua/vimade/recipe/minimalist.lua) (see here for additional params)</sub>*
 
 ```lua
-local Minimalist = require('vimade.recipe.minimalist').Minimalist
-require('vimade').setup(Minimalist{animate = true})
+require('vimade').setup({recipe = {'Minimalist', {animate = true}}})
 ```
 
 *<sub>::python:: [source](https://github.com/TaDaa/vimade/tree/master/lib/vimade/recipe/minimalist.py) (see here for additional params)</sub>*
@@ -1013,8 +1011,7 @@ require('vimade').setup(Minimalist{animate = true})
 <sub>NOTE: For **vim** users with wincolor, minimalist will link the `no_visibility_highlights` to `Normal` so that they can completely fade-out per-window.<sub>
 ```python
 from vimade import vimade
-from vimade.recipe.minimalist import Minimalist
-vimade.setup(**Minimalist(animate = True))
+vimade.setup(recipe = ['Minimalist', {'animate': True}])
 ```
 
 ![minimalist_recipe](https://raw.githubusercontent.com/TaDaa/tadaa.github.io/refs/heads/master/images/minimalist_recipe_animate2.gif)
@@ -1034,16 +1031,14 @@ and a fraction of the values to same-split *buffers*.
 *<sub>::lua:: [source](https://github.com/TaDaa/vimade/tree/master/lua/vimade/recipe/duo.lua) (see here for additional params)</sub>*
 
 ```lua
-local Duo = require('vimade.recipe.duo').Duo
-require('vimade').setup(Duo{animate = true})
+require('vimade').setup({recipe = {'Duo', {animate = true}}})
 ```
 
 *<sub>::python:: [source](https://github.com/TaDaa/vimade/tree/master/lib/vimade/recipe/duo.py) (see here for additional params)</sub>*
 
 ```python
 from vimade import vimade
-from vimade.recipe.duo import Duo
-vimade.setup(**Duo(animate = True))
+vimade.setup(recipe = ['Duo', {'animate': True}])
 ```
 
 ![duo_recipe](https://raw.githubusercontent.com/TaDaa/tadaa.github.io/refs/heads/master/images/duo-reduced.gif)
@@ -1067,16 +1062,14 @@ Gradually increases the fade and tint level based on distance from the current w
 *<sub>::lua:: [source](https://github.com/TaDaa/vimade/tree/master/lua/vimade/recipe/ripple.lua) (see here for additional params)</sub>*
 
 ```lua
-local Ripple = require('vimade.recipe.ripple').Ripple
-require('vimade').setup(Ripple{animate = true})
+require('vimade').setup({recipe = {'Ripple', {animate = true}}})
 ```
 
 *<sub>::python:: [source](https://github.com/TaDaa/vimade/tree/master/lib/vimade/recipe/ripple.py) (see here for additional params)</sub>*
 
 ```python
 from vimade import vimade
-from vimade.recipe.ripple import Ripple
-vimade.setup(**Ripple(animate = True))
+vimade.setup(recipe = ['Ripple', {'animate': True}])
 ```
 
 ![ripple_recipe](https://raw.githubusercontent.com/TaDaa/tadaa.github.io/refs/heads/master/images/ripple.gif)
