@@ -459,7 +459,11 @@ class WinState(object):
       basebg = basebg(win, M.current)
     if basebg:
       basebg = COLOR_UTIL.to24b(basebg)
+    if type(basebg) == int:
+      self.basebg = basebg
       basebg_key = 'bg(' + str(basebg) + ')'
+    else:
+      self.basebg = None
     self.basebg = basebg if type(basebg) == int else None
 
     rerun_style = False

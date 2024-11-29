@@ -204,10 +204,10 @@ M.refresh = function (wininfo, skip_link)
   end
   if basebg then
     basebg = COLOR_UTIL.to24b(basebg)
-    basebg_key = 'bg(' .. basebg .. ')'
   end
   if type(basebg) == 'number' then
     win.basebg = basebg
+    basebg_key = 'bg(' .. basebg .. ')'
   else
     win.basebg = nil
   end

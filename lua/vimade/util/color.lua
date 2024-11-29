@@ -22,8 +22,12 @@ M.to24b = function(color, is256)
     g = tonumber(color[2]) or 0
     b = tonumber(color[3]) or 0
     return tonumber('0x'..string.format('%02x',r)..string.format('%02x',g)..string.format('%02x',b)) or 0
-  elseif type(color) == 'string' and string.sub(color, 1, 1) == '#' then
-    color = '0x' .. string.sub(color, 2, string.len(color))
+  elseif type(color) == 'string' then
+    -- convert vim/nvim highlight patterns to normal numbers
+    if string.sub(color, 1, 1) == '#' then
+      color = '0x' .. string.sub(color, 2, string.len(color))
+    end
+    -- lua tonumber gracefully handles invalid input and various base types.
     return tonumber(color) or 0
   elseif type(color) == 'number' then
     return color

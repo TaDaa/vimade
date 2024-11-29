@@ -18,14 +18,22 @@ def to24b(color, is256 = False):
     color = M.RGB_256[color] or M.RGB_256[0]
 
   if type(color) in (tuple, list):
-    r = int(color[0]) or 0
-    g = int(color[1]) or 0
-    b = int(color[2]) or 0
+    ln = len(color)
+    r = ln > 0 and int(color[0]) or 0
+    g = ln > 1 and int(color[1]) or 0
+    b = ln > 2 and int(color[2]) or 0
     result = '0x' + hex(r)[2:].zfill(2) + '' + hex(g)[2:].zfill(2) + '' + hex(b)[2:].zfill(2)
     return int(result, 16) or 0
-  elif type(color) == str and color[0] == '#':
-    color = '0x' + color[1:]
-    return int(color, 16) or 0
+  elif type(color) == str:
+    # convert vim/nvim highlight patterns to normal numbers
+    if color[0] == '#':
+      color = '0x' + color[1:]
+    try:
+      # int(*,0) will infer the base type (base16 or 10) automatically.
+      # python throws an exception if it can't be converted.
+      return int(color, 0) or 0
+    except:
+      pass
   elif type(color) in (int, float):
     return int(color or 0)
   return None
