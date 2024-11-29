@@ -2,6 +2,8 @@ local M = {}
 local CONDITION = require('vimade.style.value.condition')
 local COLOR_UTIL = require('vimade.util.color')
 local TYPE = require('vimade.util.type')
+local VALIDATE = require('vimade.util.validate')
+
 local GLOBALS
 
 M.__init = function (args)
@@ -23,9 +25,10 @@ M._resolve_all_fn = function (obj, style, state)
 end
 
 M._create_to_hl = function (tint)
-  if not tint then
+  if type(tint) ~= 'table' then
     return nil
   end
+  tint = VALIDATE.tint(tint)
   local fg = tint.fg
   local bg = tint.bg
   local sp = tint.sp
@@ -35,13 +38,13 @@ M._create_to_hl = function (tint)
 
   return {
     fg = fg and COLOR_UTIL.to24b(fg.rgb) or nil,
-    ctermfg = fg and fg.rgb or nil,
-    fg_intensity = fg and (1 - (fg.intensity or 0)),
+    ctermfg = fg and COLOR_UTIL.toRgb(fg.rgb) or nil,
+    fg_intensity = fg and (1 - fg.intensity),
     bg = bg and COLOR_UTIL.to24b(bg.rgb) or nil,
-    bg_intensity = bg and (1 - (bg.intensity or 0)),
-    ctermbg = bg and bg.rgb or nil,
+    bg_intensity = bg and (1 - bg.intensity),
+    ctermbg = bg and COLOR_UTIL.toRgb(bg.rgb) or nil,
     sp = sp and COLOR_UTIL.to24b(sp) or nil,
-    sp_intensity = sp and (1 - (sp.intensity or 0)),
+    sp_intensity = sp and (1 - sp.intensity),
   }
 end
 
@@ -119,13 +122,14 @@ M.Default = function (config)
 return M.Tint(TYPE.extend({
   condition = CONDITION.INACTIVE,
   value = function (style, state)
-  if type(GLOBALS.tint) == 'function' then
-    return GLOBALS.tint(style, state)
-  elseif type(GLOBALS.tint) == 'table' then
-    return TYPE.deep_copy(GLOBALS.tint)
+    if type(GLOBALS.tint) == 'function' then
+      return VALIDATE.tint(GLOBALS.tint(style, state))
+    elseif type(GLOBALS.tint) == 'table' then
+      return TYPE.deep_copy(VALIDATE.tint(GLOBALS.tint))
+    end
+    return VALIDATE.tint(GLOBALS.tint)
   end
-  return GLOBALS.tint
-end}, config))
+}, config))
 end
 
 return M

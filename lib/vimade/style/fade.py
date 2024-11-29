@@ -5,22 +5,14 @@ M = sys.modules[__name__]
 from vimade.util import color as COLOR_UTIL
 from vimade.style.value import condition as CONDITION
 from vimade.util import type as TYPE
+from vimade.util import validate as VALIDATE
+
 GLOBALS = None
 
 def __init(args):
   global GLOBALS
   GLOBALS = args['GLOBALS']
 M.__init = __init
-
-# Only allow values between 0 and 1.
-# Attempt to coerce the type to float.
-def _validate_user_input(value):
-  if type(value) not in (float, int):
-    try:
-      value = float(value)
-    except:
-      return 0.4 # default fallback on invalid input
-  return min(max(value, 0), 1)
 
 class Fade():
   def __init__(parent, **kwargs):
@@ -36,7 +28,7 @@ class Fade():
         self.fade = parent._value
         self._animating = False
       def before(self, win, state):
-        self.fade = _validate_user_input(parent._value(self, state) if callable(parent._value) else parent._value)
+        self.fade = VALIDATE.fade(parent._value(self, state) if callable(parent._value) else parent._value)
         self.condition = _condition(self, state) if callable(_condition) else _condition
 
       def key(self, win, state):
@@ -73,5 +65,5 @@ class Fade():
 def Default(**kwargs):
   return Fade(**TYPE.extend({
     'condition': CONDITION.INACTIVE,
-    'value': lambda style, state: _validate_user_input(GLOBALS.fadelevel(style, state) if callable(GLOBALS.fadelevel) else GLOBALS.fadelevel),
+    'value': lambda style, state: VALIDATE.fade(GLOBALS.fadelevel(style, state) if callable(GLOBALS.fadelevel) else GLOBALS.fadelevel),
   }, kwargs))

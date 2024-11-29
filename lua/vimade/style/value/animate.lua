@@ -92,6 +92,26 @@ M.Tint = function(config)
 
     return result
   end
+  if not config.start then
+    config.start = function(style, state)
+      local value = config.to
+      if type(value) == 'function' then
+        value = value(style, state)
+      end
+      if value then
+        if value.fg then
+          value.fg.intensity = 0
+        end
+        if value.bg then
+          value.bg.intensity = 0
+        end
+        if value.sp then
+          value.sp.intensity = 0
+        end
+      end
+      return value
+    end
+  end
   config.compare = TYPE.deep_compare
   return M.Animate(config)
 end

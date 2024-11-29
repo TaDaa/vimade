@@ -4,6 +4,8 @@ M = sys.modules[__name__]
 from vimade.util import color as COLOR_UTIL
 from vimade.style.value import condition as CONDITION
 from vimade.util import type as TYPE
+from vimade.util import validate as VALIDATE
+
 GLOBALS = None
 
 def __init(args):
@@ -27,8 +29,9 @@ def _tint_or_global(tint):
   return GLOBALS.tint
 
 def _create_to_hl(tint):
-  if not tint:
+  if type(tint) != dict:
     return None
+  tint = VALIDATE.tint(tint)
   fg = tint.get('fg')
   bg = tint.get('bg')
   sp = tint.get('sp')
@@ -45,16 +48,18 @@ def _create_to_hl(tint):
     'sp_intensity': None,
   }
   if fg:
-    result['fg'] = COLOR_UTIL.to24b(fg['rgb'])
-    result['ctermfg'] = fg['rgb']
-    result['fg_intensity'] = 1 - fg.get('intensity', 1)
+    rgb = fg.get('rgb')
+    result['fg'] = COLOR_UTIL.to24b(rgb)
+    result['ctermfg'] = COLOR_UTIL.toRgb(rgb)
+    result['fg_intensity'] = 1 - fg.get('intensity')
   if bg:
-    result['bg'] = COLOR_UTIL.to24b(bg['rgb'])
-    result['ctermbg'] = bg['rgb']
-    result['bg_intensity'] = 1 - bg.get('intensity', 1)
+    rgb = bg.get('rgb')
+    result['bg'] = COLOR_UTIL.to24b(rgb)
+    result['ctermbg'] = COLOR_UTIL.toRgb(rgb)
+    result['bg_intensity'] = 1 - bg.get('intensity')
   if sp:
-    result['sp'] = COLOR_UTIL.to24b(sp['rgb'])
-    result['sp_intensity'] = 1 - sp.get('intensity', 1)
+    result['sp'] = COLOR_UTIL.to24b(sp.get('rgb'))
+    result['sp_intensity'] = 1 - sp.get('intensity')
   return result
 
 # @param **kwargs {
@@ -84,9 +89,9 @@ class Tint():
         self._animating = False
       def before(self, win, state):
         self.condition = _condition(self, state) if callable(_condition) else _condition
+        tint = _resolve_all_fn(parent._value, self, state)
         if self.condition == False:
           return
-        tint = _resolve_all_fn(parent._value, self, state)
         self.to_hl =_create_to_hl(tint)
       def key(self, win, state):
         if self.condition == False or not self.to_hl:
@@ -127,5 +132,5 @@ class Tint():
 def Default(**kwargs):
   return Tint(**TYPE.extend({
     'condition': CONDITION.INACTIVE,
-    'value': lambda style, state: GLOBALS.tint(style, state) if callable(GLOBALS.tint) else _tint_or_global(GLOBALS.tint),
+    'value': lambda style, state: VALIDATE.tint(GLOBALS.tint(style, state)) if callable(GLOBALS.tint) else VALIDATE.tint(_tint_or_global(GLOBALS.tint)),
   }, kwargs))

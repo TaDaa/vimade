@@ -9,13 +9,6 @@ from vimade.style import fade as FADE
 from vimade.style import tint as TINT
 from vimade.util import type as TYPE
 
-def _duo_tint_start(style, state):
-  start = TINT.Default().value()(style, state)
-  if start:
-    for color in start.values():
-      color['intensity'] = 0
-  return start
-
 def _duo_tint_to(config):
   buffer_pct = config.get('buffer_pct')
   window_pct = config.get('window_pct')
@@ -54,7 +47,6 @@ def animate_duo(config):
     TINT.Tint(
       condition = condition,
       value = ANIMATE.Tint(**TYPE.extend({}, animation, {
-        'start': _duo_tint_start,
         'to': _duo_tint_to(config),
       })
     )),

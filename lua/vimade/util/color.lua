@@ -18,11 +18,10 @@ M.to24b = function(color, is256)
   end
 
   if type(color) == 'table' then
-    r = color[1] or 0
-    g = color[2] or 0
-    b = color[3] or 0
-    local result = tonumber('0x'..string.format('%02x',r)..string.format('%02x',g)..string.format('%02x',b))
-    return result
+    r = tonumber(color[1]) or 0
+    g = tonumber(color[2]) or 0
+    b = tonumber(color[3]) or 0
+    return tonumber('0x'..string.format('%02x',r)..string.format('%02x',g)..string.format('%02x',b)) or 0
   elseif type(color) == 'string' and string.sub(color, 1, 1) == '#' then
     color = '0x' .. string.sub(color, 2, string.len(color))
     return tonumber(color) or 0

@@ -77,7 +77,22 @@ def Tint(**kwargs):
       result['sp']['rgb'] = COLOR_UTIL.interpolateRgb(to_sp_rgb, start_sp_rgb, pct_time)
       result['sp']['intensity'] = COLOR_UTIL.interpolateFloat(to_sp_intensity, start_sp_intensity, pct_time)
     return result
-
+  if not 'start' in kwargs:
+    def _start(style, state):
+      value = kwargs.get('to')
+      value = value(style, state) if callable(value) else value
+      if value:
+        fg = value.get('fg')
+        bg = value.get('bg')
+        sp = value.get('sp')
+        if fg:
+          fg['intensity'] = 0
+        if bg:
+          bg['intensity'] = 0
+        if sp:
+          sp['intensity'] = 0
+      return value
+    kwargs['start'] = _start
   kwargs['interpolate'] = interpolate
   kwargs['compare'] = TYPE.deep_compare
   return M.Animate(**kwargs)
@@ -160,7 +175,6 @@ def Animate(**kwargs):
     if value == None:
       state['value'] = start
       state['start'] = start
-
     if time <= 0:
       if reset == True:
         state['start'] = start
@@ -175,7 +189,7 @@ def Animate(**kwargs):
       style._animating = False
       return to
 
-    elapsed = time / duration
+    elapsed = time / float(duration)
     elapsed = min(max(_ease(elapsed), 0), 1)
     state['value'] = _interpolate(to, state['start'], elapsed)
     ANIMATOR.schedule(win)

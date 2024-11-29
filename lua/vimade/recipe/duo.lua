@@ -17,7 +17,7 @@ local duo_tint_to = function(config)
       for i, color in pairs(to) do
         if color.rgb then
           if color.intensity == nil then
-            color.intensity = 1
+            color.intensity = 0
           end
           color.intensity = color.intensity * pct
         end
@@ -41,15 +41,6 @@ local animate_duo = function (config)
     TINT.Tint({
       condition = config.condition,
       value = ANIMATE.Tint({
-        start = function (style, state)
-          local start = TINT.Default().value()(style, state)
-          if start then
-            for i, color in pairs(start) do
-              color.intensity = 0
-            end
-          end
-          return start
-        end,
         to = duo_tint_to(config),
         direction = config.direction,
         duration = config.duration,
