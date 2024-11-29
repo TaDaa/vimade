@@ -341,7 +341,7 @@ class Globals(object):
 
     ## already checked
     self.nc_windows = self.ncmode == 'windows'
-    self.nc_buffers = self.ncmode == 'buffers'
+    self.nc_buffers = not self.nc_windows
     # if you don't choose one of the above, everything is highlighted
 
 M = Globals()

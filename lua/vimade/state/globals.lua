@@ -244,7 +244,7 @@ M.refresh = function (override_tick_state)
 
   -- already checked --
   M.nc_windows = M.ncmode == 'windows'
-  M.nc_buffers = M.ncmode == 'buffers'
+  M.nc_buffers = not M.nc_windows
   -- if you don't choose one of the above, everything is highlighted
 
   if not M.global_ns or not M.nohlcheck
