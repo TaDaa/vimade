@@ -78,7 +78,7 @@ buffers.
   function! SetupMyVimadeConfig()
   python << EOF
   from vimade import vimade
-  vimade.setup(recipe = ['Minimalist', {'animate':True}])
+  vimade.setup(recipe = ['minimalist', {'animate':True}])
   EOF
   endfunction
   au! User Vimade#PythonReady call SetupMyVimadeConfig()
@@ -271,7 +271,7 @@ let g:vimade = {
 <sub>::lua::</sub>
 ```lua
 vimade.setup{
-  recipe = {'Default', {animate=false}},
+  recipe = {'default', {animate=false}},
   ncmode = 'buffers',
   fadelevel = 0.4,
   tint = {},
@@ -300,7 +300,7 @@ vimade.setup{
 from vimade import vimade
 from vimade.recipe.default import Default
 vimade.setup(
-  recipe = ['Default', {'animate': False}],
+  recipe = ['default', {'animate': False}],
   ncmode = 'buffers',
   fadelevel = 0.4,
   tint = None,
@@ -976,14 +976,14 @@ You can only enable **recipes** through a configuration overlay (**no vimscript*
 *<sub>::lua:: [source](https://github.com/TaDaa/vimade/tree/master/lua/vimade/recipe/default.lua) (see here for additional params)</sub>*
 
 ```lua
-require('vimade').setup({recipe = {'Default', {animate = true}}})
+require('vimade').setup({recipe = {'default', {animate = true}}})
 ```
 
 
 *<sub>::python:: [source](https://github.com/TaDaa/vimade/tree/master/lua/vimade/recipe/default.lua) (see here for additional params)</sub>*
 ```python
 from vimade import vimade
-vimade.setup(recipe = ['Default', {'animate': True}])
+vimade.setup(recipe = ['default', {'animate': True}])
 ```
 
 ![default_recipe](https://raw.githubusercontent.com/TaDaa/tadaa.github.io/refs/heads/master/images/default_recipe_animate.gif)
@@ -1002,7 +1002,7 @@ This recipe hides low value built-in highlights on inactive windows such as numb
 *<sub>::lua:: [source](https://github.com/TaDaa/vimade/tree/master/lua/vimade/recipe/minimalist.lua) (see here for additional params)</sub>*
 
 ```lua
-require('vimade').setup({recipe = {'Minimalist', {animate = true}}})
+require('vimade').setup({recipe = {'minimalist', {animate = true}}})
 ```
 
 *<sub>::python:: [source](https://github.com/TaDaa/vimade/tree/master/lib/vimade/recipe/minimalist.py) (see here for additional params)</sub>*
@@ -1010,7 +1010,7 @@ require('vimade').setup({recipe = {'Minimalist', {animate = true}}})
 <sub>NOTE: For **vim** users with wincolor, minimalist will link the `no_visibility_highlights` to `Normal` so that they can completely fade-out per-window.<sub>
 ```python
 from vimade import vimade
-vimade.setup(recipe = ['Minimalist', {'animate': True}])
+vimade.setup(recipe = ['minimalist', {'animate': True}])
 ```
 
 ![minimalist_recipe](https://raw.githubusercontent.com/TaDaa/tadaa.github.io/refs/heads/master/images/minimalist_recipe_animate2.gif)
@@ -1030,17 +1030,37 @@ and a fraction of the values to same-split *buffers*.
 *<sub>::lua:: [source](https://github.com/TaDaa/vimade/tree/master/lua/vimade/recipe/duo.lua) (see here for additional params)</sub>*
 
 ```lua
-require('vimade').setup({recipe = {'Duo', {animate = true}}})
+require('vimade').setup({recipe = {'duo', {animate = true}}})
 ```
 
 *<sub>::python:: [source](https://github.com/TaDaa/vimade/tree/master/lib/vimade/recipe/duo.py) (see here for additional params)</sub>*
 
 ```python
 from vimade import vimade
-vimade.setup(recipe = ['Duo', {'animate': True}])
+vimade.setup(recipe = ['duo', {'animate': True}])
 ```
 
 ![duo_recipe](https://raw.githubusercontent.com/TaDaa/tadaa.github.io/refs/heads/master/images/duo-reduced.gif)
+
+To make it look exactly like the screenshot above, you will want to combine the recipe with some background tint:
+
+*<sub>::lua::</sub>*
+```lua
+require('vimade').setup({
+  recipe = {'duo', {animate = true}},
+  tint = {bg = {rgb={0,0,0}, intensity = 0.3}}
+})
+```
+
+*<sub>::python::</sub>*
+
+```python
+from vimade import vimade
+vimade.setup(
+  recipe = ['duo', {'animate': True}],
+  tint = {'bg': {'rgb':[0,0,0], 'intensity': 0.3}})
+```
+
 ---
 </details>
 
@@ -1061,14 +1081,14 @@ Gradually increases the fade and tint level based on distance from the current w
 *<sub>::lua:: [source](https://github.com/TaDaa/vimade/tree/master/lua/vimade/recipe/ripple.lua) (see here for additional params)</sub>*
 
 ```lua
-require('vimade').setup({recipe = {'Ripple', {animate = true}}})
+require('vimade').setup({recipe = {'ripple', {animate = true}}})
 ```
 
 *<sub>::python:: [source](https://github.com/TaDaa/vimade/tree/master/lib/vimade/recipe/ripple.py) (see here for additional params)</sub>*
 
 ```python
 from vimade import vimade
-vimade.setup(recipe = ['Ripple', {'animate': True}])
+vimade.setup(recipe = ['ripple', {'animate': True}])
 ```
 
 ![ripple_recipe](https://raw.githubusercontent.com/TaDaa/tadaa.github.io/refs/heads/master/images/ripple.gif)
