@@ -1,7 +1,6 @@
 local M = {}
 local COLOR_UTIL = require('vimade.util.color')
 local TYPE = require('vimade.util.type')
-
 local GLOBALS
 
 M.__init = function (args)

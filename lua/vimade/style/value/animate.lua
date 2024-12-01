@@ -6,8 +6,8 @@ local ANIMATOR = require('vimade.animator')
 local COLOR_UTIL = require('vimade.util.color')
 local TYPE = require('vimade.util.type')
 local M = {}
-
 local GLOBALS
+
 M.__init = function (args)
   GLOBALS = args.GLOBALS
 end

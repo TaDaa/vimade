@@ -1,4 +1,5 @@
 local M = {}
+
 local NAMESPACE = require('vimade.state.namespace')
 local LINK = require('vimade.config_helpers.link')
 local BLOCKLIST = require('vimade.config_helpers.blocklist')

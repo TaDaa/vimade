@@ -1,6 +1,7 @@
+local M = {}
+
 local math = require('math')
 
-local M = {}
 local CONDITION = require('vimade.style.value.condition')
 local COLOR_UTIL = require('vimade.util.color')
 local TYPE = require('vimade.util.type')

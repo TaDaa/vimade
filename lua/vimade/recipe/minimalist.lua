@@ -1,4 +1,5 @@
 local M = {}
+
 local Include = require('vimade.style.include').Include
 local Exclude = require('vimade.style.exclude').Exclude
 local ANIMATE = require('vimade.style.value.animate')

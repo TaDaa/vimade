@@ -1,4 +1,5 @@
 local M = {}
+
 M.LINEAR = function (t)
   return t
 end

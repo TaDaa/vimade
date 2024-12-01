@@ -3,6 +3,7 @@ local queued_windows = {}
 M.scheduled = false
 M.animating = false
 local FADER
+local GLOBALS
 
 M.__init = function (args)
   FADER = args.FADER

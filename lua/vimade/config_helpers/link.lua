@@ -1,4 +1,5 @@
 local M = {}
+
 local MATCHERS = require('vimade.util.matchers')
 local GLOBALS = require('vimade.state.globals')
 

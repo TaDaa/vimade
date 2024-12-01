@@ -1,4 +1,5 @@
 local M = {}
+
 M.IN = 'in'
 M.OUT = 'out'
 M.IN_OUT = function (style, state)

@@ -1,5 +1,7 @@
 local M = {}
+
 local CONDITION = require('vimade.style.value.condition')
+local GLOBALS
 
 M.__init = function (args)
   GLOBALS = args.GLOBALS

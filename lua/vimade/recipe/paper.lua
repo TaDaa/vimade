@@ -1,4 +1,5 @@
 local M = {}
+
 local ANIMATE = require('vimade.style.value.animate')
 local FADE = require('vimade.style.fade')
 local TINT = require('vimade.style.tint')

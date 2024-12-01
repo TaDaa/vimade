@@ -1,4 +1,5 @@
 local M = {}
+
 if vim == nil or vim.api == nil or vim.treesitter == nil or vim.treesitter.highlighter == nil then
     return
 end

@@ -1,9 +1,9 @@
 local M = {}
+
 local CONDITION = require('vimade.style.value.condition')
 local COLOR_UTIL = require('vimade.util.color')
 local TYPE = require('vimade.util.type')
 local VALIDATE = require('vimade.util.validate')
-
 local GLOBALS
 
 M.__init = function (args)

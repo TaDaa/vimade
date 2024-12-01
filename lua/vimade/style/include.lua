@@ -1,6 +1,8 @@
 local M = {}
+
 local COMPAT = require('vimade.util.compat')
 local CONDITION = require('vimade.style.value.condition')
+local GLOBALS
 
 M.__init = function (args)
   GLOBALS = args.GLOBALS

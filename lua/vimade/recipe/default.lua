@@ -1,4 +1,5 @@
 local M = {}
+
 local ANIMATE = require('vimade.style.value.animate')
 local CONDITION = require('vimade.style.value.condition')
 local DIRECTION = require('vimade.style.value.direction')

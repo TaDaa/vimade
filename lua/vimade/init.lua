@@ -1,5 +1,5 @@
 local M = {}
-FADER = require('vimade.fader')
+local FADER = require('vimade.fader')
 
 if vim == nil or vim.api == nil then
     return

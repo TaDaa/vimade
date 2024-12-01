@@ -1,4 +1,5 @@
 local M = {}
+
 local TYPE = require('vimade.util.type')
 local COMPAT = require('vimade.util.compat')
 local HIGHLIGHTER = require('vimade.highlighter')

@@ -1,4 +1,5 @@
 local M = {}
+
 local DIRECTION = require('vimade.style.value.direction')
 local EXCLUDE = require('vimade.style.exclude')
 local TYPE = require('vimade.util.type')
