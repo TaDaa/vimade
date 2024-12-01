@@ -191,6 +191,17 @@ M.set_highlights = function(win)
     win.ns.vimade_highlights['NormalNC'] = linked_normal
   end
 
+  -- precheck highlights for ones that are no longer found. If not found, clear the highlight
+  -- in our namespace.  Ensures compatibility with highlights that are unset after calculation.
+  for name, highlight in pairs(win.ns.vimade_highlights) do
+    if name == 'NormalNC' or name =='Normal' or name == 'vimade_0' then
+      --pass
+    elseif highlights[name] == nil then
+      vim.api.nvim_set_hl(win.ns.vimade_ns, name, {})
+      win.ns.vimade_highlights[name] = nil
+    end
+  end
+
   for name, highlight in pairs(highlights) do
     -- perf
     --total_cnt = total_cnt + 1
