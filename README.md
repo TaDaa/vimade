@@ -49,18 +49,128 @@ buffers.
 
 <br>
 
-- Any plugin manager will work. Here's an example using vim-plug:
+- Any plugin manager will work.
+  You can also call `vimade.setup({...})` at any time to change any value without restarting (Neo)vim:
 
-  *<sub>::vimscript::plug::</sub>*
-  ```vim
-    Plug 'TaDaa/vimade'
+  <details open>
+  <summary>
+    <ins>For Lua users:</ins>
+    </summary
+ 
+  
+  *<sub>::lua::lazy.nvim::</sub>*
+  ```lua
+    {{
+      'tadaa/vimade',
+      -- default opts (you can partially set these or configure them however you like)
+      opts = {
+        -- Recipe can be any of 'default', 'minimalist', 'duo', and 'ripple'
+        -- Set animate = true to enable animations on any recipe.
+        -- See the docs for other config options.
+        recipe = {'default', {animate=false}},
+        ncmode = 'buffers', -- use 'windows' to fade inactive windows
+        fadelevel = 0.4, -- any value between 0 and 1. 0 is hidden and 1 is opaque.
+        tint = {
+          -- bg = {rgb={0,0,0}, intensity=0.3}, -- adds 30% black to background
+          -- fg = {rgb={0,0,255}, intensity=0.3}, -- adds 30% blue to foreground
+          -- fg = {rgb={120,120,120}, intensity=1}, -- all text will be gray
+          -- sp = {rgb={255,0,0}, intensity=0.5}, -- adds 50% red to special characters
+          -- you can also use functions for tint or any value part in the tint object
+          -- to create window-specific configurations
+          -- see the `Tinting` section of the README for more details.
+        },
+
+        -- Changes the real or theoretical background color. basebg can be used to give
+        -- transparent terminals accurating dimming.  See the 'Preparing a transparent terminal'
+        -- section in the README.md for more info.
+        -- basebg = [23,23,23],
+        basebg = '',
+
+        -- prevent a window or buffer from being styled. You 
+        blocklist = {
+          default = {
+            buf_opts = { buftype = {'prompt', 'terminal'} },
+            win_config = { relative = true },
+            -- buf_name = {'name1','name2', name3'},
+            -- buf_vars = { variable = {'match1', 'match2'} },
+            -- win_opts = { option = {'match1', 'match2' } },
+            -- win_vars = { variable = {'match1', 'match2'} },
+          },
+          -- any_rule_name1 = {
+          --   buf_opts = {}
+          -- },
+          -- only_behind_float_windows = {
+          --   buf_opts = function(win, current)
+          --     if (win.win_config.relative == '')
+          --       and (current and current.win_config.relative ~= '') then
+          --         return false
+          --     end
+          --     return true
+          --   end
+          -- },
+        },
+        -- Link connects windows so that they style or unstyle together.
+        -- Properties are matched against the active window. Same format as blocklist above
+        link = {},
+        groupdiff = true, -- links diffs so that they style together
+        groupscrollbind = false, -- link scrollbound windows so that they style together.
+
+        -- enable to bind to FocusGained and FocusLost events. This allows fading inactive
+        -- tmux panes.
+        enablefocusfading = false,
+
+        -- when nohlcheck is disabled the highlight tree will always be recomputed. You may
+        -- want to disable this if you have a plugin that creates dynamic highlights in
+        -- inactive windows. 99% of the time you shouldn't need to change this value.
+        nohlcheck = true,
+      }
+    }}
+  ```
+  </details>
+
+  *<sub>::lua::packer::</sub>*
+  ```lua
+  require('packer').startup(function()
+    use({
+      'TaDaa/vimade',
+      config = function ()
+        require('vimade').setup({
+          recipe = {'default', {animate = false}},
+          ncmode = 'buffers',
+          fadelevel = 0.4,
+          tint = {},
+          -- see the lazy.nvim config above or `Lua defaults` for full breakdown
+        })
+      end,
+    })
+  end)
   ```
 
-- And for Lua users using lazy.nvim:
-  
-  *<sub>::lua::lazy::</sub>*
+  *<sub>::lua::paq::</sub>*
   ```lua
-    require('lazy').setup({spec = {'tadaa/vimade'}})
+  require 'paq' { 'TaDaa/vimade' }
+
+  require('vimade').setup({
+    recipe = {'default', {animate = false}},
+    ncmode = 'buffers',
+    fadelevel = 0.4,
+    tint = {},
+    -- see the lazy.nvim config above or `Lua defaults` for full breakdown
+  })
+  ```
+
+  *<sub>::vimscript::vim-plug::</sub>*
+  ```lua
+    Plug 'TaDaa/vimade'
+    lua << EOF
+    require('vimade').setup({
+      recipe = {'default', {animate = false}},
+      ncmode = 'buffers',
+      fadelevel = 0.4,
+      tint = {},
+      -- see the lazy.nvim config above or `Lua defaults` for full breakdown
+    })
+    EOF
   ```
 
   <details open>
@@ -69,8 +179,7 @@ buffers.
     
     
   If you are using **vim** or older versions of **neovim** and want to configure using **python**, you need to bind your setup to `Vimade#PythonReady`.
-  This ensures that **Vimade** has been added to the python path before your configuration runs. Here's an example that sets up
-  the *Minimalist* recipe.
+  This ensures that **Vimade** has been added to the python path before your configuration runs.
     
   </summary>
 
@@ -78,7 +187,15 @@ buffers.
   function! SetupMyVimadeConfig()
   python << EOF
   from vimade import vimade
-  vimade.setup(recipe = ['minimalist', {'animate':True}])
+  vimade.setup(
+    recipe = ['default', {'animate':False}],
+    ncmode = 'buffers',
+    fadelevel = 0.4,
+    tint = {},
+    enablefocusfading = False,
+    basebg = '',
+    # all options listed in `Python defaults` section of README.md
+   )
   EOF
   endfunction
   au! User Vimade#PythonReady call SetupMyVimadeConfig()
@@ -257,7 +374,7 @@ let g:vimade = {
 \   'signsretentionperiod': 4000,
 \   'signspriority': 31,
 \   'fademinimap': 1,
-\   'fadepriority': 10,
+\   'matchpriority': 10,
 \   'disablebatch': 0,
 \   " lua only options below
 \   'nohlcheck': 1,
@@ -271,22 +388,65 @@ let g:vimade = {
 <sub>::lua::</sub>
 ```lua
 vimade.setup{
-  recipe = {'default', {animate=false}},
-  ncmode = 'buffers',
-  fadelevel = 0.4,
-  tint = {},
-  basebg = '',
-  blocklist = {
-    buf_opts = { buftype = ['prompt', 'terminal'] },
-    win_config { relative = true },
-  },
-  link = {},
-  groupdiff = 1,
-  groupscrollbind = 0,
-  enablefocusfading = 0,
-  normalid = '',
-  normalncid = '',
-  nohlcheck = 1,
+        -- Recipe can be any of 'default', 'minimalist', 'duo', and 'ripple'
+        -- Set animate = true to enable animations on any recipe.
+        -- See the docs for other config options.
+        recipe = {'default', {animate=false}},
+        ncmode = 'buffers', -- use 'windows' to fade inactive windows
+        fadelevel = 0.4, -- any value between 0 and 1. 0 is hidden and 1 is opaque.
+        tint = {
+          -- bg = {rgb={0,0,0}, intensity=0.3}, -- adds 30% black to background
+          -- fg = {rgb={0,0,255}, intensity=0.3}, -- adds 30% blue to foreground
+          -- fg = {rgb={120,120,120}, intensity=1}, -- all text will be gray
+          -- sp = {rgb={255,0,0}, intensity=0.5}, -- adds 50% red to special characters
+          -- you can also use functions for tint or any value part in the tint object
+          -- to create window-specific configurations
+          -- see the `Tinting` section of the README for more details.
+        },
+
+        -- Changes the real or theoretical background color. basebg can be used to give
+        -- transparent terminals accurating dimming.  See the 'Preparing a transparent terminal'
+        -- section in the README.md for more info.
+        -- basebg = [23,23,23],
+        basebg = '',
+
+        -- prevent a window or buffer from being styled. You 
+        blocklist = {
+          default = {
+            buf_opts = { buftype = {'prompt', 'terminal'} },
+            win_config = { relative = true },
+            -- buf_name = {'name1','name2', name3'},
+            -- buf_vars = { variable = {'match1', 'match2'} },
+            -- win_opts = { option = {'match1', 'match2' } },
+            -- win_vars = { variable = {'match1', 'match2'} },
+          },
+          -- any_rule_name1 = {
+          --   buf_opts = {}
+          -- },
+          -- only_behind_float_windows = {
+          --   buf_opts = function(win, current)
+          --     if (win.win_config.relative == '')
+          --       and (current and current.win_config.relative ~= '') then
+          --         return false
+          --     end
+          --     return true
+          --   end
+          -- },
+        },
+        -- Link connects windows so that they style or unstyle together.
+        -- Properties are matched against the active window. Same format as blocklist above
+        link = {},
+        groupdiff = true, -- links diffs so that they style together
+        groupscrollbind = false, -- link scrollbound windows so that they style together.
+
+        -- enable to bind to FocusGained and FocusLost events. This allows fading inactive
+        -- tmux panes.
+        enablefocusfading = false,
+
+        -- when nohlcheck is disabled the highlight tree will always be recomputed. You may
+        -- want to disable this if you have a plugin that creates dynamic highlights in
+        -- inactive windows. 99% of the time you shouldn't need to change this value.
+        nohlcheck = true,
 }
 ```
 
@@ -300,30 +460,61 @@ vimade.setup{
 from vimade import vimade
 from vimade.recipe.default import Default
 vimade.setup(
+  # Recipe can be any of 'default', 'minimalist', 'duo', and 'ripple'
+  # Set animate = true to enable animations on any recipe.
+  # See the docs for other config options.
   recipe = ['default', {'animate': False}],
-  ncmode = 'buffers',
-  fadelevel = 0.4,
-  tint = None,
+  ncmode = 'buffers', # use 'windows' to fade inactive windows
+  fadelevel = 0.4, # any value between 0 and 1. 0 is hidden and 1 is opaque.
+  tint = {
+    # 'bg': {'rgb':[0,0,0], 'intensity':0.3}, # adds 30% black to background
+    # 'fg': {'rgb':[0,0,255], 'intensity':0.3}, # adds 30% blue to foreground
+    # 'fg': {'rgb':[120,120,120], 'intensity':1}, # all text will be gray
+    # 'sp': {'rgb':[255,0,0], 'intensity':0.5}, # adds 50% red to special characters
+  },
+  # changes the real or theoretical background color. basebg can be used to give
+  # transparent terminals accurating dimming.  See the 'Preparing a transparent terminal'
+  # section in the README.md for more info
   basebg = '',
   blocklist = {
-    'buf_opts': { 'buftype': ['popup', 'prompt'] },
-    'win_config': { 'relative': True },
+    'default': {
+      'buf_opts': { 'buftype': ['popup', 'prompt'] },
+      'win_config': { 'relative': True },
+      # buf_name = ['name1','name2', name3'],
+      # buf_vars = { 'variable': ['match1', 'match2'] },
+      # win_opts = { 'option': ['match1', 'match2' ] },
+      # win_vars = { 'variable': ['match1', 'match2'] },
+    },
+    # 'any_rule_name1': {
+    #   'buf_opts': {}
+    # },
   },
+  # Link connects windows so that they style or unstyle together.
+  # Properties are matched against the active window. Same format as blocklist above
   link = {},
-  groupdiff = 1,
-  groupscrollind = 0
-  enablefocusfading = 0
-  normalid = '',
-  normalncid = '',
+  groupdiff = True, # links diffs so that they style together
+  groupscrollbind = False, # link scrollbound windows so that they style together.
+  # enable to bind to FocusGained and FocusLost events. This allows fading inactive
+  # tmux panes.
+  enablefocusfading = False,
+  # Basegroups are extra highlights that are faded using winhl (neovim only)
   basegroups = ['Folded', 'Search', 'SignColumn', 'CursorLine', 'CursorLineNr', 'DiffAdd', 'DiffChange', 'DiffDelete', 'DiffText', 'FoldColumn', 'Whitespace', 'NonText', 'SpecialKey', 'Conceal', 'EndOfBuffer', 'WinSeparator', 'LineNr', 'LineNrAbove', 'LineNrBelow'],
-  enablebasegroups = 1,
-  enablesigns = 1,
+  enablebasegroups = True,
+  # Enable sign highlighting
+  enablesigns = True,
+  # Create signs starting at the following id.
   signsid = 13100,
+  # How long in ms to check for sign updates after the buffer is faded.
   signsretentionperiod = 4000,
+  # Priority that will be used for faded signs
   signspriority = 31,
-  fademinimap = 1,
-  fadepriority = 10,
-  disablebatch = 0,
+  # Special handling for `severin-lemaignan/vim-minimap`
+  fademinimap = True,
+  # Priority to be used for matchaddpos highlights. Set to 0 to show search in inactive windows. 
+  matchpriority = 10,
+  # Set to True to disable IPC batch for debugging purposes. Enabling this will negatively
+  # impact performance.
+  disablebatch = False,
 )
 ```
 
