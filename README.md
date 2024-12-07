@@ -913,7 +913,7 @@ build your own style and add it into **Vimade**.
 
   <sub>*::lua::*</sub>
   ```lua
-  local Tint = require('vimade.style.Tint').Tint
+  local Tint = require('vimade.style.tint').Tint
   vimade.setup{
     style = {
       Tint{
@@ -941,7 +941,53 @@ build your own style and add it into **Vimade**.
   
   | option | values/type | default | description |
   | -      | -           | -       | -           |
-  | `value` | <pre><sub>`{fg:{rgb:[num,num,num],intensity:num},`<br>` bg:{rgb:[num,num,num],intensity:num},`</sub><br><sub>` sp:{rgb:[num,num,num],intensity:num}}`</sub></pre> <sub>`function(style,state)=any`(functions can be used for any part of the tint config object)</sub> | `nil` |  The target tint colors. Intensity is the inverse of fadelevel. `1` is full intensity, while `0` is not applied.
+  | `value` | <pre><sub>`{fg:{rgb:[num,num,num],intensity:num},`<br>` bg:{rgb:[num,num,num],intensity:num},`</sub><br><sub>` sp:{rgb:[num,num,num],intensity:num}}`</sub></pre> <sub>`function(style,state)=any`<br>*functions can be used for any part of the tint config object*</sub> | `nil` |  The target tint colors. Intensity is the inverse of fadelevel. `1` is full intensity, while `0` is not applied.
+  | `tick` | `function()=>void` | `nil` |  A function that is run once per frame. Useful if you need to do expensive pre-computation that shouldn't occur once per-window.
+
+  </details>
+
+  <details>
+  <summary>
+  <ins>Invert</ins>
+  
+  Invert the colors in each window by a percentage.
+  </summary>
+
+  <sub>*::lua::*</sub>
+  ```lua
+  local Tint = require('vimade.style.invert').Invert
+  vimade.setup{
+    style = {
+      Invert{
+        value = {
+          fg = 0.5,
+          bg = 0.5,
+          sp = 0.5,
+        }
+        -- alternatively use
+        -- value = 0.5 (applies 0.5 to fg, bg, and sp)
+      }
+    }
+  }
+  ```
+  <sub>*::python::*</sub>
+  ```python
+  from vimade import vimade
+  from vimade.style.invert import Invert
+  vimade.setup(style = [
+    Invert(value = {
+      'fg': 0.5,
+      'bg': 0.5,
+      'sp': 0.5,
+      # alternatively use
+      # value = 0.5 (applies 0.5 to fg, bg, and sp)
+    })
+  ])
+  ```
+  
+  | option | values/type | default | description |
+  | -      | -           | -       | -           |
+  | `value` | <pre><sub>`number\|{fg:number,bg:number,sp:number}`</sub></pre> <sub>`function(style,state)=any`<br>*functions can be used for any part of the invert config object*</sub> | `nil` |  The target inversion level. `1` is full inversion, while `0` is not applied.
   | `tick` | `function()=>void` | `nil` |  A function that is run once per frame. Useful if you need to do expensive pre-computation that shouldn't occur once per-window.
 
   </details>
