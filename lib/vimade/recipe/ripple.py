@@ -78,7 +78,7 @@ def _ripple_tick():
     M._max_distance = max(info['dist'], M._max_distance)
     M._max_area = max(info['area'], M._max_area)
 def _ripple_to_tint(style, state):
-  to = TINT.Default().value()(style, state)
+  to = style.resolve(TINT.Default().value(), state)
   if not style.win.winid in M._win_infos:
     return to
   if to:
@@ -90,13 +90,13 @@ def _ripple_to_tint(style, state):
         color['intensity'] = (float(M._win_infos[style.win.winid]['dist']) / float(M._max_distance or 1)) * color['intensity']
   return to
 def _ripple_to_fade(style, state):
-  to = FADE.Default().value()(style, state)
+  to = style.resolve(FADE.Default().value(), state)
   if not style.win.winid in M._win_infos:
     return to
   to = float(to)
   return to + (1 - float(M._win_infos[style.win.winid]['dist']) / float(M._max_distance or 1)) * ((1-to) * 0.5)
 def _ripple_start_tint(style, state):
-  start = TINT.Default().value()(style, state)
+  start = style.resolve(TINT.Default().value(), state)
   if start:
     for color in start.values():
       color['intensity'] = 0

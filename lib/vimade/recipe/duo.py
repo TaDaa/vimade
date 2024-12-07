@@ -13,7 +13,7 @@ def _duo_tint_to(config):
   buffer_pct = config.get('buffer_pct')
   window_pct = config.get('window_pct')
   def _duo_tint_result(style, state):
-    to = TINT.Default().value()(style, state)
+    to = style.resolve(TINT.Default().value(), state)
     if to and style.win.tabnr == GLOBALS.current['tabnr']:
       pct = window_pct
       if style.win.bufnr == GLOBALS.current['bufnr']:
@@ -29,7 +29,7 @@ def _duo_fade_to(config):
   buffer_pct = config.get('buffer_pct')
   window_pct = config.get('window_pct')
   def _duo_fade_result(style, state):
-    to = FADE.Default().value()(style, state)
+    to = style.resolve(FADE.Default().value(), state)
     pct = window_pct
     if to != None and style.win.tabnr == GLOBALS.current['tabnr'] and style.win.bufnr == GLOBALS.current['bufnr']:
       pct = buffer_pct

@@ -78,7 +78,7 @@ local ripple_tick = function()
   end
 end
 local ripple_to_tint = function (style, state)
-  local to = TINT.Default().value()(style, state)
+  local to = style.resolve(TINT.Default().value(), state)
   local m_dist = max_distance
   if m_dist == 0 then
     m_dist = 1
@@ -96,7 +96,7 @@ local ripple_to_tint = function (style, state)
   return to
 end
 local ripple_to_fade = function (style, state)
-  local to = FADE.Default().value()(style, state)
+  local to = style.resolve(FADE.Default().value(), state)
   local m_dist = max_distance
   if m_dist == 0 then
     m_dist = 1
@@ -124,7 +124,7 @@ local animate_ripple = function (config)
       condition = config.condition,
       value = ANIMATE.Tint({
         start = function (style, state)
-          local start = TINT.Default().value()(style, state)
+          local start = style.resolve(TINT.Default().value(), state)
           if start then
             for i, color in pairs(start) do
               color.intensity = 0
