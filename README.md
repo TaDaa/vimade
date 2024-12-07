@@ -1,8 +1,25 @@
-# vim[f]ade
 
+<table>
+<tbody>
+  <tr><td align="center">
+  <img  src="https://tadaa.github.io/images/logo-transformed%20(1).png" width="400"></img>      
+  </td></tr>
+<tr>
+  <td align="center">
+    
 ### Dim, Fade, Tint, and Customize (Neo)vim
+  </td>
+</tr>
+<tr>
+  <td>
+    <img src="https://raw.githubusercontent.com/TaDaa/tadaa.github.io/refs/heads/master/images/minimalist_full.gif" width="980"></img>      
+  </td>
+</tr>
+</tbody>
+</table>
 
-![main_minimalist_full](https://raw.githubusercontent.com/TaDaa/tadaa.github.io/refs/heads/master/images/minimalist_full.gif)
+
+
 
 ## What is this?
 
