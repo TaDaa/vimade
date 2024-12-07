@@ -13,25 +13,14 @@ def __init(args):
   GLOBALS = args['GLOBALS']
 M.__init = __init
 
-def _resolve_all_fn(obj, style, state):
-  if callable(obj):
-    obj = obj(style, state)
-  if type(obj) == dict:
-    copy = {}
-    for k, v in obj.items():
-      copy[k] = _resolve_all_fn(v, style, state)
-    return copy
-  return obj
-
 def _tint_or_global(tint):
   if type(tint) == dict:
     return TYPE.deep_copy(tint)
   return GLOBALS.tint
 
-def _create_to_hl(tint):
+def _create_tint(tint):
   if type(tint) != dict:
     return None
-  tint = VALIDATE.tint(tint)
   fg = tint.get('fg')
   bg = tint.get('bg')
   sp = tint.get('sp')
@@ -87,12 +76,15 @@ class Tint():
         self.condition = None
         self.to_hl = None
         self._animating = False
+      def resolve(self, value, state):
+        return VALIDATE.tint(TYPE.resolve_all_fn(value, self, state))
       def before(self, win, state):
+        # don't use self.resolve here for performance reasons
+        tint = TYPE.resolve_all_fn(parent._value, self, state)
         self.condition = _condition(self, state) if callable(_condition) else _condition
-        tint = _resolve_all_fn(parent._value, self, state)
         if self.condition == False:
           return
-        self.to_hl =_create_to_hl(tint)
+        self.to_hl = _create_tint(VALIDATE.tint(tint))
       def key(self, win, state):
         if self.condition == False or not self.to_hl:
           return ''
@@ -126,11 +118,11 @@ class Tint():
   def value(parent, replacement = None):
     if replacement != None:
       parent._value = replacement
-      return result
+      return parent
     return parent._value
 
 def Default(**kwargs):
   return Tint(**TYPE.extend({
     'condition': CONDITION.INACTIVE,
-    'value': lambda style, state: VALIDATE.tint(GLOBALS.tint(style, state)) if callable(GLOBALS.tint) else VALIDATE.tint(_tint_or_global(GLOBALS.tint)),
+    'value': lambda style, state: GLOBALS.tint(style, state) if callable(GLOBALS.tint) else _tint_or_global(GLOBALS.tint),
   }, kwargs))

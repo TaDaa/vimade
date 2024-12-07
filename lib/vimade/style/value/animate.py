@@ -5,6 +5,7 @@ from vimade import animator as ANIMATOR
 from vimade.style.value import ease as EASE
 from vimade.style.value import condition as CONDITION
 from vimade.style.value import direction as DIRECTION
+from vimade.style import invert as INVERT
 from vimade.util import type as TYPE
 from vimade.util import color as COLOR_UTIL
 
@@ -31,68 +32,51 @@ def _compare_eq(value, last):
   return value == last
 
 def Number(**kwargs):
-  kwargs['interpolate'] = COLOR_UTIL.interpolateFloat
+  def interpolate(to, start, pct_time, style, state):
+    return COLOR_UTIL.interpolateFloat(to, start, pct_time)
+  kwargs['interpolate'] = interpolate
   kwargs['compare'] = _compare_eq
   return M.Animate(**kwargs)
 
 def Rgb(**kwargs):
-  kwargs['interpolate'] = COLOR_UTIL.interpolateRgb
+  def interpolate(to, start, pct_time, style, state):
+    return COLOR_UTIL.interpolateRgb(to, start, pct_time)
+  kwargs['interpolate'] = interpolate
   kwargs['compare'] = TYPE.shallow_compare
   return M.Animate(**kwargs)
 
+def Invert(**kwargs):
+  def interpolate(to, start, pct_time, style, state):
+    result = {}
+    to = to or {}
+    start = start or {}
+    result['fg'] = COLOR_UTIL.interpolateFloat(to.get('fg', 0), start.get('fg', 0), pct_time)
+    result['bg'] = COLOR_UTIL.interpolateFloat(to.get('bg', 0), start.get('bg', 0), pct_time)
+    result['sp'] = COLOR_UTIL.interpolateFloat(to.get('sp', 0), start.get('sp', 0), pct_time)
+    return result
+  kwargs['interpolate'] = interpolate
+  kwargs['compare'] = TYPE.deep_compare
+  return M.Animate(**kwargs)
+
 def Tint(**kwargs):
-  def interpolate(to, start, pct_time):
+  def interpolate(to, start, pct_time, style, state):
+    if not start and not to:
+      return None
     to = to or {}
     start = start or {}
     result = {}
-    start_fg = start.get('fg', {})
-    start_bg = start.get('bg', {})
-    start_sp = start.get('sp', {})
-    to_fg = to.get('fg', {})
-    to_bg = to.get('bg', {})
-    to_sp = to.get('sp', {})
-    start_fg_rgb = start_fg.get('rgb', to_fg.get('rgb'))
-    start_bg_rgb = start_bg.get('rgb', to_bg.get('rgb'))
-    start_sp_rgb = start_sp.get('rgb', to_sp.get('rgb'))
-    to_fg_rgb = to_fg.get('rgb', start_fg.get('rgb'))
-    to_bg_rgb = to_bg.get('rgb', start_bg.get('rgb'))
-    to_sp_rgb = to_sp.get('rgb', start_sp.get('rgb'))
-    start_fg_intensity = start_fg.get('intensity', 0)
-    start_bg_intensity = start_bg.get('intensity', 0)
-    start_sp_intensity = start_sp.get('intensity', 0)
-    to_fg_intensity = to_fg.get('intensity', 0)
-    to_bg_intensity = to_bg.get('intensity', 0)
-    to_sp_intensity = to_sp.get('intensity', 0)
-
-    if to_fg_rgb != None:
-      result['fg'] = {}
-      result['fg']['rgb'] = COLOR_UTIL.interpolateRgb(to_fg_rgb, start_fg_rgb, pct_time)
-      result['fg']['intensity'] = COLOR_UTIL.interpolateFloat(to_fg_intensity, start_fg_intensity, pct_time)
-    if to_bg_rgb != None:
-      result['bg'] = {}
-      result['bg']['rgb'] = COLOR_UTIL.interpolateRgb(to_bg_rgb, start_bg_rgb, pct_time)
-      result['bg']['intensity'] = COLOR_UTIL.interpolateFloat(to_bg_intensity, start_bg_intensity, pct_time)
-    if to_sp_rgb != None:
-      result['sp'] = {}
-      result['sp']['rgb'] = COLOR_UTIL.interpolateRgb(to_sp_rgb, start_sp_rgb, pct_time)
-      result['sp']['intensity'] = COLOR_UTIL.interpolateFloat(to_sp_intensity, start_sp_intensity, pct_time)
+    for key, value in to.items():
+      if not key in start:
+        start[key] = {'rgb': value['rgb'], 'intensity': 0}
+    for key, value in start.items():
+      if not key in to:
+        to[key] = {'rgb': value['rgb'], 'intensity': 0}
+    for key, value in to.items():
+      result[key] = {
+        'rgb': COLOR_UTIL.interpolateRgb(value['rgb'], start[key]['rgb'],  pct_time),
+        'intensity': COLOR_UTIL.interpolateFloat(value['intensity'], start[key]['intensity'], pct_time),
+      }
     return result
-  if not 'start' in kwargs:
-    def _start(style, state):
-      value = kwargs.get('to')
-      value = value(style, state) if callable(value) else value
-      if value:
-        fg = value.get('fg')
-        bg = value.get('bg')
-        sp = value.get('sp')
-        if fg:
-          fg['intensity'] = 0
-        if bg:
-          bg['intensity'] = 0
-        if sp:
-          sp['intensity'] = 0
-      return value
-    kwargs['start'] = _start
   kwargs['interpolate'] = interpolate
   kwargs['compare'] = TYPE.deep_compare
   return M.Animate(**kwargs)
@@ -136,9 +120,9 @@ def Animate(**kwargs):
     if not id in state:
       state[id] = {'value': None}
     state = state[id]
-    to = _to(style, state) if callable(_to) else _to
+    to = style.resolve(_to, state)
+    start = style.resolve(_start, state)
     compare = _compare(to, state.get('last_to')) if callable(_compare) else _compare
-    start = _start(style, state) if callable(_start) else _start
     delay = _delay(style, state) if callable(_delay) else _delay
     duration = _duration(style, state) if callable(_duration) else _duration
     direction = _direction(style, state) if callable(_direction) else _direction
@@ -191,7 +175,7 @@ def Animate(**kwargs):
 
     elapsed = time / float(duration)
     elapsed = min(max(_ease(elapsed), 0), 1)
-    state['value'] = _interpolate(to, state['start'], elapsed)
+    state['value'] = _interpolate(to, state['start'], elapsed, style, state)
     ANIMATOR.schedule(win)
     style._animating = True
     return state['value']

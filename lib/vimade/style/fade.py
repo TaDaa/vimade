@@ -27,10 +27,11 @@ class Fade():
         self.condition = None
         self.fade = parent._value
         self._animating = False
+      def resolve(self, value, state):
+        return VALIDATE.fade(TYPE.resolve_all_fn(value, self, state))
       def before(self, win, state):
-        self.fade = VALIDATE.fade(parent._value(self, state) if callable(parent._value) else parent._value)
+        self.fade = self.resolve(parent._value, state)
         self.condition = _condition(self, state) if callable(_condition) else _condition
-
       def key(self, win, state):
         if self.condition == False:
           return ''
@@ -65,5 +66,5 @@ class Fade():
 def Default(**kwargs):
   return Fade(**TYPE.extend({
     'condition': CONDITION.INACTIVE,
-    'value': lambda style, state: VALIDATE.fade(GLOBALS.fadelevel(style, state) if callable(GLOBALS.fadelevel) else GLOBALS.fadelevel),
+    'value': lambda style, state: GLOBALS.fadelevel(style, state) if callable(GLOBALS.fadelevel) else GLOBALS.fadelevel,
   }, kwargs))

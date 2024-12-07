@@ -33,6 +33,24 @@ def color(value, is256 = False):
   else:
     return range(value, 0, 0xFFFFFF, 0)
 
+def invert(value):
+  if type(value) in (int, float):
+    value = range(value, 0, 1, 0)
+    return {'fg': value, 'bg': value, 'sp': value}
+  if type(value) == dict:
+    fg = value.get('fg')
+    bg = value.get('bg')
+    sp = value.get('sp')
+    if fg != None:
+      value['fg'] = range(fg, 0, 1, 0)
+    if bg != None:
+      value['bg'] = range(bg, 0, 1, 0)
+    if sp != None:
+      value['sp'] = range(sp, 0, 1, 0)
+    return value
+  return {'fg': 0, 'bg': 0, 'sp': 0}
+
+
 def tint_attr(value):
   if type(value) != dict:
     return None
@@ -45,7 +63,9 @@ def tint_attr(value):
     value['intensity'] = intensity(intensity_value)
   elif intensity_value != None:
     value['intensity'] = intensity(intensity_value)
-  return value
+  if value.get('rgb') != None and value.get('intensity') != None:
+    return value
+  return None
 
 def tint(value):
   if type(value) != dict:

@@ -86,3 +86,13 @@ def deep_extend(base, *args):
     target = deep_copy(target)
     shallow_extend(base, target)
   return base
+
+def resolve_all_fn(obj, style, state):
+  if callable(obj):
+    obj = obj(style, state)
+  if type(obj) == dict:
+    copy = {}
+    for k, v in obj.items():
+      copy[k] = resolve_all_fn(v, style, state)
+    return copy
+  return obj
