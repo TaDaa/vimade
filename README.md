@@ -12,7 +12,7 @@
 </tr>
 <tr>
   <td>
-    <img src="https://raw.githubusercontent.com/TaDaa/tadaa.github.io/refs/heads/master/images/minimalist_full.gif" width="980"></img>      
+    <img src="https://raw.githubusercontent.com/TaDaa/tadaa.github.io/refs/heads/master/images/minimalist_full.gif"></img>      
   </td>
 </tr>
 </tbody>
