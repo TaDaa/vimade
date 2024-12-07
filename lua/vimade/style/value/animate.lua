@@ -51,66 +51,49 @@ M.Rgb = function(config)
   return M.Animate(config)
 end
 
+M.Invert = function(config)
+  config = TYPE.shallow_copy(config)
+  config.interpolate = function (to, start, pct_time, style, state)
+    local result = {}
+    to = to or {}
+    start = start or {}
+    result.fg = COLOR_UTIL.interpolateFloat(to.fg or 0, start.fg or 0, pct_time)
+    result.bg = COLOR_UTIL.interpolateFloat(to.bg or 0, start.bg or 0, pct_time)
+    result.sp = COLOR_UTIL.interpolateFloat(to.sp or 0, start.sp or 0, pct_time)
+    return result
+  end
+  config.compare = TYPE.deep_compare
+  return M.Animate(config)
+end
+
 -- interpolate the entire available tint object
 M.Tint = function(config)
   config = TYPE.shallow_copy(config)
 
   config.interpolate = function (to, start, pct_time)
-    start = start or {}
+    if not start and not to then
+      return nil
+    end
     to = to or {}
+    start = start or {}
     local result = {}
-    local start_fg_rgb = (start.fg and start.fg.rgb) or (to.fg and to.fg.rgb)
-    local to_fg_rgb = (to.fg and to.fg.rgb) or start_fg_rgb
-    local start_bg_rgb = (start.bg and start.bg.rgb) or (to.bg and to.bg.rgb)
-    local to_bg_rgb = (to.bg and to.bg.rgb) or start_bg_rgb
-    local start_sp_rgb = (start.sp and start.sp.rgb) or (to.sp and to.sp.rgb)
-    local to_sp_rgb = (to.sp and to.sp.rgb) or start_sp_rgb
-    local start_fg_intensity = start.fg and start.fg.intensity or 0
-    local start_bg_intensity = start.bg and start.bg.intensity or 0
-    local start_sp_intensity = start.sp and start.sp.intensity or 0
-    local to_fg_intensity = to.fg and to.fg.intensity or 0
-    local to_bg_intensity = to.bg and to.bg.intensity or 0
-    local to_sp_intensity = to.sp and to.sp.intensity or 0
-
-    if to_fg_rgb then
-      result.fg = {}
-      result.fg.rgb = COLOR_UTIL.interpolateRgb(to_fg_rgb, start_fg_rgb, pct_time)
-      result.fg.intensity = COLOR_UTIL.interpolateFloat(to_fg_intensity, start_fg_intensity, pct_time)
+    for key, value in pairs(to) do
+      if start[key] == nil then
+        start[key] = {rgb = value.rgb, intensity = 0}
+      end
     end
-
-    if to_bg_rgb then
-      result.bg = {}
-      result.bg.rgb = COLOR_UTIL.interpolateRgb(to_bg_rgb, start_bg_rgb, pct_time)
-      result.bg.intensity = COLOR_UTIL.interpolateFloat(to_bg_intensity, start_bg_intensity, pct_time)
+    for key, value in pairs(start) do
+      if to[key] == nil then
+        to[key] = {rgb = value.rgb, intensity = 0}
+      end
     end
-
-    if to_sp_rgb then
-      result.sp = {}
-      result.sp.rgb = COLOR_UTIL.interpolateRgb(to_sp_rgb, start_sp_rgb, pct_time)
-      result.sp.intensity = COLOR_UTIL.interpolateFloat(to_sp_intensity, start_sp_intensity, pct_time)
+    for key, value in pairs(to) do
+      result[key] = {
+        rgb = COLOR_UTIL.interpolateRgb(value.rgb, start[key].rgb, pct_time),
+        intensity = COLOR_UTIL.interpolateFloat(value.intensity, start[key].intensity, pct_time),
+      }
     end
-
     return result
-  end
-  if not config.start then
-    config.start = function(style, state)
-      local value = config.to
-      if type(value) == 'function' then
-        value = value(style, state)
-      end
-      if value then
-        if value.fg then
-          value.fg.intensity = 0
-        end
-        if value.bg then
-          value.bg.intensity = 0
-        end
-        if value.sp then
-          value.sp.intensity = 0
-        end
-      end
-      return value
-    end
   end
   config.compare = TYPE.deep_compare
   return M.Animate(config)
@@ -157,10 +140,8 @@ M.Animate = function (config)
       state[id] = {}
     end
     state = state[id]
-    local to = _to
-    if type(to) == 'function' then
-      to = to(style, state)
-    end
+    local to = style.resolve(_to, state)
+    local start = style.resolve(_start, state)
     local compare = _compare
     if type(compare) == 'function' then
       compare = compare(to, state['last_to'])
@@ -169,10 +150,6 @@ M.Animate = function (config)
       state['change_timestamp'] = GLOBALS.now
     end
     state['last_to'] = to
-    local start = _start
-    if type(start) == 'function' then
-      start = start(style, state)
-    end
     local delay = _delay
     if type(delay) == 'function' then
       delay = delay(style, state)
@@ -235,7 +212,7 @@ M.Animate = function (config)
     end
     local elapsed = time / duration
     elapsed = math.min(math.max(_ease(elapsed), 0), 1)
-    state.value = _interpolate(to, state.start, elapsed)
+    state.value = _interpolate(to, state.start, elapsed, style, state)
     style._animating = true
     ANIMATOR.schedule(win)
     return state.value

@@ -10,25 +10,10 @@ M.__init = function (args)
   GLOBALS = args.GLOBALS
 end
 
-M._resolve_all_fn = function (obj, style, state)
-  if type(obj) == 'function' then
-    obj = obj(style, state)
-  end
-  if type(obj) == 'table' then
-    local copy = {}
-    for i, v in pairs(obj) do
-      copy[i] = M._resolve_all_fn(v, style, state)
-    end
-    return copy
-  end
-  return obj
-end
-
-M._create_to_hl = function (tint)
+M._create_tint = function (tint)
   if type(tint) ~= 'table' then
     return nil
   end
-  tint = VALIDATE.tint(tint)
   local fg = tint.fg
   local bg = tint.bg
   local sp = tint.sp
@@ -61,15 +46,19 @@ M.Tint = function(config)
     style.win = win
     style._condition = _condition
     style._animating = false
+    style.resolve = function (value, state)
+       return VALIDATE.tint(TYPE.resolve_all_fn(value, style, state))
+    end
     style.before = function (win, state)
-      tint = M._resolve_all_fn(_value, style, state)
+      -- don't use style.resolve here for performance reasons
+      tint = TYPE.resolve_all_fn(_value, style, state)
       if type(_condition) == 'function' then
         condition = _condition(style, state)
       end
       if condition == false then
         return
       end
-      to_hl = M._create_to_hl(tint)
+      to_hl = M._create_tint(VALIDATE.tint(tint))
     end
     style.key = function (win, state)
       if not to_hl or condition == false then
@@ -123,11 +112,11 @@ return M.Tint(TYPE.extend({
   condition = CONDITION.INACTIVE,
   value = function (style, state)
     if type(GLOBALS.tint) == 'function' then
-      return VALIDATE.tint(GLOBALS.tint(style, state))
+      return GLOBALS.tint(style, state)
     elseif type(GLOBALS.tint) == 'table' then
-      return TYPE.deep_copy(VALIDATE.tint(GLOBALS.tint))
+      return TYPE.deep_copy(GLOBALS.tint)
     end
-    return VALIDATE.tint(GLOBALS.tint)
+    return GLOBALS.tint
   end
 }, config))
 end

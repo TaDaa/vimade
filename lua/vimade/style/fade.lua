@@ -14,7 +14,7 @@ end
 
 -- @param config {
   -- @required value = number | function (win) -> number -- number is the fadelevel that is applied to each window
-  -- }
+-- }
 M.Fade = function(config)
   local result = {}
   local _value = config.value
@@ -27,13 +27,12 @@ M.Fade = function(config)
     style.win = win
     style._condition = _condition
     style._animating = false
+    style.resolve = function (value, state)
+      return VALIDATE.fade(TYPE.resolve_all_fn(value, style, state))
+    end
     style.before = function (win, state)
-      if type(_value) == 'function' then
-        fade = _value(style, state)
-      end
-      fade = VALIDATE.fade(fade)
-      -- before any ops related to this module, we want to ensure we have the most up-to-date fade
-      -- for the window
+      fade = style.resolve(_value, state)
+      -- condition needs to be the last check due to animation checks
       if type(_condition) == 'function' then
         condition = _condition(style, state)
       end
@@ -98,7 +97,7 @@ return M.Fade(TYPE.extend({
     if type(value) == 'function' then
       value = value(style, state)
     end
-    return VALIDATE.fade(value)
+    return value
   end
 }, config))
 end

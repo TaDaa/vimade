@@ -105,4 +105,18 @@ M.deep_extend = function (base, ...)
   return base
 end
 
+M.resolve_all_fn = function (obj, ...)
+  if type(obj) == 'function' then
+    obj = obj(...)
+  end
+  if type(obj) == 'table' then
+    local copy = {}
+    for i, v in pairs(obj) do
+      copy[i] = M.resolve_all_fn(v, ...)
+    end
+    return copy
+  end
+  return obj
+end
+
 return M
