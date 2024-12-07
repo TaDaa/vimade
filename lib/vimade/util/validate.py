@@ -38,15 +38,9 @@ def invert(value):
     value = range(value, 0, 1, 0)
     return {'fg': value, 'bg': value, 'sp': value}
   if type(value) == dict:
-    fg = value.get('fg')
-    bg = value.get('bg')
-    sp = value.get('sp')
-    if fg != None:
-      value['fg'] = range(fg, 0, 1, 0)
-    if bg != None:
-      value['bg'] = range(bg, 0, 1, 0)
-    if sp != None:
-      value['sp'] = range(sp, 0, 1, 0)
+    value['fg'] = range(value.get('fg'), 0, 1, 0)
+    value['bg'] = range(value.get('bg'), 0, 1, 0)
+    value['sp'] = range(value.get('sp'), 0, 1, 0)
     return value
   return {'fg': 0, 'bg': 0, 'sp': 0}
 

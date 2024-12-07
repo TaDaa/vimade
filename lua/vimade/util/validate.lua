@@ -51,15 +51,9 @@ M.invert = function (value)
     return {fg = value, bg = value, sp = value}
   end
   if type(value) == 'table' then
-    if value.fg then
-      value.fg = M.range(value.fg, 0, 1, 0)
-    end
-    if value.bg then
-      value.bg = M.range(value.bg, 0, 1, 0)
-    end
-    if value.sp then
-      value.sp = M.range(value.sp, 0, 1, 0)
-    end
+    value.fg = M.range(value.fg, 0, 1, 0)
+    value.bg = M.range(value.bg, 0, 1, 0)
+    value.sp = M.range(value.sp, 0, 1, 0)
     return value
   end
   return {fg = 0, bg = 0, sp = 0}
