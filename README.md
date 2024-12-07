@@ -16,7 +16,7 @@
 <tr>
   <td align="center">
     
-### Dim, Fade, Tint, and Customize (Neo)vim
+**Dim, Fade, Tint, and Customize (Neo)vim**
   </td>
 </tr>
 <tr>
