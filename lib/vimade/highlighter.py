@@ -41,7 +41,7 @@ def __init(args):
       def next(replacement):
         IPC.batch_command('hi! link vimade_0 vimade_' + str(replacement[0]))
       create_highlights(M.global_win, [M.global_win.original_wincolor]).then(next)
-    def unhighlight(self, a , b):
+    def unhighlight(self, a = False, b = False):
       pass
     def add_signs():
       pass
