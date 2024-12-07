@@ -1,8 +1,17 @@
 
+
+
 <table>
 <tbody>
   <tr><td align="center">
-  <img  src="https://tadaa.github.io/images/logo-transformed%20(1).png" width="400"></img>      
+ 
+<picture>
+  <source media="(prefers-color-scheme: light)" srcset="https://tadaa.github.io/images/logo-transformed%20(1).png">
+  <source media="(prefers-color-scheme: dark)" srcset="https://tadaa.github.io/images/logo-transformed-inv.png#gh-dark-mode-only">
+  <img width="400" alt="" src="https://tadaa.github.io/images/logo-transformed%20(1).png#gh-light-mode-only">
+</picture>
+
+
   </td></tr>
 <tr>
   <td align="center">
