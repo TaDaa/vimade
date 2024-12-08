@@ -502,8 +502,8 @@ class Namespace:
               syn_indices.append(len(gaps))
               gaps.append([None, row, column])
             elif enablebasegroups == False:
-              color['s'] = 0
-              gaps.append((0, row, column))
+              color['s'] = -1
+              gaps.append((-1, row, column))
           elif color['s'] != None and not hi_row.get(column):
             gaps.append((color['s'], row, column))
           color['t'] = tick_id
