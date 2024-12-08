@@ -16,7 +16,9 @@ def _duo_tint_to(config):
     to = style.resolve(TINT.Default().value(), state)
     if to and style.win.tabnr == GLOBALS.current['tabnr']:
       pct = window_pct
-      if style.win.bufnr == GLOBALS.current['bufnr']:
+      if not style.win.nc:
+        pct = 0
+      elif style.win.bufnr == GLOBALS.current['bufnr']:
         pct = buffer_pct
       for color in to.values():
         if 'rgb' in color:
@@ -29,6 +31,8 @@ def _duo_fade_to(config):
   buffer_pct = config.get('buffer_pct')
   window_pct = config.get('window_pct')
   def _duo_fade_result(style, state):
+    if not style.win.nc:
+      return 1
     to = style.resolve(FADE.Default().value(), state)
     pct = window_pct
     if to != None and style.win.tabnr == GLOBALS.current['tabnr'] and style.win.bufnr == GLOBALS.current['bufnr']:
