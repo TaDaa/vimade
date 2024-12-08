@@ -10,12 +10,11 @@ local GLOBALS = require('vimade.state.globals')
 local duo_tint_to = function(config)
   return function (style, state)
     local to = style.resolve(TINT.Default().value(), state)
-    if not style.win.nc then
-      return 0
-    end
     if to and style.win.tabnr == GLOBALS.current.tabnr then
       local pct = config.window_pct
-      if style.win.bufnr == GLOBALS.current.bufnr then
+      if not style.win.nc then
+        pct = 0
+      elseif style.win.bufnr == GLOBALS.current.bufnr then
         pct = config.buffer_pct
       end
       for i, color in pairs(to) do
