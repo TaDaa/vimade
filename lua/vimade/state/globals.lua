@@ -120,9 +120,10 @@ local DEFAULTS = TYPE.extend(DEFAULT_RECIPE.Default(), {
     default = {
       function(hi_name)
         -- see #85 prevent global statusline from flickering due to multiple windows impacting
-        -- StatusLine highlight. WinSeparator needs to be disabled due to misalignment that
-        -- occurs without StatusLine. TODO look into WinSeparator issue more.
-        return (hi_name == 'StatusLine' or hi_name == 'WinSeparator') and vim.go.laststatus == 3
+        -- StatusLine. laststatus=3 also causes some misalignment on WinSeparator, if you see
+        -- issues consider either also excluding 'WinSeparator' or tweaking the WinSeparator
+        -- guibg until you find a value that looks good.
+        return hi_name == 'StatusLine' and vim.go.laststatus == 3
       end
     },
   },
