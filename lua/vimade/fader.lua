@@ -2,6 +2,7 @@ local M = {}
 local ANIMATE = require('vimade.style.value.animate')
 local ANIMATOR = require('vimade.animator')
 local COMPAT = require('vimade.util.compat')
+local DISABLED_HIGHLIGHTS = require('vimade.config_helpers.disabled_highlights')
 local EXCLUDE = require('vimade.style.exclude')
 local FADE = require('vimade.style.fade')
 local GLOBALS = require('vimade.state.globals')
@@ -90,8 +91,10 @@ end
 M.tick = function (override_tick_state)
   local last_ei = vim.go.ei
   vim.go.ei ='all'
+
   M.notify('tick:before')
   GLOBALS.refresh(override_tick_state)
+  M.notify('tick:refresh')
 
   update()
 
@@ -119,6 +122,7 @@ HIGHLIGHTER.__init({FADER=M, GLOBALS=GLOBALS})
 REAL_NAMESPACE.__init({FADER=M, GLOBALS=GLOBALS})
 FADE.__init({FADER=M, GLOBALS=GLOBALS})
 TINT.__init({FADER=M, GLOBALS=GLOBALS})
+DISABLED_HIGHLIGHTS.__init({FADER=M, GLOBALS=GLOBALS})
 EXCLUDE.__init({FADER=M, GLOBALS=GLOBALS})
 INCLUDE.__init({FADER=M, GLOBALS=GLOBALS})
 WIN_STATE.__init({FADER=M, GLOBALS=GLOBALS})

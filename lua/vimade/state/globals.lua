@@ -53,6 +53,7 @@ M.current = {
 }
 M.link = {}
 M.blocklist = {}
+M.disabled_highlights = {}
 M.global_highlights = {}
 
 local CURRENT = {
@@ -114,6 +115,15 @@ local DEFAULTS = TYPE.extend(DEFAULT_RECIPE.Default(), {
     },
     -- include_alternative matchers if desired
     -- function(win, activeWin) end
+  },
+  disabled_highlights = {
+    default = {
+      function(hi_name)
+        -- see #85 prevent global statusline from flickering due to multiple windows impacting
+        -- StatusLine highlight.
+        return hi_name == 'StatusLine' and vim.go.laststatus == 3
+      end
+    },
   },
   blocklist = {
     -- runs the default_matcher with this config
@@ -256,6 +266,7 @@ M.refresh = function (override_tick_state)
   -- link and blocklist are merged at the name level (user overlay has priority)
   M.link = TYPE.extend({}, DEFAULTS.link, vimade.link)
   M.blocklist = TYPE.extend({}, DEFAULTS.blocklist, vimade.blocklist)
+  M.disabled_highlights = TYPE.extend({}, DEFAULTS.disabled_highlights, vimade.disabled_highlights)
 
   M.basebg = vimade.basebg ~= '' and vimade.basebg or DEFAULTS.basebg
   M.groupdiff = TYPE.num_to_bool(vimade.groupdiff, DEFAULTS.groupdiff)
