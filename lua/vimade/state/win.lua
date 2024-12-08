@@ -69,6 +69,7 @@ M.__create = function (winid)
       height = -1,
       linked = false,
       blocked = false,
+      blocked_highlights = {},
       nc = false,
       hi_key = '',
       is_active_win = nil,
@@ -257,6 +258,8 @@ M.refresh = function (wininfo, skip_link)
         style_active = style_active + 1
       end
     end
+    win.blocked_highlights = BLOCKLIST.HIGHLIGHTS(win, M.current)
+    hi_key = hi_key .. ':bh' .. BLOCKLIST.TO_HIGHLIGHTS_KEY(win.blocked_highlights)
   end
 
   if style_active > 0

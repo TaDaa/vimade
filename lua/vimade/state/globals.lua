@@ -53,7 +53,6 @@ M.current = {
 }
 M.link = {}
 M.blocklist = {}
-M.disabled_highlights = {}
 M.global_highlights = {}
 
 local CURRENT = {
@@ -116,17 +115,6 @@ local DEFAULTS = TYPE.extend(DEFAULT_RECIPE.Default(), {
     -- include_alternative matchers if desired
     -- function(win, activeWin) end
   },
-  disabled_highlights = {
-    default = {
-      function(hi_name)
-        -- see #85 prevent global statusline from flickering due to multiple windows impacting
-        -- StatusLine. laststatus=3 also causes some misalignment on WinSeparator, if you see
-        -- issues consider either also excluding 'WinSeparator' or tweaking the WinSeparator
-        -- guibg until you find a value that looks good.
-        return hi_name == 'StatusLine' and vim.go.laststatus == 3
-      end
-    },
-  },
   blocklist = {
     -- runs the default_matcher with this config
     -- any value that is a config goes to the
@@ -135,6 +123,20 @@ local DEFAULTS = TYPE.extend(DEFAULT_RECIPE.Default(), {
     -- this is set to an empty object to enforce the default condition
     -- for legacy conditions
     default = {
+      highlights = {
+        function(win, active)
+          -- see #85 prevent global statusline from flickering due to multiple windows impacting
+          -- StatusLine. laststatus=3 also causes some misalignment on WinSeparator, if you see
+          -- issues consider either also excluding 'WinSeparator' or tweaking the WinSeparator
+          -- guibg until you find a value that looks good.
+          -- permits StatusLine on the active window for active highlights
+          if vim.go.laststatus == 3 and win.nc ~= active then
+            return 'StatusLine'
+          end
+        end,
+        -- Also can specify names, example:
+        -- 'WinSeparator',
+      },
       buf_name = nil,
       -- terminal is temporarily disabled until proper fading is added
       buf_opts = {buftype = {'prompt', 'terminal'}},
@@ -268,7 +270,6 @@ M.refresh = function (override_tick_state)
   -- link and blocklist are merged at the name level (user overlay has priority)
   M.link = TYPE.extend({}, DEFAULTS.link, vimade.link)
   M.blocklist = TYPE.extend({}, DEFAULTS.blocklist, vimade.blocklist)
-  M.disabled_highlights = TYPE.extend({}, DEFAULTS.disabled_highlights, vimade.disabled_highlights)
 
   M.basebg = vimade.basebg ~= '' and vimade.basebg or DEFAULTS.basebg
   M.groupdiff = TYPE.num_to_bool(vimade.groupdiff, DEFAULTS.groupdiff)

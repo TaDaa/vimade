@@ -1,7 +1,6 @@
 local M = {}
 local COLOR_UTIL = require('vimade.util.color')
 local TYPE = require('vimade.util.type')
-local DISABLED_HIGHLIGHTS = require('vimade.config_helpers.disabled_highlights')
 local GLOBALS
 
 M.__init = function (args)
@@ -223,7 +222,7 @@ M.set_highlights = function(win)
       --if hi.ctermfg == nil then
       --end
 
-      if not DISABLED_HIGHLIGHTS.is_disabled(name) then
+      if win.blocked_highlights[name] ~= true then
         for i, s in ipairs(style) do
           s.modify(hi, hi_target)
         end
