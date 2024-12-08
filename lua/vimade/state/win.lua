@@ -101,13 +101,15 @@ end
 
 M.refresh_active = function (wininfo)
   local win = M.refresh(wininfo, true)
-  M.current = win
   return win
 end
 
-M.refresh = function (wininfo, skip_link)
+M.refresh = function (wininfo, is_active)
   local winid = tonumber(wininfo.winid)
   local win = M.__create(winid)
+  if is_active then
+    M.current = win
+  end
 
   win.state = GLOBALS.READY
   win.winid = winid
@@ -165,7 +167,7 @@ M.refresh = function (wininfo, skip_link)
   end
 
   local linked = false
-  if M.current and not skip_link then
+  if M.current and not is_active then
     for key, value in pairs(GLOBALS.link) do
       if type(value) == 'table' then
         linked = LINK.DEFAULT(win, M.current, value)
