@@ -129,8 +129,7 @@ local DEFAULTS = TYPE.extend(DEFAULT_RECIPE.Default(), {
           -- StatusLine. laststatus=3 also causes some misalignment on WinSeparator, if you see
           -- issues consider either also excluding 'WinSeparator' or tweaking the WinSeparator
           -- guibg until you find a value that looks good.
-          -- permits StatusLine on the active window for active highlights
-          if vim.go.laststatus == 3 and win.nc ~= active then
+          if vim.go.laststatus == 3 then
             return 'StatusLine'
           end
         end,
