@@ -8,6 +8,11 @@ local TYPE = require('vimade.util.type')
 local M = {}
 local GLOBALS
 
+local MATH_MIN = math.min
+local MATH_MAX = math.max
+local INTERPOLATE_FLOAT = COLOR_UTIL.interpolateFloat
+local INTERPOLATE_RGB = COLOR_UTIL.interpolateRgb
+
 M.__init = function (args)
   GLOBALS = args.GLOBALS
 end
@@ -37,7 +42,7 @@ M.DIRECTION = DIRECTION
 --}
 M.Number = function (config)
   config = TYPE.shallow_copy(config)
-  config.interpolate = COLOR_UTIL.interpolateFloat
+  config.interpolate = INTERPOLATE_FLOAT
   config.compare = function (value, last)
     return value == last
   end
@@ -46,7 +51,7 @@ end
 
 M.Rgb = function(config)
   config = TYPE.shallow_copy(config)
-  config.interpolate = COLOR_UTIL.interpolateRgb
+  config.interpolate = INTERPOLATE_RGB
   config.compare = TYPE.shallow_compare
   return M.Animate(config)
 end
@@ -57,9 +62,9 @@ M.Invert = function(config)
     local result = {}
     to = to or {}
     start = start or {}
-    result.fg = COLOR_UTIL.interpolateFloat(to.fg or 0, start.fg or 0, pct_time)
-    result.bg = COLOR_UTIL.interpolateFloat(to.bg or 0, start.bg or 0, pct_time)
-    result.sp = COLOR_UTIL.interpolateFloat(to.sp or 0, start.sp or 0, pct_time)
+    result.fg = INTERPOLATE_FLOAT(to.fg or 0, start.fg or 0, pct_time)
+    result.bg = INTERPOLATE_FLOAT(to.bg or 0, start.bg or 0, pct_time)
+    result.sp = INTERPOLATE_FLOAT(to.sp or 0, start.sp or 0, pct_time)
     return result
   end
   config.compare = TYPE.deep_compare
@@ -89,8 +94,8 @@ M.Tint = function(config)
     end
     for key, value in pairs(to) do
       result[key] = {
-        rgb = COLOR_UTIL.interpolateRgb(value.rgb, start[key].rgb, pct_time),
-        intensity = COLOR_UTIL.interpolateFloat(value.intensity, start[key].intensity, pct_time),
+        rgb = INTERPOLATE_RGB(value.rgb, start[key].rgb, pct_time),
+        intensity = INTERPOLATE_FLOAT(value.intensity, start[key].intensity, pct_time),
       }
     end
     return result
@@ -144,12 +149,12 @@ M.Animate = function (config)
     local start = style.resolve(_start, state)
     local compare = _compare
     if type(compare) == 'function' then
-      compare = compare(to, state['last_to'])
+      compare = compare(to, state.last_to)
     end
     if compare == false then
-      state['change_timestamp'] = GLOBALS.now
+      state.change_timestamp = GLOBALS.now
     end
-    state['last_to'] = to
+    state.last_to = to
     local delay = _delay
     if type(delay) == 'function' then
       delay = delay(style, state)
@@ -167,7 +172,7 @@ M.Animate = function (config)
       reset = reset(style, state)
     end
     -- TODO this logic is nc specific and should be abstracted
-    local time = GLOBALS.now - (math.max(win.timestamps.nc, state['change_timestamp'] or 0) + delay)
+    local time = GLOBALS.now - (MATH_MAX(win.timestamps.nc, state.change_timestamp or 0) + delay)
     if (direction == DIRECTION.OUT and style._condition == CONDITION.ACTIVE and style.win.nc == false)
       or (direction == DIRECTION.IN and style._condition == CONDITION.INACTIVE and style.win.nc == true) then
        state.value = to
@@ -211,7 +216,7 @@ M.Animate = function (config)
       return to
     end
     local elapsed = time / duration
-    elapsed = math.min(math.max(_ease(elapsed), 0), 1)
+    elapsed = MATH_MIN(MATH_MAX(_ease(elapsed), 0), 1)
     state.value = _interpolate(to, state.start, elapsed, style, state)
     style._animating = true
     ANIMATOR.schedule(win)

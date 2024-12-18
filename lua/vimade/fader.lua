@@ -1,4 +1,6 @@
 local M = {}
+local bit = require('bit')
+
 local ANIMATE = require('vimade.style.value.animate')
 local ANIMATOR = require('vimade.animator')
 local COMPAT = require('vimade.util.compat')
@@ -25,7 +27,7 @@ local update = function ()
     end
   end
 
-  for i, wininfo in pairs(windows) do
+  for i, wininfo in ipairs(windows) do
     -- we skip only_these_windows here because we need to know who the active window is
     -- for linking and other ops
     if current.winid == wininfo.winid then
@@ -36,19 +38,36 @@ local update = function ()
     end
   end
 
-  for i, wininfo in pairs(windows) do
+  for i, wininfo in ipairs(windows) do
     if current.tabnr == wininfo.tabnr and current.winid ~= wininfo.winid then
       WIN_STATE.refresh(wininfo)
     end
   end
-  for i, wininfo in pairs(windows) do
+
+  -- Neovim will sometimes corrupt namespaces. This happens frequently in 0.8.0 and much less
+  -- on newer versions.  Corrupted namespaces results in flickers, lost highlights, or completely
+  -- incorrect colors.  We can detect it by ensuring the first highlight in a namespace (vimade_control)
+  -- always has our expected color values. When the values are wrong, we need to reset every color
+  -- in that namespace and force redraw.
+  local corrupted_namespaces = {}
+  for i, wininfo in ipairs(windows) do
     if current.tabnr == wininfo.tabnr then
       local win = WIN_STATE.get(wininfo)
-      if win.current_ns ~= nil then
-        COMPAT.nvim_win_set_hl_ns(wininfo.winid, win.current_ns)
+      -- check if the namespace is owned by vimade and whether its currently active
+      -- ensures that the 
+      if win.ns and win.current_ns and win.current_ns == win.ns.vimade_ns then
+        local result = COMPAT.nvim_get_hl(win.ns.vimade_ns, {name = 'vimade_control'})
+        if result.fg ~= 0XFEDCBA or result.bg ~= 0X123456 then
+          if not corrupted_namespaces[win.ns.vimade_ns] then
+            corrupted_namespaces[win.ns.vimade_ns] = true
+            HIGHLIGHTER.set_highlights(win)
+          end
+          COMPAT.nvim__redraw({win=win.winid, valid=false})
+        end
       end
     end
   end
+
   WIN_STATE.cleanup(windows)
 end
 
@@ -117,6 +136,7 @@ end
 
 ANIMATE.__init({FADER=M, GLOBALS=GLOBALS})
 ANIMATOR.__init({FADER=M, GLOBALS=GLOBALS})
+COMPAT.__init({FADER=M, GLOBALS=GLOBALS})
 HIGHLIGHTER.__init({FADER=M, GLOBALS=GLOBALS})
 REAL_NAMESPACE.__init({FADER=M, GLOBALS=GLOBALS})
 FADE.__init({FADER=M, GLOBALS=GLOBALS})

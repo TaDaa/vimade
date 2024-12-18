@@ -24,6 +24,21 @@ local get_next_id = function ()
   return ids
 end
 
+-- will_reuse should only be set if the calling window will
+-- for sure reuse the namespace
+M.clear_winid = function (winid, will_self_reuse)
+  local current_win_ns = M.winid_lookup[winid] 
+  M.winid_lookup[winid] = nil
+  if current_win_ns ~= nil then
+    current_win_ns.windows[winid] = nil
+
+    if next(current_win_ns.windows) == nil then
+      M.key_lookup[current_win_ns.key] = nil
+      M.vimade_active_ns_lookup[current_win_ns.vimade_ns] = nil
+      table.insert(M.free_ns, current_win_ns)
+    end
+  end
+end
 
 M.get_replacement = function (win, real_ns, hi_key, skip_create)
   local key = hi_key
@@ -41,7 +56,8 @@ M.get_replacement = function (win, real_ns, hi_key, skip_create)
       return nil
     end
     ns = table.remove(M.free_ns) or {
-      vimade_ns = vim.api.nvim_create_namespace('vimade_' .. get_next_id()),
+      -- vimade_ns = vim.api.nvim_create_namespace('vimade_' .. get_next_id()),
+      vimade_ns = vim.api.nvim_create_namespace(''),
       vimade_highlights = {},
     }
     ns.key = key
@@ -63,7 +79,7 @@ M.get_replacement = function (win, real_ns, hi_key, skip_create)
 end
 
 M.check_ns_modified = function(ns)
-  local real = REAL_NAMESPACE.refresh(ns.real_ns)
+  local real = REAL_NAMESPACE.refresh(ns.real_ns, false)
   ns.modified = real.modified
   ns.real = real
 end
@@ -75,36 +91,6 @@ end
 M.from_winid = function (winid)
   local result = M.winid_lookup[winid]
   return result and result.vimade_ns
-end
-
-M.clear_ns = function(ns)
-  local vimade_ns = ns.vimade_ns
-  local all_hi = COMPAT.nvim_get_hl(vimade_ns, {})
-  for hi_name, v in pairs(all_hi) do
-    vim.api.nvim_set_hl(vimade_ns, hi_name, {})
-  end
-  ns.vimade_highlights = {}
-end
-
--- will_reuse should only be set if the calling window will
--- for sure reuse the namespace
-M.clear_winid = function (winid, will_self_reuse)
-  local current_win_ns = M.winid_lookup[winid] 
-  M.winid_lookup[winid] = nil
-  if current_win_ns ~= nil then
-    current_win_ns.windows[winid] = nil
-
-    if next(current_win_ns.windows) == nil then
-      M.key_lookup[current_win_ns.key] = nil
-      M.vimade_active_ns_lookup[current_win_ns.vimade_ns] = nil
-      -- this is a slight hack, but basically if the ns is going to be reused by the calling parent
-      -- there is no purpose in clearing it right now.
-      if not will_self_reuse then
-        M.clear_ns(current_win_ns)
-      end
-      table.insert(M.free_ns, current_win_ns)
-    end
-  end
 end
 
 return M

@@ -3,94 +3,40 @@ local M = {}
 local TYPE = require('vimade.util.type')
 local COMPAT = require('vimade.util.compat')
 local HIGHLIGHTER = require('vimade.highlighter')
+local ANIMATOR = require('vimade.animator')
 local GLOBALS
 local FADER
+local TABLE_INSERT = table.insert
+
+local NVIM_GET_HL = COMPAT.nvim_get_hl
+local global_sync_id = 1
 
 M.__init = function (args)
   GLOBALS = args.GLOBALS
   FADER = args.FADER
 
   FADER.on('tick:before', function ()
-    if next(M.cache) ~= nil then
+    -- logic below defers invalidations during an animation. If the namespace source
+    -- changes, we'll recompute afterwards.
+    if next(M.cache) ~= nil and not ANIMATOR.animating then
       M.pending_removal = M.cache
       M.cache = {}
     end
   end)
 end
 
-local REQUIRED_GUI_HI_KEYS = {
-  fg = true,
-  bg = true,
-  sp = true,
-  blend = true,
-  --link = true,
-}
-local REQUIRED_CTERM_HI_KEYS = {
-  ctermfg = true,
-  ctermbg = true,
-  --- sp is required in 256 mode to render correctly
-  sp = true,
-  --link = true,
-}
-local VALID_CTERM_KEYS = {
-  cterm = true,
-  --link = true
-}
-local VALID_SP = {
-  bold = true,
-  standout = true,
-  underline = true,
-  undercurl = true,
-  underdouble = true,
-  underdotted = true,
-  underdashed = true,
-  strikethrough = true,
-  italic = true,
-  reverse = true,
-  nocombine = true,
-  cterm = true,
-}
-
-local filter_hi = function (hi)
-  local has_required = false
-  local valid_keys
-  local required_keys
-  if GLOBALS.termguicolors == true then
-    required_keys = REQUIRED_GUI_HI_KEYS
-    hi.cterm = {}
+M.resolve_all_links = function (real_ns, real_highlights, is_global)
+  local copy_ns
+  if GLOBALS.termguicolors then
+    copy_ns = TYPE.copy_hl_ns_gui
   else
-    required_keys = REQUIRED_CTERM_HI_KEYS
+    copy_ns = TYPE.copy_hl_ns_cterm
   end
-  for key, v in pairs(hi) do
-    if required_keys[key] ~= nil then
-      has_required = true
-    elseif GLOBALS.termguicolors == false then
-      if key == 'cterm' then
-        for k, c in pairs(v) do
-          if not VALID_SP[k] == nil then
-            v[k] = nil
-          end
-        end
-      else
-        hi[key] =nil
-      end
-    elseif VALID_SP[key] == nil then
-      hi[key] = nil
-    end
-  end
-  if has_required == false then
-    return nil
-  end
-  return hi
-end
-
-
-local resolve_all_links = function (real_ns, real_highlights)
-  local globals = TYPE.deep_copy(GLOBALS.global_highlights)
-  local overrides = real_ns ~= 0 and TYPE.deep_copy(real_highlights) or {}
+  local globals = copy_ns(is_global and real_highlights or GLOBALS.global_highlights)
+  local overrides = real_ns ~= 0 and copy_ns(real_highlights) or {}
   local output = {}
-
   local visited = {}
+
   local walk_links = function (start_name, start_hi, start_ns)
     local hi = start_hi
     local name = start_name
@@ -133,7 +79,7 @@ local resolve_all_links = function (real_ns, real_highlights)
     hi = mark_and_next(name)
     local circular = false
     while hi do
-      table.insert(chain, {hi= hi, name=name})
+      TABLE_INSERT(chain, {hi= hi, name = name})
       if not hi.link then
         break
       end
@@ -149,8 +95,9 @@ local resolve_all_links = function (real_ns, real_highlights)
       name = maybe_next_name
       -- if we've already visited this node we are done, break early
       -- and use the already processed hi
-      if visited[name] then
-        hi = visited[name]
+      local visited_hi = visited[name]
+      if visited_hi then
+        hi = visited_hi 
         break
       end
     end
@@ -158,23 +105,23 @@ local resolve_all_links = function (real_ns, real_highlights)
     if circular == true then
       -- for circular handling we try our "best".  Get the "actual" color
       -- which is often wrong, fallback to global, and break the link
-      hi = COMPAT.nvim_get_hl(real_ns, {name = name, link=false})
+      local hi_conf = {name = name, link = false}
+      hi = NVIM_GET_HL(real_ns, hi_conf)
       if hi.link or next(hi) == nil then
-        hi = COMPAT.nvim_get_hl(0, {name = name, link=false})
+        hi = NVIM_GET_HL(0, hi_conf)
       end
       hi.link = nil
     end
 
     -- apply the final highlights to each of the linked nodes
-    for i, linked in pairs(chain) do
-      local linked_hi = linked.hi
+    for i, linked in ipairs(chain) do
       -- replace the link chain with the end highlight
       -- if it was circular, its now disconnected
       -- (see hi.link = nil above)
       -- TODO its likely we can re-enable the logic to keep links
       -- without requiring the whole tree.  This method is mostly
       -- to fix animated fademode='windows'
-      chain[i].hi = hi
+      linked.hi = hi
       visited[linked.name] = hi
       hi.link = nil
     end
@@ -185,13 +132,16 @@ local resolve_all_links = function (real_ns, real_highlights)
 
   for name, override in pairs(overrides) do
     if override.link  then
-      -- walk each link in the override ns and incude them in the output
       local chain = walk_links(name, override, real_ns)
       for i, linked in pairs(chain) do
-        output[linked.name] = filter_hi(linked.hi)
+        local linked_hi = linked.hi
+        if linked_hi.fg or linked_hi.bg or linked_hi.sp or linked_hi.ctermfg or linked_hi.ctermbg or linked_hi.blend then
+          output[linked.name] = linked_hi
+        end
       end
-    else
-      output[name] = filter_hi(override)
+      -- TODO cleanup, this is ugly
+    elseif override.fg or override.bg or override.sp or override.ctermfg or override.ctermbg or override.blend then
+      output[name] = override
     end
   end
 
@@ -200,46 +150,88 @@ local resolve_all_links = function (real_ns, real_highlights)
     if override.link  then
       local chain = walk_links(name, override, 0)
       for i, linked in pairs(chain) do
-        if not output[linked.name] then
-          output[linked.name] = filter_hi(linked.hi)
+        local linked_name = linked.name
+        local linked_hi = linked.hi
+      -- TODO cleanup, this is ugly
+        if not output[name] and (linked_hi.fg or linked_hi.bg or linked_hi.sp or linked_hi.ctermfg or linked_hi.ctermbg or linked_hi.blend) then
+          output[linked_name] = linked_hi
         end
       end
-    elseif not output[name] then
-      output[name] = filter_hi(override)
+    elseif not output[name] and (override.fg or override.bg or override.sp or override.ctermfg or override.ctermbg or override.blend) then
+      output[name] = override
     end
   end
   if output.Normal then
     -- do not try and grab NormalNC -> Neovim will fail to lookup the correct colors for circular highlights
     -- only use link resolving logic above
     output.Normal.link = nil
+    output.Normal.foreground = nil
+    output.Normal.background = nil
   end
   if output.NormalNC then
     -- do not try and grab NormalNC -> Neovim will fail to lookup the correct colors for circular highlights
     -- only use link resolving logic above
     output.NormalNC.link = nil
+    output.NormalNC.foreground = nil
+    output.NormalNC.background = nil
   end
   return output
 end
 
+M.is_desync = function(ns)
+  local global_ns = M.cache[0] or M.pending_removal[0]
+  return ns.id ~= 0 and global_ns and ns.sync_id ~= global_ns.sync_id
+end
+
 M.pending_removal = {}
 M.cache = {}
-M.refresh = function (real_ns)
-  if not M.cache[real_ns] then
-    local ns = {}
+M.refresh = function (real_ns, is_global)
+  local ns = M.cache[real_ns]
+  local filter_ns
+  local equal_ns
+  if GLOBALS.termguicolors then
+    filter_ns = TYPE.filter_ns_gui
+    equal_ns = TYPE.equal_ns_gui
+  else
+    filter_ns = TYPE.filter_ns_cterm
+    equal_ns = TYPE.equal_ns_cterm
+  end
+  if not ns then
+    ns = {}
+    local global_ns = M.cache[0]
     local last = M.pending_removal[real_ns]
     M.cache[real_ns] = ns
-    ns.highlights = COMPAT.nvim_get_hl(real_ns, {link=true})
-    ns.complete_highlights = resolve_all_links(real_ns, ns.highlights)
-
-    local modified = true
+    ns.id = real_ns
+    ns.sync_id = last and last.sync_id
+    ns.highlights = NVIM_GET_HL(real_ns, {link = true})
+    filter_ns(ns.highlights)
     if bit.band(GLOBALS.tick_state, GLOBALS.RECALCULATE) > 0 then
-      -- pass
+      ns.modified = true 
+    elseif real_ns ~= 0 and 
+      (global_ns and (global_ns.modified or ns.sync_id ~= global_ns.sync_id)) then
+      ns.modified = true
+    elseif last == nil then
+      ns.modified = true
     elseif last ~= nil then
-      modified = TYPE.deep_compare(last.complete_highlights, ns.complete_highlights) == false
+      if equal_ns(last.highlights, ns.highlights) == false then
+        ns.modified = true
+      end
     end
-    ns.modified = modified
+    if (not last or not last.complete_highlights) or ns.modified then
+      ns.complete_highlights = M.resolve_all_links(real_ns, ns.highlights, is_global)
+      -- lets us know when to resync non-global namespaces
+      -- this is atypical behavior but can occur if the global namespace
+      -- changes on a different tab, gets synchronized and then user
+      -- switches to a tab with separate namespaces
+      if is_global then
+        global_sync_id = global_sync_id + 1
+      end
+      ns.sync_id = global_sync_id
+    else
+      ns.complete_highlights = last.complete_highlights
+    end
   end
-  return M.cache[real_ns]
+  return ns
 end
 
 return M

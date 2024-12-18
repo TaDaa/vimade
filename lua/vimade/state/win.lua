@@ -1,6 +1,9 @@
 local M = {}
 
+local bit = require('bit')
+
 local NAMESPACE = require('vimade.state.namespace')
+local REAL_NAMESPACE = require('vimade.state.real_namespace')
 local LINK = require('vimade.config_helpers.link')
 local BLOCKLIST = require('vimade.config_helpers.blocklist')
 local HIGHLIGHTER = require('vimade.highlighter')
@@ -238,11 +241,6 @@ M.refresh = function (wininfo, is_active)
   end
 
   local hi_key = win.real_ns .. ':' 
-  if win.is_active_win then
-    hi_key = 'ac:' .. hi_key
-  else
-    hi_key = 'nc:' .. hi_key
-  end
   hi_key = hi_key .. ':' .. basebg_key
 
   -- this is to separate out the logic for inactive vs active.  we can use this for highlighting
@@ -264,32 +262,39 @@ M.refresh = function (wininfo, is_active)
     hi_key = hi_key .. ':bh' .. BLOCKLIST.TO_HIGHLIGHTS_KEY(win.blocked_highlights)
   end
 
+  local redraw = false
   if style_active > 0
     and (not win.ns
+    or REAL_NAMESPACE.is_desync(win.ns.real)
     or not GLOBALS.nohlcheck
-    or win.ns.modified
     or win.hi_key ~= hi_key
-    or bit.band(GLOBALS.tick_state, GLOBALS.RECALCULATE) > 0) then
-    local ns = NAMESPACE.get_replacement(win, real_ns, hi_key)
-    if ns.modified == true or win.hi_key ~= hi_key then
+    or bit.band(GLOBALS.tick_state, GLOBALS.RECALCULATE) > 0)
+    then
+    local ns = NAMESPACE.get_replacement(win, real_ns, hi_key, false)
+    if ns.modified or win.hi_key ~= hi_key then
+      redraw = true
       win.state = bit.bor(GLOBALS.CHANGED, win.state)
-      ns.modified = true
     end
     win.hi_key = hi_key
     win.ns = ns
   end
 
-  -- every namespace needs to be set again, this is related to the issues where the Neovim API
-  -- sets / returns incorrect values for namespace highlights.
   if win.ns and win.ns.real.complete_highlights then
     if style_active == 0 then
-      win.current_ns = win.real_ns
-    else
+      if win.current_ns ~= win.real_ns then
+        win.current_ns = win.real_ns
+        COMPAT.nvim_win_set_hl_ns(winid, win.current_ns)
+      end
+    elseif redraw then
       if M.ns_cache[win.ns.vimade_ns] == nil then
-        HIGHLIGHTER.set_highlights(win)
         M.ns_cache[win.ns.vimade_ns] = true
+        HIGHLIGHTER.set_highlights(win)
       end
       win.current_ns = win.ns.vimade_ns
+      COMPAT.nvim_win_set_hl_ns(winid, win.current_ns)
+    elseif bit.band(GLOBALS.CHANGED, win.state) > 0 then
+      win.current_ns = win.ns.vimade_ns
+      COMPAT.nvim_win_set_hl_ns(winid, win.current_ns)
     end
   end
   return win

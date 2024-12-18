@@ -1,5 +1,7 @@
 local M = {}
 
+local bit = require('bit')
+
 local DIRECTION = require('vimade.style.value.direction')
 local EXCLUDE = require('vimade.style.exclude')
 local TYPE = require('vimade.util.type')
@@ -212,8 +214,8 @@ M.getInfo = function ()
 end
 
 M.refresh_global_ns = function ()
-  M.global_ns = REAL_NAMESPACE.refresh(0)
-  if M.global_ns.modified == true then
+  M.global_ns = REAL_NAMESPACE.refresh(0, true)
+  if M.global_ns.modified  then
     M.global_highlights = M.global_ns.highlights
   end
 end
@@ -263,7 +265,7 @@ M.refresh = function (override_tick_state)
     'winid',
     'bufnr',
     'tabnr',
-  }, current, M.current, CURRENT, bit.bor(M.RECALCULATE, M.CHANGED)))
+  }, current, M.current, CURRENT,  M.CHANGED))
 
   -- will be handled in win_state --
   -- link and blocklist are merged at the name level (user overlay has priority)
@@ -284,9 +286,9 @@ M.refresh = function (override_tick_state)
   -- if you don't choose one of the above, everything is highlighted
 
   if not M.global_ns or not M.nohlcheck
-    or bit.band(M.RECALCULATE, M.tick_state) > 0 then
+    or bit.band(M.CHANGED, M.tick_state) > 0 then
     M.refresh_global_ns()
-    if M.global_ns.modified == true then
+    if M.global_ns.modified then
       M.tick_state = bit.bor(M.RECALCULATE, M.tick_state)
     end
   end

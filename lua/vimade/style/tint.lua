@@ -6,6 +6,12 @@ local TYPE = require('vimade.util.type')
 local VALIDATE = require('vimade.util.validate')
 local GLOBALS
 
+local DEEP_COPY = TYPE.deep_copy
+local TO_24B = COLOR_UTIL.to24b
+local TO_RGB = COLOR_UTIL.toRgb
+local INTERPOLATE_24B = COLOR_UTIL.interpolate24b
+local INTERPOLATE_256 = COLOR_UTIL.interpolate256
+
 M.__init = function (args)
   GLOBALS = args.GLOBALS
 end
@@ -22,13 +28,13 @@ M._create_tint = function (tint)
   end
 
   return {
-    fg = fg and COLOR_UTIL.to24b(fg.rgb) or nil,
-    ctermfg = fg and COLOR_UTIL.toRgb(fg.rgb) or nil,
+    fg = fg and TO_24B(fg.rgb) or nil,
+    ctermfg = fg and TO_RGB(fg.rgb) or nil,
     fg_intensity = fg and (1 - fg.intensity),
-    bg = bg and COLOR_UTIL.to24b(bg.rgb) or nil,
+    bg = bg and TO_24B(bg.rgb) or nil,
     bg_intensity = bg and (1 - bg.intensity),
-    ctermbg = bg and COLOR_UTIL.toRgb(bg.rgb) or nil,
-    sp = sp and COLOR_UTIL.to24b(sp) or nil,
+    ctermbg = bg and TO_RGB(bg.rgb) or nil,
+    sp = sp and TO_24B(sp) or nil,
     sp_intensity = sp and (1 - sp.intensity),
   }
 end
@@ -74,25 +80,25 @@ M.Tint = function(config)
         return
       end
       if target.bg and to_hl.bg then
-        target.bg = COLOR_UTIL.interpolate24b(target.bg, to_hl.bg, to_hl.bg_intensity)
+        target.bg = INTERPOLATE_24B(target.bg, to_hl.bg, to_hl.bg_intensity)
       end
       if target.ctermbg and to_hl.ctermbg then
-        target.ctermbg = COLOR_UTIL.interpolate256(target.ctermbg, to_hl.ctermbg, to_hl.bg_intensity)
+        target.ctermbg = INTERPOLATE_256(target.ctermbg, to_hl.ctermbg, to_hl.bg_intensity)
       end
       if hl.fg and to_hl.fg then
-        hl.fg = COLOR_UTIL.interpolate24b(hl.fg, to_hl.fg, to_hl.fg_intensity)
+        hl.fg = INTERPOLATE_24B(hl.fg, to_hl.fg, to_hl.fg_intensity)
       end
       if hl.sp and to_hl.sp then
-        hl.sp = COLOR_UTIL.interpolate24b(hl.sp, to_hl.sp, to_hl.sp_intensity)
+        hl.sp = INTERPOLATE_24B(hl.sp, to_hl.sp, to_hl.sp_intensity)
       end
       if hl.ctermfg and to_hl.ctermfg then
-        hl.ctermfg = COLOR_UTIL.interpolate256(hl.ctermfg, to_hl.ctermfg, to_hl.fg_intensity)
+        hl.ctermfg = INTERPOLATE_256(hl.ctermfg, to_hl.ctermfg, to_hl.fg_intensity)
       end
       if hl.bg and to_hl.bg then
-        hl.bg = COLOR_UTIL.interpolate24b(hl.bg, to_hl.bg, to_hl.bg_intensity)
+        hl.bg = INTERPOLATE_24B(hl.bg, to_hl.bg, to_hl.bg_intensity)
       end
       if hl.ctermbg and to_hl.ctermbg  then
-        hl.ctermbg = COLOR_UTIL.interpolate256(hl.ctermbg, to_hl.ctermbg, to_hl.bg_intensity)
+        hl.ctermbg = INTERPOLATE_256(hl.ctermbg, to_hl.ctermbg, to_hl.bg_intensity)
       end
     end
     return style
@@ -114,7 +120,7 @@ return M.Tint(TYPE.extend({
     if type(GLOBALS.tint) == 'function' then
       return GLOBALS.tint(style, state)
     elseif type(GLOBALS.tint) == 'table' then
-      return TYPE.deep_copy(GLOBALS.tint)
+      return DEEP_COPY(GLOBALS.tint)
     end
     return GLOBALS.tint
   end

@@ -3,71 +3,32 @@ local COLOR_UTIL = require('vimade.util.color')
 local TYPE = require('vimade.util.type')
 local GLOBALS
 
+local nvim_set_hl = vim.api.nvim_set_hl
+
 M.__init = function (args)
   GLOBALS = args.GLOBALS
 end
 
-local REQUIRED_HI_KEYS = {
-  'fg',
-  'bg',
-  'sp',
-  'blend',
-  'ctermfg',
-  'ctermbg',
-}
-local SECONDARY_HI_KEYS = {
-  'bold',
-  'standout',
-  'underline',
-  'undercurl',
-  'underdouble',
-  'underdotted',
-  'underdashed',
-  'strikethrough',
-  'italic',
-  'reverse',
-  'nocombine',
-}
-
-local get_replacement_parts = function (target_hi, keys, delimiter, output)
-  local replacement_key = ''
-  for i, key in ipairs(keys) do
-    local c = target_hi[key]
-    output[key] = target_hi[key]
-    if c ~= nil then
-      if type(c) == 'boolean' then
-        c = c and 'y' or 'n'
-      end
-      replacement_key = replacement_key .. delimiter .. i .. delimiter .. c
-    end
-  end
-  return replacement_key
-end
-
-local get_replacement_key = function (target_hi, ns)
-  local output = {}
-  local replacement_key = get_replacement_parts(target_hi, REQUIRED_HI_KEYS, ':', output)
-  if replacement_key ~= '' then
-    replacement_key = replacement_key.. get_replacement_parts(target_hi, SECONDARY_HI_KEYS, '#', output)
-    if target_hi.cterm then
-      replacement_key = replacement_key .. get_replacement_parts(target_hi.cterm, SECONDARY_HI_KEYS, '!', output)
-    end
-    return replacement_key
-  end
-  return nil
-end
-
--- todo this should be and/or group of windows, we are only running this potentially once per window
 M.set_highlights = function(win)
+  local copy_ns
+  if GLOBALS.termguicolors then
+    copy_ns = TYPE.copy_hl_ns_gui
+  else
+    copy_ns = TYPE.copy_hl_ns_cterm
+  end
   local default_fg = GLOBALS.is_dark and 0xFFFFFF or 0x000000
   local default_bg = GLOBALS.is_dark and 0x000000 or 0xFFFFFF
   local default_sp = default_fg
   local default_ctermfg = GLOBALS.is_dark and 231 or 0
   local default_ctermbg = GLOBALS.is_dark and 0 or 231
   local basebg = win.basebg or nil
-  local highlights = win.ns.real.complete_highlights
-  local normal_nc = TYPE.deep_copy(highlights.NormalNC or {})
-  local normal = TYPE.deep_copy(highlights.Normal or {})
+  local highlights = copy_ns(win.ns.real.complete_highlights)
+  local normal_nc = highlights.NormalNC or {}
+  local normal = highlights.Normal or {}
+  local blocked_highlights = win.blocked_highlights
+  local vimade_highlights = win.ns.vimade_highlights
+  local ns = win.ns
+  local vimade_ns = win.ns.vimade_ns
 
   if GLOBALS.termguicolors then
     default_ctermfg = nil
@@ -120,12 +81,6 @@ M.set_highlights = function(win)
   }
 
   local style = win.style
-  -- perf
-  --local cnt_linked = 0
-  --local cnt_new_links = 0
-  --local total_cnt = 0
-  --local skipped = 0
-  --local existing = 0
   local link_cache = {}
 
   -- default normal properties
@@ -137,21 +92,24 @@ M.set_highlights = function(win)
   if normal.ctermfg == nil then
     normal.ctermfg = normal_ctermfg
   end
-  -- run normal styles
-  local nt_copy = TYPE.deep_copy(normal_target)
+
+  local nt_copy = {
+    name = '',
+    fg = normal_target.fg,
+    bg = normal_target.bg,
+    sp = normal_target.sp,
+    ctermfg = normal_target.ctermfg,
+    ctermbg = normal_target.ctermbg,
+    normal_bg = normal_target.normal_bg,
+  }
   for i, s in ipairs(style) do
     s.modify(normal, nt_copy)
   end
+
   -- clear name
   normal.name = nil
   -- store the used target for debugging purposes only
-  win.ns.normal_target = normal_target
-
-  local existing_normal = win.ns.vimade_highlights['vimade_0']
-
-  local cache_key = get_replacement_key(normal, win.ns)
-  link_cache[cache_key] = 'vimade_0'
-
+  ns.normal_target = normal_target
 
   -- Resist caching the code below, the Neovim API is extremely buggy and changing minor things
   -- here will probably break how the API responds with color values.  This is an infrequent bug.
@@ -170,102 +128,83 @@ M.set_highlights = function(win)
   --
   -- tldr; don't cache the changes you need to do except for links.
 
-  local cache_key = get_replacement_key(normal, win.ns)
-  link_cache[cache_key] = 'vimade_0'
-  vim.api.nvim_set_hl(win.ns.vimade_ns, 'vimade_0', normal)
-  win.ns.vimade_highlights['vimade_0'] = normal
+  -- vimade_control is used to ensure that the namespace hasn't become corrupted. Neovim seems to have a bug
+  -- that occurs every so often that either causes a user visible flicker or completely incorrect colors.
+  -- When this happens the first set highlights seem to be most effected, therefore we set vimade_control FIRST.
+  -- then check it again after all the highlights have been set for all windows.  This re-check process currently
+  -- happens in fader.lua
+  nvim_set_hl(vimade_ns, 'vimade_control', {bg=0x123456, fg=0xFEDCBA})
 
-  -- we use links to reduce the amount of actual highlights that need to be configured.  We can instead
-  -- link existing highlights to ones that already match the target colors.  This reduces the
-  -- overall definitions by 80-90%.
-  local existing_normal = win.ns.vimade_highlights['Normal']
-  -- perf
-  --if existing_normal and existing_normal.link == 'vimade_0' then
-    --existing = existing + 1
-  --end
-  if existing_normal == nil or existing_normal.link ~= 'vimade_0' then
-    local linked_normal = {link='vimade_0'}
-    vim.api.nvim_set_hl(win.ns.vimade_ns, 'NormalNC',  linked_normal)
-    vim.api.nvim_set_hl(win.ns.vimade_ns, 'Normal', linked_normal)
-    win.ns.vimade_highlights['Normal'] = linked_normal
-    win.ns.vimade_highlights['NormalNC'] = linked_normal
-  end
+  nvim_set_hl(vimade_ns, 'vimade_0', normal)
+  vimade_highlights.vimade_0 = normal
 
   -- precheck highlights for ones that are no longer found. If not found, clear the highlight
   -- in our namespace.  Ensures compatibility with highlights that are unset after calculation.
-  for name, highlight in pairs(win.ns.vimade_highlights) do
+  for name, highlight in pairs(vimade_highlights) do
     if name == 'NormalNC' or name =='Normal' or name == 'vimade_0' then
       --pass
     elseif highlights[name] == nil then
-      vim.api.nvim_set_hl(win.ns.vimade_ns, name, {})
-      win.ns.vimade_highlights[name] = nil
+      -- despite the neovim docs, using an empty {} here actually clears the highlight and does
+      -- not inherit color information from the global namespace.  Instead we hack the behavior
+      -- by linking the namespace to its global value.
+      nvim_set_hl(vimade_ns, name, {link = name})
+      vimade_highlights[name] = nil
     end
   end
 
-  for name, highlight in pairs(highlights) do
-    -- perf
-    --total_cnt = total_cnt + 1
-    if name == 'NormalNC' or name =='Normal' then
-      --pass
-    else
-      -- copies area required here as user mutations are expected. Deep copy due to cterm
-      local hi = TYPE.deep_copy(highlight)
-      local hi_target = TYPE.deep_copy(normal_target)
+  -- highlights are pre-copied
+  -- remove Normal/NormalNC since this a precopy anyways
+  highlights.Normal = nil
+  highlights.NormalNC = nil
+  highlights.vimade_0 = nil
+  highlights.vimade_control = nil
 
-      hi.name = name
+  -- TODO allow functions for blocked_highlights, should be fine to support this now
 
-      --TODO(see https://github.com/TaDaa/vimade/issues/81)
-      --Don't enable this again below (it shouldn't be needed any more anyways)
-      -- set default fg highlights if they are unset
-      --if hi.fg == nil then
-      --end
-      --if hi.ctermfg == nil then
-      --end
-
-      if win.blocked_highlights[name] ~= true then
-        for i, s in ipairs(style) do
-          s.modify(hi, hi_target)
-        end
-      end
-
-      hi.name = nil
-
-      local existing_hi = win.ns.vimade_highlights[name]
-      local cache_key = get_replacement_key(hi, win.ns)
-
-      -- perf
-      --if hi.link ~= nil then
-        --skipped = skipped + 1
-      --end
-
-      -- TODO re-add link skipping (removed for g:fademode='windows' animations)
-      -- given a valid cache key, we check to see if we can link it something already
-      -- existing in the namespace.  This is a common scenario and usually the answer is yes
-      if cache_key ~= nil then
-        if link_cache[cache_key] then
-          -- perf
-          -- only create links for highlights that are not in the replacement namespace already
-          -- or those that are linked to the wrong highlight (or not at all)
-          if existing_hi == nil or existing_hi.link ~= link_cache[cache_key] then
-            local linked_hi = {link=link_cache[cache_key]}
-            vim.api.nvim_set_hl(win.ns.vimade_ns, name, linked_hi)
-            win.ns.vimade_highlights[name] = linked_hi
-            --cnt_linked = cnt_linked + 1
-          --else
-            --existing = existing + 1
-          end
-        else
-          link_cache[cache_key] = name
-          vim.api.nvim_set_hl(win.ns.vimade_ns, name, hi)
-          win.ns.vimade_highlights[name] = hi
-          --cnt_new_links = cnt_new_links + 1
-        end
-      end
+  -- anything blocked can be set to link to itself
+  for name, v in pairs(blocked_highlights) do
+    if v == true then
+      highlights[name] = nil
+      -- despite the neovim docs, using an empty {} here actually clears the highlight and does
+      -- not inherit color information from the global namespace.  Instead we hack the behavior
+      -- by linking the namespace to its global value.
+      nvim_set_hl(vimade_ns, name, {link = name})
     end
   end
-  --print('existing', existing,'linked', cnt_linked, 'skipped', skipped, 'new_links', cnt_new_links, 'total_cnt', total_cnt)
+
+  for name, hi in pairs(highlights) do
+    -- copies area required here as user mutations are expected. Deep copy due to cterm
+    -- resuse the existing copy here for performance reasons and manually reassign
+    -- all fields
+    nt_copy.name = normal_target.name
+    nt_copy.fg = normal_target.fg
+    nt_copy.bg = normal_target.bg
+    nt_copy.sp = normal_target.sp
+    nt_copy.ctermfg = normal_target.ctermfg
+    nt_copy.ctermbg = normal_target.ctermbg
+    nt_copy.normal_bg = normal_target.normal_bg
+
+    hi.name = name
+
+    --TODO(see https://github.com/TaDaa/vimade/issues/81)
+    --Don't enable this again below (it shouldn't be needed any more anyways)
+    -- set default fg highlights if they are unset
+    --if hi.fg == nil then
+    --end
+    --if hi.ctermfg == nil then
+    --end
+
+    for _, s in ipairs(style) do
+      s.modify(hi, nt_copy)
+    end
+
+    hi.name = nil
+
+    nvim_set_hl(vimade_ns, name, hi)
+    vimade_highlights[name] = hi
+  end
+  nvim_set_hl(vimade_ns, 'NormalNC',  normal)
+  nvim_set_hl(vimade_ns, 'Normal', normal)
 end
 
-
 return M
-

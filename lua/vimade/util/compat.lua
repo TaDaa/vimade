@@ -1,5 +1,22 @@
 local M = {}
 
+local FADER
+local nvim__needs_redraw = false
+-- best effort filled nvim__redraw (see tick:after below)
+M.nvim__redraw = vim.api.nvim__redraw or function ()
+  nvim__needs_redraw = true
+end
+
+M.__init = function(args)
+  FADER = args.FADER
+  if not vim.api.nvim__redraw then
+    FADER.on('tick:after', function()
+      nvim__needs_redraw = false
+      vim.cmd('redraw')
+    end)
+  end
+end
+
 -- nvim_get_hl
 M.nvim_get_hl =
   -- default implementation + full support
@@ -17,18 +34,18 @@ M.nvim_get_hl =
             if key == true or key == 'true' then
               highlight[key] = nil
             elseif key == 'foreground' then
-              highlight['fg'] = attr
+              highlight.fg = attr
             elseif key == 'background' then
-              highlight['bg'] = attr
+              highlight.bg = attr
             end
           end
           local term = vim.api.nvim_get_hl_by_name(name, false)
           -- cterm colors are missing using get_hl_defs
           for key, attr in pairs(term) do
             if key == 'foreground' then
-              highlight['ctermfg'] = attr
+              highlight.ctermfg = attr
             elseif key == 'background' then
-              highlight['ctermbg'] = attr
+              highlight.ctermbg = attr
             end
           end
         end
@@ -40,8 +57,8 @@ M.nvim_get_hl =
           term = vim.api.nvim_get_hl_by_id(m.id, false)
           gui = vim.api.nvim_get_hl_by_id(m.id, true)
         else
-          term = vim.api.nvim_get_hl_by_id(m.name, false)
-          gui = vim.api.nvim_get_hl_by_id(m.name, true)
+          term = vim.api.nvim_get_hl_by_name(m.name, false)
+          gui = vim.api.nvim_get_hl_by_name(m.name, true)
         end
         return {
           ctermfg = term.foreground,

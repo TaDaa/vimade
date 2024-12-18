@@ -8,6 +8,12 @@ local TYPE = require('vimade.util.type')
 local VALIDATE = require('vimade.util.validate')
 local GLOBALS
 
+local INTERPOLATE_LINEAR = COLOR_UTIL.interpolateLinear
+local INTERPOLATE_256 = COLOR_UTIL.interpolate256
+local INTERPOLATE_24B = COLOR_UTIL.interpolate24b
+local MATH_MAX = math.max
+local MATH_MIN = math.min
+
 M.__init = function(args)
   GLOBALS = args.GLOBALS
 end
@@ -53,27 +59,27 @@ M.Fade = function(config)
       end
       if to_hl.bg ~= nil then
         if hl.fg ~= nil then
-          hl.fg = COLOR_UTIL.interpolate24b(hl.fg, to_hl.bg, fade)
+          hl.fg = INTERPOLATE_24B(hl.fg, to_hl.bg, fade)
         end
         if hl.bg ~= nil then
-          hl.bg = COLOR_UTIL.interpolate24b(hl.bg, to_hl.bg, fade)
+          hl.bg = INTERPOLATE_24B(hl.bg, to_hl.bg, fade)
         end
         if hl.sp ~= nil then
-          hl.sp = COLOR_UTIL.interpolate24b(hl.sp, to_hl.bg, fade)
+          hl.sp = INTERPOLATE_24B(hl.sp, to_hl.bg, fade)
         end
       end
       if hl.blend ~= nil then
         --always assume blend is 100
         --some easing functions can go beyond 100 and under 0, this causes a neovim error
         --cap it here.
-        hl.blend = math.max(0, math.min(100, COLOR_UTIL.interpolateLinear(hl.blend, 100, fade)))
+        hl.blend = MATH_MAX(0, MATH_MIN(100, INTERPOLATE_LINEAR(hl.blend, 100, fade)))
       end
       if to_hl.ctermbg ~= nil then
         if hl.ctermfg ~= nil then
-          hl.ctermfg = COLOR_UTIL.interpolate256(hl.ctermfg, to_hl.ctermbg, fade)
+          hl.ctermfg = INTERPOLATE_256(hl.ctermfg, to_hl.ctermbg, fade)
         end
         if hl.ctermbg ~= nil then
-          hl.ctermbg = COLOR_UTIL.interpolate256(hl.ctermbg, to_hl.ctermbg, fade)
+          hl.ctermbg = INTERPOLATE_256(hl.ctermbg, to_hl.ctermbg, fade)
         end
       end
     end

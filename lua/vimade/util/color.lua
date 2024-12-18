@@ -1,13 +1,25 @@
 local M = {}
 local bit = require('bit')
 
-M.RGB_256 = {{0,0,0},{128,0,0},{0,128,0},{128,128,0},{0,0,128},{128,0,128},{0,128,128},{192,192,192},{128,128,128},{255,0,0},{0,255,0},{255,255,0},{0,0,255},{255,0,255},{0,255,255},{255,255,255},{0,0,0},{0,0,95},{0,0,135},{0,0,175},{0,0,215},{0,0,255},{0,95,0},{0,95,95},{0,95,135},{0,95,175},{0,95,215},{0,95,255},{0,135,0},{0,135,95},{0,135,135},{0,135,175},{0,135,215},{0,135,255},{0,175,0},{0,175,95},{0,175,135},{0,175,175},{0,175,215},{0,175,255},{0,215,0},{0,215,95},{0,215,135},{0,215,175},{0,215,215},{0,215,255},{0,255,0},{0,255,95},{0,255,135},{0,255,175},{0,255,215},{0,255,255},{95,0,0},{95,0,95},{95,0,135},{95,0,175},{95,0,215},{95,0,255},{95,95,0},{95,95,95},{95,95,135},{95,95,175},{95,95,215},{95,95,255},{95,135,0},{95,135,95},{95,135,135},{95,135,175},{95,135,215},{95,135,255},{95,175,0},{95,175,95},{95,175,135},{95,175,175},{95,175,215},{95,175,255},{95,215,0},{95,215,95},{95,215,135},{95,215,175},{95,215,215},{95,215,255},{95,255,0},{95,255,95},{95,255,135},{95,255,175},{95,255,215},{95,255,255},{135,0,0},{135,0,95},{135,0,135},{135,0,175},{135,0,215},{135,0,255},{135,95,0},{135,95,95},{135,95,135},{135,95,175},{135,95,215},{135,95,255},{135,135,0},{135,135,95},{135,135,135},{135,135,175},{135,135,215},{135,135,255},{135,175,0},{135,175,95},{135,175,135},{135,175,175},{135,175,215},{135,175,255},{135,215,0},{135,215,95},{135,215,135},{135,215,175},{135,215,215},{135,215,255},{135,255,0},{135,255,95},{135,255,135},{135,255,175},{135,255,215},{135,255,255},{175,0,0},{175,0,95},{175,0,135},{175,0,175},{175,0,215},{175,0,255},{175,95,0},{175,95,95},{175,95,135},{175,95,175},{175,95,215},{175,95,255},{175,135,0},{175,135,95},{175,135,135},{175,135,175},{175,135,215},{175,135,255},{175,175,0},{175,175,95},{175,175,135},{175,175,175},{175,175,215},{175,175,255},{175,215,0},{175,215,95},{175,215,135},{175,215,175},{175,215,215},{175,215,255},{175,255,0},{175,255,95},{175,255,135},{175,255,175},{175,255,215},{175,255,255},{215,0,0},{215,0,95},{215,0,135},{215,0,175},{215,0,215},{215,0,255},{215,95,0},{215,95,95},{215,95,135},{215,95,175},{215,95,215},{215,95,255},{215,135,0},{215,135,95},{215,135,135},{215,135,175},{215,135,215},{215,135,255},{215,175,0},{215,175,95},{215,175,135},{215,175,175},{215,175,215},{215,175,255},{215,215,0},{215,215,95},{215,215,135},{215,215,175},{215,215,215},{215,215,255},{215,255,0},{215,255,95},{215,255,135},{215,255,175},{215,255,215},{215,255,255},{255,0,0},{255,0,95},{255,0,135},{255,0,175},{255,0,215},{255,0,255},{255,95,0},{255,95,95},{255,95,135},{255,95,175},{255,95,215},{255,95,255},{255,135,0},{255,135,95},{255,135,135},{255,135,175},{255,135,215},{255,135,255},{255,175,0},{255,175,95},{255,175,135},{255,175,175},{255,175,215},{255,175,255},{255,215,0},{255,215,95},{255,215,135},{255,215,175},{255,215,215},{255,215,255},{255,255,0},{255,255,95},{255,255,135},{255,255,175},{255,255,215},{255,255,255},{8,8,8},{18,18,18},{28,28,28},{38,38,38},{48,48,48},{58,58,58},{68,68,68},{78,78,78},{88,88,88},{98,98,98},{108,108,108},{118,118,118},{128,128,128},{138,138,138},{148,148,148},{158,158,158},{168,168,168},{178,178,178},{188,188,188},{198,198,198},{208,208,208},{218,218,218},{228,228,228},{238,238,238}}
-M.RGB_THRESHOLDS = {-1, 0, 95, 135, 175, 215, 255, 256, length = 8}
-M.GREY_THRESHOLDS = {-1, 8, 18, 28, 38, 48, 58, 68, 78, 88, 98, 108, 118, 128, 138, 148, 158, 168, 178, 188, 198, 208, 218, 228, 238, 258, length=26}
-M.LOOKUP_256_RGB = {}
-for i,rgb in pairs(M.RGB_256) do
-  M.LOOKUP_256_RGB[rgb[1]..'-'..rgb[2]..'-'..rgb[3]] = i - 1
+local BIT_BAND = bit.band
+local BIT_LSHIFT = bit.lshift
+local BIT_RSHIFT = bit.rshift
+local MATH_ABS = math.abs
+local MATH_FLOOR = math.floor
+local MATH_MAX = math.max
+local MATH_MIN = math.min
+local STRING_SUB = string.sub
+local STRING_LEN = string.len
+local STRING_FORMAT = string.format
+
+local RGB_256 = {{0,0,0},{128,0,0},{0,128,0},{128,128,0},{0,0,128},{128,0,128},{0,128,128},{192,192,192},{128,128,128},{255,0,0},{0,255,0},{255,255,0},{0,0,255},{255,0,255},{0,255,255},{255,255,255},{0,0,0},{0,0,95},{0,0,135},{0,0,175},{0,0,215},{0,0,255},{0,95,0},{0,95,95},{0,95,135},{0,95,175},{0,95,215},{0,95,255},{0,135,0},{0,135,95},{0,135,135},{0,135,175},{0,135,215},{0,135,255},{0,175,0},{0,175,95},{0,175,135},{0,175,175},{0,175,215},{0,175,255},{0,215,0},{0,215,95},{0,215,135},{0,215,175},{0,215,215},{0,215,255},{0,255,0},{0,255,95},{0,255,135},{0,255,175},{0,255,215},{0,255,255},{95,0,0},{95,0,95},{95,0,135},{95,0,175},{95,0,215},{95,0,255},{95,95,0},{95,95,95},{95,95,135},{95,95,175},{95,95,215},{95,95,255},{95,135,0},{95,135,95},{95,135,135},{95,135,175},{95,135,215},{95,135,255},{95,175,0},{95,175,95},{95,175,135},{95,175,175},{95,175,215},{95,175,255},{95,215,0},{95,215,95},{95,215,135},{95,215,175},{95,215,215},{95,215,255},{95,255,0},{95,255,95},{95,255,135},{95,255,175},{95,255,215},{95,255,255},{135,0,0},{135,0,95},{135,0,135},{135,0,175},{135,0,215},{135,0,255},{135,95,0},{135,95,95},{135,95,135},{135,95,175},{135,95,215},{135,95,255},{135,135,0},{135,135,95},{135,135,135},{135,135,175},{135,135,215},{135,135,255},{135,175,0},{135,175,95},{135,175,135},{135,175,175},{135,175,215},{135,175,255},{135,215,0},{135,215,95},{135,215,135},{135,215,175},{135,215,215},{135,215,255},{135,255,0},{135,255,95},{135,255,135},{135,255,175},{135,255,215},{135,255,255},{175,0,0},{175,0,95},{175,0,135},{175,0,175},{175,0,215},{175,0,255},{175,95,0},{175,95,95},{175,95,135},{175,95,175},{175,95,215},{175,95,255},{175,135,0},{175,135,95},{175,135,135},{175,135,175},{175,135,215},{175,135,255},{175,175,0},{175,175,95},{175,175,135},{175,175,175},{175,175,215},{175,175,255},{175,215,0},{175,215,95},{175,215,135},{175,215,175},{175,215,215},{175,215,255},{175,255,0},{175,255,95},{175,255,135},{175,255,175},{175,255,215},{175,255,255},{215,0,0},{215,0,95},{215,0,135},{215,0,175},{215,0,215},{215,0,255},{215,95,0},{215,95,95},{215,95,135},{215,95,175},{215,95,215},{215,95,255},{215,135,0},{215,135,95},{215,135,135},{215,135,175},{215,135,215},{215,135,255},{215,175,0},{215,175,95},{215,175,135},{215,175,175},{215,175,215},{215,175,255},{215,215,0},{215,215,95},{215,215,135},{215,215,175},{215,215,215},{215,215,255},{215,255,0},{215,255,95},{215,255,135},{215,255,175},{215,255,215},{215,255,255},{255,0,0},{255,0,95},{255,0,135},{255,0,175},{255,0,215},{255,0,255},{255,95,0},{255,95,95},{255,95,135},{255,95,175},{255,95,215},{255,95,255},{255,135,0},{255,135,95},{255,135,135},{255,135,175},{255,135,215},{255,135,255},{255,175,0},{255,175,95},{255,175,135},{255,175,175},{255,175,215},{255,175,255},{255,215,0},{255,215,95},{255,215,135},{255,215,175},{255,215,215},{255,215,255},{255,255,0},{255,255,95},{255,255,135},{255,255,175},{255,255,215},{255,255,255},{8,8,8},{18,18,18},{28,28,28},{38,38,38},{48,48,48},{58,58,58},{68,68,68},{78,78,78},{88,88,88},{98,98,98},{108,108,108},{118,118,118},{128,128,128},{138,138,138},{148,148,148},{158,158,158},{168,168,168},{178,178,178},{188,188,188},{198,198,198},{208,208,208},{218,218,218},{228,228,228},{238,238,238}}
+local RGB_THRESHOLDS = {-1, 0, 95, 135, 175, 215, 255, 256, length = 8}
+local GREY_THRESHOLDS = {-1, 8, 18, 28, 38, 48, 58, 68, 78, 88, 98, 108, 118, 128, 138, 148, 158, 168, 178, 188, 198, 208, 218, 228, 238, 258, length=26}
+local LOOKUP_256_RGB = {}
+for i,rgb in pairs(RGB_256) do
+  LOOKUP_256_RGB[rgb[1]..'-'..rgb[2]..'-'..rgb[3]] = i - 1
 end
+local INTERPOLATE_LINEAR
 
 M.to24b = function(color, is256)
   local r
@@ -15,18 +27,18 @@ M.to24b = function(color, is256)
   local b
 
   if is256 and type(color) == 'number' then
-    color = M.RGB_256[color+1] or M.RGB_256[1]
+    color = RGB_256[color+1] or RGB_256[1]
   end
 
   if type(color) == 'table' then
     r = tonumber(color[1]) or 0
     g = tonumber(color[2]) or 0
     b = tonumber(color[3]) or 0
-    return tonumber('0x'..string.format('%02x',r)..string.format('%02x',g)..string.format('%02x',b)) or 0
+    return tonumber('0x'..STRING_FORMAT('%02x',r)..STRING_FORMAT('%02x',g)..STRING_FORMAT('%02x',b)) or 0
   elseif type(color) == 'string' then
     -- convert vim/nvim highlight patterns to normal numbers
-    if string.sub(color, 1, 1) == '#' then
-      color = '0x' .. string.sub(color, 2, string.len(color))
+    if STRING_SUB(color, 1, 1) == '#' then
+      color = '0x' .. STRING_SUB(color, 2, STRING_LEN(color))
     end
     -- lua tonumber gracefully handles invalid input and various base types.
     return tonumber(color) or 0
@@ -40,16 +52,16 @@ M.toRgb = function (color, is256)
   local g
   local b
 
-  if type(color) == 'string' and string.sub(color, 1, 1) == '#' then
-    color = tonumber('0x' .. string.sub(color, 2, string.len(color))) or 0
+  if type(color) == 'string' and STRING_SUB(color, 1, 1) == '#' then
+    color = tonumber('0x' .. STRING_SUB(color, 2, STRING_LEN(color))) or 0
   end
   if type(color) == 'number' then
     if is256 then
-     color = M.RGB_256[color+1] or M.RGB_256[1]
+     color = RGB_256[color+1] or RGB_256[1]
     else
-      r = bit.rshift(bit.band(color, 0xFF0000), 16)
-      g = bit.rshift(bit.band(color, 0x00FF00), 8)
-      b = bit.band(color, 0x0000FF)
+      r = BIT_RSHIFT(BIT_BAND(color, 0xFF0000), 16)
+      g = BIT_RSHIFT(BIT_BAND(color, 0x00FF00), 8)
+      b = BIT_BAND(color, 0x0000FF)
     end
   end
   if type(color) == 'table' then
@@ -61,26 +73,27 @@ M.toRgb = function (color, is256)
 end
 
 M.interpolate24b = function(source, target, fade)
-  local target_r = bit.rshift(bit.band(target, 0xFF0000), 16)
-  local target_g = bit.rshift(bit.band(target, 0x00FF00), 8)
-  local target_b = bit.band(target, 0x0000FF)
-  local r = M.interpolateLinear(bit.rshift(bit.band(source, 0XFF0000), 16), target_r, fade)
-  local g = M.interpolateLinear(bit.rshift(bit.band(source, 0X00FF00), 8), target_g, fade)
-  local b = M.interpolateLinear(bit.band(source, 0X0000FF), target_b, fade)
-  return bit.lshift(r, 16) + bit.lshift(g, 8) + b
+  local target_r = BIT_RSHIFT(BIT_BAND(target, 0xFF0000), 16)
+  local target_g = BIT_RSHIFT(BIT_BAND(target, 0x00FF00), 8)
+  local target_b = BIT_BAND(target, 0x0000FF)
+  local r = MATH_FLOOR(target_r + (BIT_RSHIFT(BIT_BAND(source, 0xFF0000), 16) - target_r) * fade)
+  local g = MATH_FLOOR(target_g + (BIT_RSHIFT(BIT_BAND(source, 0x00FF00), 8) - target_g) * fade)
+  local b = MATH_FLOOR(target_b + (BIT_BAND(source, 0x0000FF) - target_b) * fade)
+  return BIT_LSHIFT(r, 16) + BIT_LSHIFT(g, 8) + b
 end
+
+M.interpolateLinear = function(source, target, fade)
+  return MATH_FLOOR(target + (source - target) * fade)
+end
+INTERPOLATE_LINEAR = M.interpolateLinear
 
 M.interpolateRgb = function(source, target, fade)
   source = source or target or {0,0,0}
   target = target or source
-  local r = M.interpolateLinear(source[1], target[1], fade)
-  local g = M.interpolateLinear(source[2], target[2], fade)
-  local b = M.interpolateLinear(source[3], target[3], fade)
+  local r = INTERPOLATE_LINEAR(source[1], target[1], fade)
+  local g = INTERPOLATE_LINEAR(source[2], target[2], fade)
+  local b = INTERPOLATE_LINEAR(source[3], target[3], fade)
   return {r,g,b}
-end
-
-M.interpolateLinear = function(source, target, fade)
-  return math.floor(target + (source - target) * fade)
 end
 
 M.interpolateFloat = function(source, target, fade)
@@ -92,8 +105,8 @@ end
 
 M.interpolate256 = function(source, target, fade, prefer_color)
   prefer_color = prefer_color or false
-  local source = type(source) == 'table' and source or M.RGB_256[source+1]
-  local to = type(target) == 'table' and target or M.RGB_256[target+1]
+  local source = type(source) == 'table' and source or RGB_256[source+1]
+  local to = type(target) == 'table' and target or RGB_256[target+1]
   local r = 0
   local g = 0
   local b = 0
@@ -102,7 +115,7 @@ M.interpolate256 = function(source, target, fade, prefer_color)
     g = source[2]
     b = source[3]
   else
-    local target = {math.floor(to[1]+(source[1]-to[1])*fade), math.floor(to[2]+(source[2]-to[2])*fade), math.floor(to[3]+(source[3]-to[3])*fade)}
+    local target = {MATH_FLOOR(to[1]+(source[1]-to[1])*fade), MATH_FLOOR(to[2]+(source[2]-to[2])*fade), MATH_FLOOR(to[3]+(source[3]-to[3])*fade)}
     local dir = (to[1]+to[2]+to[3]) / 3 - (source[1]+source[2]+source[3]) / 3
     local i = 0
     local rgb_result = {0,0,0}
@@ -110,11 +123,11 @@ M.interpolate256 = function(source, target, fade, prefer_color)
     for k, v in ipairs(target) do
         i = i + 1
         local j = 2
-        while j <= M.RGB_THRESHOLDS.length do
-          if v > M.RGB_THRESHOLDS[j] then
+        while j <= RGB_THRESHOLDS.length do
+          if v > RGB_THRESHOLDS[j] then
             j = j + 1
           else
-            if v <= (M.RGB_THRESHOLDS[j]/2.5 + M.RGB_THRESHOLDS[j-1]/2) then
+            if v <= (RGB_THRESHOLDS[j]/2.5 + RGB_THRESHOLDS[j-1]/2) then
               rgb_result[i] = j - 1 
             else
               rgb_result[i] = j
@@ -123,11 +136,11 @@ M.interpolate256 = function(source, target, fade, prefer_color)
           end
         end
         j = 2
-        while j <= M.GREY_THRESHOLDS.length do
-          if v > M.GREY_THRESHOLDS[j] then
+        while j <= GREY_THRESHOLDS.length do
+          if v > GREY_THRESHOLDS[j] then
             j = j+1
           else
-            if v < (M.GREY_THRESHOLDS[j]/2.5 + M.GREY_THRESHOLDS[j-1]/2) then
+            if v < (GREY_THRESHOLDS[j]/2.5 + GREY_THRESHOLDS[j-1]/2) then
               grey_result[i] = j - 1 
             else
               grey_result[i] = j
@@ -177,26 +190,26 @@ M.interpolate256 = function(source, target, fade, prefer_color)
       g = g - 1
       b = b - 1
     end
-    r = math.min(math.max(r, 2), 7)
-    g = math.min(math.max(g, 2), 7)
-    b = math.min(math.max(b, 2), 7)
-    r = M.RGB_THRESHOLDS[r]
-    g = M.RGB_THRESHOLDS[g]
-    b = M.RGB_THRESHOLDS[b]
+    r = MATH_MIN(MATH_MAX(r, 2), 7)
+    g = MATH_MIN(MATH_MAX(g, 2), 7)
+    b = MATH_MIN(MATH_MAX(b, 2), 7)
+    r = RGB_THRESHOLDS[r]
+    g = RGB_THRESHOLDS[g]
+    b = RGB_THRESHOLDS[b]
 
 
-    local grey = math.max(grey_result[1], grey_result[2], grey_result[3])
-    grey = math.min(math.max(grey, 2), M.GREY_THRESHOLDS.length - 1)
-    grey = M.GREY_THRESHOLDS[grey]
+    local grey = MATH_MAX(grey_result[1], grey_result[2], grey_result[3])
+    grey = MATH_MIN(MATH_MAX(grey, 2), GREY_THRESHOLDS.length - 1)
+    grey = GREY_THRESHOLDS[grey]
 
-    if math.abs(grey-r0) + math.abs(grey - g0) + math.abs(grey - b0)
-      < (math.abs(r-r0) + math.abs(g - g0) + math.abs(b - b0)) / (prefer_color == true and 100 or 1.2) then
+    if MATH_ABS(grey-r0) + MATH_ABS(grey - g0) + MATH_ABS(grey - b0)
+      < (MATH_ABS(r-r0) + MATH_ABS(g - g0) + MATH_ABS(b - b0)) / (prefer_color == true and 100 or 1.2) then
       r = grey
       g = grey
       b = grey
     end
   end
-  return M.LOOKUP_256_RGB[r .. '-' .. g .. '-' .. b]
+  return LOOKUP_256_RGB[r .. '-' .. g .. '-' .. b]
 end
 
 return M
