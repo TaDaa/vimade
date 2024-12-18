@@ -586,7 +586,7 @@ function! vimade#CheckWindows()
 endfunction
 
 function! vimade#StartAnimationTimer()
-  if g:vimade_features.has_timer_start
+  if g:vimade_features.has_timer_start && !exists('g:vimade_animation_running')
     let g:vimade_animation_running = 1
     if !exists('g:vimade_animation_timer')
       let g:vimade_animation_timer = timer_start(16, 'vimade#DoAnimations', {'repeat': -1})
