@@ -1,6 +1,8 @@
 local M = {}
 
 local bit = require('bit')
+local BIT_BAND = bit.band
+local BIT_BOR = bit.bor
 
 local NAMESPACE = require('vimade.state.namespace')
 local REAL_NAMESPACE = require('vimade.state.real_namespace')
@@ -200,7 +202,7 @@ M.refresh = function (wininfo, is_active)
     win.timestamps.nc = GLOBALS.now
   end
 
-  win.state = bit.bor(win.state, _update_state({
+  win.state = BIT_BOR(win.state, _update_state({
     nc = should_nc
   }, win, GLOBALS.CHANGED))
 
@@ -268,12 +270,12 @@ M.refresh = function (wininfo, is_active)
     or REAL_NAMESPACE.is_desync(win.ns.real)
     or not GLOBALS.nohlcheck
     or win.hi_key ~= hi_key
-    or bit.band(GLOBALS.tick_state, GLOBALS.RECALCULATE) > 0)
+    or BIT_BAND(GLOBALS.tick_state, GLOBALS.RECALCULATE) > 0)
     then
     local ns = NAMESPACE.get_replacement(win, real_ns, hi_key, false)
     if ns.modified or win.hi_key ~= hi_key then
       redraw = true
-      win.state = bit.bor(GLOBALS.CHANGED, win.state)
+      win.state = BIT_BOR(GLOBALS.CHANGED, win.state)
     end
     win.hi_key = hi_key
     win.ns = ns
@@ -292,7 +294,7 @@ M.refresh = function (wininfo, is_active)
       end
       win.current_ns = win.ns.vimade_ns
       COMPAT.nvim_win_set_hl_ns(winid, win.current_ns)
-    elseif bit.band(GLOBALS.CHANGED, win.state) > 0 then
+    elseif BIT_BAND(GLOBALS.CHANGED, win.state) > 0 then
       win.current_ns = win.ns.vimade_ns
       COMPAT.nvim_win_set_hl_ns(winid, win.current_ns)
     end

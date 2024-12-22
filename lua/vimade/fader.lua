@@ -1,5 +1,6 @@
 local M = {}
 local bit = require('bit')
+local BIT_BOR = bit.bor
 
 local ANIMATE = require('vimade.style.value.animate')
 local ANIMATOR = require('vimade.animator')
@@ -98,7 +99,7 @@ M.getInfo = function ()
 end
 
 M.redraw = function()
-  M.tick(bit.bor(GLOBALS.RECALCULATE, GLOBALS.CHANGED))
+  M.tick(BIT_BOR(GLOBALS.RECALCULATE, GLOBALS.CHANGED))
 end
 
 M.animate = function ()

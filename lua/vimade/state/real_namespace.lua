@@ -1,5 +1,8 @@
 local M = {}
 
+local bit = require('bit')
+local BIT_BAND = bit.band
+
 local TYPE = require('vimade.util.type')
 local COMPAT = require('vimade.util.compat')
 local HIGHLIGHTER = require('vimade.highlighter')
@@ -209,7 +212,7 @@ M.refresh = function (real_ns, is_global)
     ns.sync_id = last and last.sync_id
     ns.highlights = NVIM_GET_HL(real_ns, {link = true})
     filter_ns(ns.highlights)
-    if bit.band(GLOBALS.tick_state, GLOBALS.RECALCULATE) > 0 then
+    if BIT_BAND(GLOBALS.tick_state, GLOBALS.RECALCULATE) > 0 then
       ns.modified = true 
     elseif real_ns ~= 0 and 
       (global_ns and (global_ns.modified or ns.sync_id ~= global_ns.sync_id)) then

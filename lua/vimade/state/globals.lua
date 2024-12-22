@@ -1,6 +1,8 @@
 local M = {}
 
 local bit = require('bit')
+local BIT_BAND = bit.band
+local BIT_BOR = bit.bor
 
 local DIRECTION = require('vimade.style.value.direction')
 local EXCLUDE = require('vimade.style.exclude')
@@ -244,11 +246,11 @@ M.refresh = function (override_tick_state)
     M.nohlcheck = DEFAULTS.nohlcheck
   end
 
-  M.tick_state = bit.bor(M.tick_state, check_fields({
+  M.tick_state = BIT_BOR(M.tick_state, check_fields({
     'normalid',
     'normalncid',
   }, vimade, M, DEFAULTS, M.RECALCULATE))
-  M.tick_state = bit.bor(M.tick_state, check_fields({
+  M.tick_state = BIT_BOR(M.tick_state, check_fields({
     'is_dark',
     'colorscheme',
     'termguicolors',
@@ -256,16 +258,16 @@ M.refresh = function (override_tick_state)
     is_dark = vim.go.background == 'dark',
     colorscheme = vim.g.colors_name,
     termguicolors = vim.go.termguicolors,
-  }, M, OTHER, bit.bor(M.RECALCULATE, M.CHANGED)))
-  M.tick_state = bit.bor(M.tick_state, check_fields({
+  }, M, OTHER, BIT_BOR(M.RECALCULATE, M.CHANGED)))
+  M.tick_state = BIT_BOR(M.tick_state, check_fields({
     'vimade_fade_active',
   }, {
     vimade_fade_active = vim.g.vimade_fade_active == 1,
   }, M, OTHER, M.CHANGED))
-  M.tick_state = bit.bor(M.tick_state, check_fields({
+  M.tick_state = BIT_BOR(M.tick_state, check_fields({
     'ncmode',
   }, vimade, M, DEFAULTS, M.CHANGED))
-  M.tick_state = bit.bor(M.tick_state, check_fields({
+  M.tick_state = BIT_BOR(M.tick_state, check_fields({
     'winid',
     'bufnr',
     'tabnr',
@@ -290,10 +292,10 @@ M.refresh = function (override_tick_state)
   -- if you don't choose one of the above, everything is highlighted
 
   if not M.global_ns or not M.nohlcheck
-    or bit.band(M.CHANGED, M.tick_state) > 0 then
+    or BIT_BAND(M.CHANGED, M.tick_state) > 0 then
     M.refresh_global_ns()
     if M.global_ns.modified then
-      M.tick_state = bit.bor(M.RECALCULATE, M.tick_state)
+      M.tick_state = BIT_BOR(M.RECALCULATE, M.tick_state)
     end
   end
 
