@@ -259,7 +259,7 @@ M.refresh = function (wininfo, is_active)
       end
     end
     win.blocked_highlights = BLOCKLIST.HIGHLIGHTS(win, M.current)
-    hi_key = hi_key .. ':bh' .. BLOCKLIST.TO_HIGHLIGHTS_KEY(win.blocked_highlights)
+    hi_key = hi_key .. ':bh(' .. BLOCKLIST.TO_HIGHLIGHTS_KEY(win.blocked_highlights) .. ')'
   end
 
   local redraw = false

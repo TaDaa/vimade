@@ -3,12 +3,11 @@ local M = {}
 local CONDITION = require('vimade.style.value.condition')
 local GLOBALS
 
+local exclude_key_reducer = require('vimade.util.key_reducer')()
+
 M.__init = function (args)
   GLOBALS = args.GLOBALS
 end
-
-M.exclude_names = {}
-M.exclude_id = 1
 
 -- @param config = {
 --  value= {'Folded', 'VertSplit', 'Normal', ...}, # list of names that should be skipped on the style array
@@ -26,7 +25,7 @@ M.Exclude = function(config)
       table.insert(children, s.attach(win))
     end
     local exclude = {}
-    local exclude_ids = {}
+    local exclude_key = ''
     local style = {}
     style.win = win
     style._condition = _condition
@@ -38,8 +37,6 @@ M.Exclude = function(config)
       if condition == false then
         return
       end
-      exclude = {}
-      exclude_ids = {}
       local input
 
       if type(names) == 'function' then
@@ -50,19 +47,14 @@ M.Exclude = function(config)
       if type(input) == 'string' then
         input = {input}
       end
-      -- order required to prevent invalidation
+
+      exclude_key = exclude_key_reducer.reduce_ipairs(input)
+
+      exclude = {}
       for i, name in ipairs(input) do
-        local name_id = M.exclude_names[name]
-        if name_id == nil then
-          name_id = M.exclude_id
-          M.exclude_names[name] = name_id
-          M.exclude_id = M.exclude_id + 1
-        end
-        if exclude[name] == nil then
-          exclude[name] = name_id
-          table.insert(exclude_ids, name_id)
-        end
+        exclude[name] = true
       end
+
       for i, s in ipairs(children) do
         s.before(win, state)
       end
@@ -71,7 +63,7 @@ M.Exclude = function(config)
       if condition == false then
         return ''
       end
-      local key ='E-' .. table.concat(exclude_ids, ',') .. '('
+      local key ='E-' .. exclude_key .. '('
       local s_active = 0
       for j, s in ipairs(children) do
         if j ~= 0 then
