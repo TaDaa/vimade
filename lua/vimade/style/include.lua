@@ -87,6 +87,11 @@ M.Include = function(config)
         return
       end
       if include[hl.name] then
+        -- This is an implicit unlink. We also have the unlink style available, but
+        -- anything that goes through include is not expected to be linked.
+        if hl.link then
+          hl.link = nil
+        end
         for i, s in ipairs(children) do
           s.modify(hl, to_hl)
         end
