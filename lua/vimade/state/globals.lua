@@ -126,7 +126,7 @@ local DEFAULTS = TYPE.extend(DEFAULT_RECIPE.Default(), {
     -- for legacy conditions
     default = {
       highlights = {
-        function(win, active)
+        laststatus_3 = function(win, active)
           -- see #85 prevent global statusline from flickering due to multiple windows impacting
           -- StatusLine. laststatus=3 also causes some misalignment on WinSeparator, if you see
           -- issues consider either also excluding 'WinSeparator' or tweaking the WinSeparator
@@ -151,6 +151,10 @@ local DEFAULTS = TYPE.extend(DEFAULT_RECIPE.Default(), {
     },
   },
 })
+
+M.defaults = function ()
+  return TYPE.deep_copy(DEFAULTS)
+end
 
 local check_fields = function (fields, next, current, defaults, return_state)
   local modified = false
