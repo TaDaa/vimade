@@ -115,7 +115,7 @@ buffers.
         -- prevent a window or buffer from being styled. You 
         blocklist = {
           default = {
-            buf_opts = { buftype = {'prompt', 'terminal'} },
+            buf_opts = { buftype = {'prompt'} },
             win_config = { relative = true },
             -- buf_name = {'name1','name2', name3'},
             -- buf_vars = { variable = {'match1', 'match2'} },
@@ -376,7 +376,7 @@ let g:vimade = {
 \   'blocklist': {
 \     'default': {
 \       'buf_opts': {
-\         'buftype': g:vimade_features.has_nvim ? ['prompt', 'terminal'] : ['popup', 'prompt']
+\         'buftype': g:vimade_features.has_nvim ? ['prompt'] : ['popup', 'prompt']
 \       },
 \       'win_config':{
 \         'relative': v:true
@@ -439,7 +439,7 @@ vimade.setup{
         -- prevent a window or buffer from being styled. You 
         blocklist = {
           default = {
-            buf_opts = { buftype = {'prompt', 'terminal'} },
+            buf_opts = { buftype = {'prompt'} },
             win_config = { relative = true },
             -- buf_name = {'name1','name2', name3'},
             -- buf_vars = { variable = {'match1', 'match2'} },
@@ -563,7 +563,7 @@ vimade.setup(
 | `fadelevel` | `float [0-1]` `function(style,state)=>float` | `0.4` | The amount of fade opacity that should be applied to fg-text (`0` is invisible and `1` is no fading)
 | `tint` | <sub>When set via **lua** or **python**, each object or number can also be a function that returns the corresponding value component</sub><br><br><sub>`{'fg':{'rgb':[255,255,255], 'intensity':1, 'bg':{'rgb':[0,0,0], 'intensity':1}, 'sp':{'fg':[0,0,255], 'intensity':0.5}}}`</sub> | `nil` | The amount of tint that can be applied against each highlight component (fg, bg, sp). Intensity is a float value [0-1], where 1 is the most intense and 0 is not tinted.  See the tinting tutorial for more details.
 | `basebg` | <sub> `'#FFFFFF'` `[255,255,255]` `0xFFFFFF` </sub> | `nil` | This value manipulates the target background color. This is most useful for transparent windows, where the *Normal* bg is *NONE*.  Set this value to a good target value to improve fading accuracy.
-| `blocklist` | <sub>When set via **lua** or **python**, the top level named object can be a `function(win)=>bool`. Each nested object or value can also be a `function(relative_config)=>bool`.  `True` indicates blocked, `False` not linked, `nil` indeterminate.</sub><br><br><sub>`{[key:string]: {'buf_opts': {[key]:string: value}, 'buf_vars': {...}, 'win_opts': {...}, 'win_vars': 'win_config': {...}}}`</sub> | <sub> ```{'default':{'buf_opts': {'buftype':['prompt', 'terminal', 'popup']}, 'win_config': {'relative': 1}}}```</sub> | If the window is determined to be blocked, **Vimade** highlights will be removed and it will skip the styling process. See the block and linking section for more details.
+| `blocklist` | <sub>When set via **lua** or **python**, the top level named object can be a `function(win)=>bool`. Each nested object or value can also be a `function(relative_config)=>bool`.  `True` indicates blocked, `False` not linked, `nil` indeterminate.</sub><br><br><sub>`{[key:string]: {'buf_opts': {[key]:string: value}, 'buf_vars': {...}, 'win_opts': {...}, 'win_vars': 'win_config': {...}}}`</sub> | <sub> ```{'default':{'buf_opts': {'buftype':['prompt']}, 'win_config': {'relative': 1}}}```</sub> | If the window is determined to be blocked, **Vimade** highlights will be removed and it will skip the styling process. See the block and linking section for more details.
 | `link` | <sub>When set via **lua** or **python**, the top level named object can be a `function(win, active_win)=>bool`. Each nested object or value can also be a `function(relative_win_obj,active_win_obj)=>bool`.  `True` indicates linked, `False` not linked, `nil` indeterminate.</sub><br><br> | `nil` | Determines whether the current window should be linked and unhighlighted with the active window.  `groupdiff` and `groupscrollbind` tie into the default behavior of this object behind the scenes to unlink diffs.  See the block and linking section for more details.
 | `groupdiff` | `0` `1` `bool` | `1` | highlights and unhighlights diff windows together.
 | `groupscrollbind` | `0` `1` `bool` | `0` | highlights and unhighlights scrolllbound windows together.
@@ -786,8 +786,7 @@ For **lua** `defaults` are:
 ```lua
   blocklist = {
     default = {
-      -- terminal is temporarily disabled until proper fading is added
-      buf_opts = {buftype = {'prompt', 'terminal'}},
+      buf_opts = {buftype = {'prompt'}},
       win_config = {
         relative = true
       },

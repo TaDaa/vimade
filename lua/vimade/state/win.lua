@@ -92,6 +92,8 @@ M.__create = function (winid)
       ns = nil,
       state = GLOBALS.READY,
       style = {},
+      terminal = false,
+      terminal_match = nil,
       -- raw global styles that were used to build this win
       _global_style = {},
       buf_opts = nil,
@@ -102,6 +104,17 @@ M.__create = function (winid)
     M.cache[winid] = win
   end
   return M.cache[winid]
+end
+
+-- note this means styles applied against the active styling may need additional consideration
+local handle_terminal = function(win, style_active)
+  if (style_active == 0 and win.terminal_match)
+    or (win.terminal_match and not win.terminal) then
+    vim.fn.matchdelete(win.terminal_match, win.winid)
+    win.terminal_match = nil
+  elseif (style_active > 0 and win.terminal and not win.terminal_match) then
+    win.terminal_match =vim.fn.matchadd('Normal', '.*', 0, -1, {window = win.winid})
+  end
 end
 
 M.refresh_active = function (wininfo)
@@ -130,6 +143,7 @@ M.refresh = function (wininfo, is_active)
   win.buf_vars = vim.b[win.bufnr]
   win.win_opts = vim.wo[win.winid]
   win.win_vars = vim.w[win.winid]
+  win.terminal = win.buf_opts.buftype == 'terminal'
 
   local is_active_win = win.winid == GLOBALS.current.winid
   local is_active_buf = win.bufnr == GLOBALS.current.bufnr
@@ -282,6 +296,7 @@ M.refresh = function (wininfo, is_active)
   end
 
   if win.ns and win.ns.real.complete_highlights then
+    handle_terminal(win, style_active)
     if style_active == 0 then
       if win.current_ns ~= win.real_ns then
         win.current_ns = win.real_ns

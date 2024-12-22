@@ -142,7 +142,7 @@ local DEFAULTS = TYPE.extend(DEFAULT_RECIPE.Default(), {
       },
       buf_name = nil,
       -- terminal is temporarily disabled until proper fading is added
-      buf_opts = {buftype = {'prompt', 'terminal'}},
+      buf_opts = {buftype = {'prompt'}},
       buf_vars = nil,
       win_opts = nil,
       win_vars = nil,
