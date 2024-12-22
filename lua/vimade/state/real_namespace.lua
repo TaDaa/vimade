@@ -105,6 +105,8 @@ M.resolve_all_links = function (real_ns, real_highlights, is_global)
     if circular == true then
       -- for circular handling we try our "best".  Get the "actual" color
       -- which is often wrong, fallback to global, and break the link
+      -- this is not a scenario that Neovim even consistently supports as it
+      -- returns color information inconsistently.
       local hi_conf = {name = name, link = false}
       hi = NVIM_GET_HL(real_ns, hi_conf)
       if hi.link or next(hi) == nil then
@@ -112,18 +114,22 @@ M.resolve_all_links = function (real_ns, real_highlights, is_global)
       end
       hi.link = nil
     end
-
     -- apply the final highlights to each of the linked nodes
     for i, linked in ipairs(chain) do
-      -- replace the link chain with the end highlight
-      -- if it was circular, its now disconnected
-      -- (see hi.link = nil above)
-      -- TODO its likely we can re-enable the logic to keep links
-      -- without requiring the whole tree.  This method is mostly
-      -- to fix animated fademode='windows'
-      linked.hi = hi
-      visited[linked.name] = hi
-      hi.link = nil
+      -- Replace the link chain with the end highlight values.
+      -- If it was circular, it was already disconnected
+      -- (see hi.link = nil above).
+      -- This allows us to have the actual displayed highlight settings at each
+      -- node.  If a user wants to disconnect a node, it should behave
+      -- intuitively and transition from the real active value.
+      local link = linked.hi.link
+      local linked_hi = {}
+      linked.hi = linked_hi
+      visited[linked.name] = linked_hi
+      for k, v in pairs(hi) do
+        linked_hi[k] = v
+      end
+      linked_hi.link = link
     end
     return chain
   end
@@ -135,12 +141,12 @@ M.resolve_all_links = function (real_ns, real_highlights, is_global)
       local chain = walk_links(name, override, real_ns)
       for i, linked in pairs(chain) do
         local linked_hi = linked.hi
-        if linked_hi.fg or linked_hi.bg or linked_hi.sp or linked_hi.ctermfg or linked_hi.ctermbg or linked_hi.blend then
+        if linked_hi.link or linked_hi.fg or linked_hi.bg or linked_hi.sp or linked_hi.ctermfg or linked_hi.ctermbg or linked_hi.blend then
           output[linked.name] = linked_hi
         end
       end
       -- TODO cleanup, this is ugly
-    elseif override.fg or override.bg or override.sp or override.ctermfg or override.ctermbg or override.blend then
+    elseif override.link or override.fg or override.bg or override.sp or override.ctermfg or override.ctermbg or override.blend then
       output[name] = override
     end
   end
@@ -153,25 +159,23 @@ M.resolve_all_links = function (real_ns, real_highlights, is_global)
         local linked_name = linked.name
         local linked_hi = linked.hi
       -- TODO cleanup, this is ugly
-        if not output[name] and (linked_hi.fg or linked_hi.bg or linked_hi.sp or linked_hi.ctermfg or linked_hi.ctermbg or linked_hi.blend) then
+        if not output[name] and (linked_hi.link or linked_hi.fg or linked_hi.bg or linked_hi.sp or linked_hi.ctermfg or linked_hi.ctermbg or linked_hi.blend) then
           output[linked_name] = linked_hi
         end
       end
-    elseif not output[name] and (override.fg or override.bg or override.sp or override.ctermfg or override.ctermbg or override.blend) then
+    elseif not output[name] and (override.link or override.fg or override.bg or override.sp or override.ctermfg or override.ctermbg or override.blend) then
       output[name] = override
     end
   end
   if output.Normal then
     -- do not try and grab NormalNC -> Neovim will fail to lookup the correct colors for circular highlights
     -- only use link resolving logic above
-    output.Normal.link = nil
     output.Normal.foreground = nil
     output.Normal.background = nil
   end
   if output.NormalNC then
     -- do not try and grab NormalNC -> Neovim will fail to lookup the correct colors for circular highlights
     -- only use link resolving logic above
-    output.NormalNC.link = nil
     output.NormalNC.foreground = nil
     output.NormalNC.background = nil
   end

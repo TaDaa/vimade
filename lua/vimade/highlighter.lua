@@ -39,13 +39,9 @@ M.set_highlights = function(win)
     default_sp = nil
   end
   
-  -- we have to unlink Normal and NormalNC highlights from any shenanigans that plugins are doing
-  -- things should still fade as expected.
-  normal.link = nil
-  if normal_nc.link then
-    normal_nc.link = nil
-  end
-
+  -- remember normal and normal_nc may also be linked, however their
+  -- color properties have already been inherited in real_namespace.lua
+  -- and will reflect the real values.
   if not win.is_active_win then
     if normal_nc.ctermbg ~= nil then
       normal.ctermbg = normal_nc.ctermbg
@@ -160,7 +156,6 @@ M.set_highlights = function(win)
   highlights.vimade_control = nil
 
   -- TODO allow functions for blocked_highlights, should be fine to support this now
-
   -- anything blocked can be set to link to itself
   for name, v in pairs(blocked_highlights) do
     if v == true then

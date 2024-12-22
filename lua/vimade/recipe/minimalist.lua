@@ -2,6 +2,7 @@ local M = {}
 
 local Include = require('vimade.style.include').Include
 local Exclude = require('vimade.style.exclude').Exclude
+local Unlink = require('vimade.style.unlink').Unlink
 local ANIMATE = require('vimade.style.value.animate')
 local FADE = require('vimade.style.fade')
 local TINT = require('vimade.style.tint')
@@ -19,6 +20,11 @@ local animate_minimalist = function (config)
     direction = config.direction,
   }
   local result = {
+    -- unlinks the targetted highlights ahead of time, this ensures that all styles apply on our selected names.
+    Unlink({
+      condition = config.condition,
+      value = config.exclude_names,
+    }),
     TINT.Tint({
       condition = config.condition,
       value = ANIMATE.Tint(TYPE.extend({}, animation, {
@@ -67,6 +73,11 @@ end
 
 local minimalist = function (config)
   return {
+    -- unlinks the targetted highlights ahead of time, this ensures that all styles apply on our selected names.
+    Unlink({
+      condition = config.condition,
+      value = config.exclude_names,
+    }),
     TINT.Default(config),
     Exclude({
       condition = config.condition,

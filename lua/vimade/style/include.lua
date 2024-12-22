@@ -87,11 +87,6 @@ M.Include = function(config)
         return
       end
       if include[hl.name] then
-        -- anything that is "Included' needs to be unlinked so that it visually changes
-        -- the highlights here should already be correct (see namespace.lua - resolve_all_links)
-        if hl.link then
-          hl.link = nil
-        end
         for i, s in ipairs(children) do
           s.modify(hl, to_hl)
         end
