@@ -46,6 +46,11 @@ M.unhighlight = function (winid)
   local win = M.cache[winid]
   if win then
     win.nc = false
+    -- TODO this should just be moved into handle_terminal
+    if win.terminal_match then
+      vim.fn.matchdelete(win.terminal_match, winid)
+      win.terminal_match = nil
+    end
   end
 end
 
