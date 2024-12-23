@@ -3,10 +3,19 @@ local COLOR_UTIL = require('vimade.util.color')
 local TYPE = require('vimade.util.type')
 local GLOBALS
 
+local TABLE_INSERT = table.insert
+
 local nvim_set_hl = vim.api.nvim_set_hl
+-- contains pattern matches per tick cycle. This works because highlights aren't going to
+-- change mid-tick, therefore we know our matches are good for the entire cycle, allowing us
+-- to only need to find matching names one time (and then re-use those names later).
+local pattern_cache = {}
 
 M.__init = function (args)
   GLOBALS = args.GLOBALS
+  args.FADER.on('tick:before', function()
+    pattern_cache = {}
+  end)
 end
 
 M.set_highlights = function(win)
@@ -88,22 +97,11 @@ M.set_highlights = function(win)
   if normal.ctermfg == nil then
     normal.ctermfg = normal_ctermfg
   end
+  -- highlights are pre-copied
+  -- NormalNC should just Normal highlights since Vimade understands what values
+  -- should be used for inactive windows or buffers.
+  highlights.NormalNC = TYPE.copy_hl(normal)
 
-  local nt_copy = {
-    name = '',
-    fg = normal_target.fg,
-    bg = normal_target.bg,
-    sp = normal_target.sp,
-    ctermfg = normal_target.ctermfg,
-    ctermbg = normal_target.ctermbg,
-    normal_bg = normal_target.normal_bg,
-  }
-  for i, s in ipairs(style) do
-    s.modify(normal, nt_copy)
-  end
-
-  -- clear name
-  normal.name = nil
   -- store the used target for debugging purposes only
   ns.normal_target = normal_target
 
@@ -131,15 +129,33 @@ M.set_highlights = function(win)
   -- happens in fader.lua
   nvim_set_hl(vimade_ns, 'vimade_control', {bg=0x123456, fg=0xFEDCBA})
 
-  nvim_set_hl(vimade_ns, 'vimade_0', normal)
-  vimade_highlights.vimade_0 = normal
-
+  -- Pre-check blocked highlights by exact match.
+  for _, name in ipairs(blocked_highlights.exact) do
+    highlights[name] = nil
+  end
+  -- Pre-check blocked highlights by pattern. We cache the lookup each tick
+  -- so that we don't suffer performance degredation with multiple windows
+  for _, pattern in ipairs(blocked_highlights.pattern) do
+    local cached = pattern_cache[pattern]
+    if not cached then
+      cached = {}
+      pattern_cache[pattern] = cached
+      for name, hi in pairs(highlights) do
+        if name:find(pattern) then
+          TABLE_INSERT(cached, name)
+        end
+      end
+    end
+    for k, name in ipairs(cached) do
+      highlights[name] = nil
+    end
+  end
+  --
   -- precheck highlights for ones that are no longer found. If not found, clear the highlight
   -- in our namespace.  Ensures compatibility with highlights that are unset after calculation.
+  vimade_highlights.vimade_0 = nil
   for name, highlight in pairs(vimade_highlights) do
-    if name == 'NormalNC' or name =='Normal' or name == 'vimade_0' then
-      --pass
-    elseif highlights[name] == nil then
+    if highlights[name] == nil then
       -- despite the neovim docs, using an empty {} here actually clears the highlight and does
       -- not inherit color information from the global namespace.  Instead we hack the behavior
       -- by linking the namespace to its global value.
@@ -148,25 +164,18 @@ M.set_highlights = function(win)
     end
   end
 
-  -- highlights are pre-copied
-  -- remove Normal/NormalNC since this a precopy anyways
-  highlights.Normal = nil
-  highlights.NormalNC = nil
   highlights.vimade_0 = nil
   highlights.vimade_control = nil
 
-  -- TODO allow functions for blocked_highlights, should be fine to support this now
-  -- anything blocked can be set to link to itself
-  for name, v in pairs(blocked_highlights) do
-    if v == true then
-      highlights[name] = nil
-      -- despite the neovim docs, using an empty {} here actually clears the highlight and does
-      -- not inherit color information from the global namespace.  Instead we hack the behavior
-      -- by linking the namespace to its global value.
-      nvim_set_hl(vimade_ns, name, {link = name})
-    end
-  end
-
+  local nt_copy = {
+    name = '',
+    fg = normal_target.fg,
+    bg = normal_target.bg,
+    sp = normal_target.sp,
+    ctermfg = normal_target.ctermfg,
+    ctermbg = normal_target.ctermbg,
+    normal_bg = normal_target.normal_bg,
+  }
   for name, hi in pairs(highlights) do
     -- copies area required here as user mutations are expected. Deep copy due to cterm
     -- resuse the existing copy here for performance reasons and manually reassign
@@ -198,8 +207,10 @@ M.set_highlights = function(win)
     nvim_set_hl(vimade_ns, name, hi)
     vimade_highlights[name] = hi
   end
-  nvim_set_hl(vimade_ns, 'NormalNC',  normal)
-  nvim_set_hl(vimade_ns, 'Normal', normal)
+  if vimade_highlights.Normal then
+    nvim_set_hl(vimade_ns, 'vimade_0', vimade_highlights.Normal)
+    vimade_highlights.vimade_0 = vimade_highlights.Normal
+  end
 end
 
 return M

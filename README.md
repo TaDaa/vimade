@@ -111,10 +111,23 @@ buffers.
         -- section in the README.md for more info.
         -- basebg = [23,23,23],
         basebg = '',
-
         -- prevent a window or buffer from being styled. You 
         blocklist = {
           default = {
+            highlights = {
+              laststatus_3 = function(win, active)
+                -- Global statusline, laststatus=3, is currently disabled as multiple windows take ownership
+                -- of the StatusLine highlight (see #85).
+                if vim.go.laststatus == 3 then
+                    -- you can also return tables (e.g. {'StatusLine', 'StatusLineNC'})
+                    return 'StatusLine'
+                end
+              end,
+              -- Exact highlight names are supported:
+              -- 'WinSeparator',
+              -- Lua patterns are supported, just put the text between / symbols:
+              -- '/^StatusLine.*/' -- will match any highlight starting with "StatusLine"
+            },
             buf_opts = { buftype = {'prompt'} },
             win_config = { relative = true },
             -- buf_name = {'name1','name2', name3'},
@@ -140,11 +153,15 @@ buffers.
         link = {},
         groupdiff = true, -- links diffs so that they style together
         groupscrollbind = false, -- link scrollbound windows so that they style together.
-
         -- enable to bind to FocusGained and FocusLost events. This allows fading inactive
         -- tmux panes.
         enablefocusfading = false,
-
+        -- Time in milliseconds before re-checking windows. This is only used when usecursorhold
+        -- is set to false.
+        checkinterval = 1000,
+        -- enables cursorhold event instead of using an async timer.  This may make Vimade
+        -- feel more performant in some scenarios. See h:updatetime.
+        usecursorhold = false,
         -- when nohlcheck is disabled the highlight tree will always be recomputed. You may
         -- want to disable this if you have a plugin that creates dynamic highlights in
         -- inactive windows. 99% of the time you shouldn't need to change this value.
@@ -386,7 +403,7 @@ let g:vimade = {
 \   'link': {},
 \   'groupdiff': 1,
 \   'groupscrollbind': 0,
-\   'checkinterval': g:vimade_features.has_gui_running && !(g:vimade_features.has_nvim) ? 100 : 500,
+\   'checkinterval': 1000,
 \   'usecursorhold': g:vimade_features.has_gui_running && !g:vimade_features.has_nvim && g:vimade_features.has_gui_version,
 \   'enablefocusfading': 0,
 \   'normalid': '',
@@ -414,65 +431,82 @@ let g:vimade = {
 <sub>::lua::</sub>
 ```lua
 vimade.setup{
-        -- Recipe can be any of 'default', 'minimalist', 'duo', and 'ripple'
-        -- Set animate = true to enable animations on any recipe.
-        -- See the docs for other config options.
-        recipe = {'default', {animate=false}},
-        ncmode = 'buffers', -- use 'windows' to fade inactive windows
-        fadelevel = 0.4, -- any value between 0 and 1. 0 is hidden and 1 is opaque.
-        tint = {
-          -- bg = {rgb={0,0,0}, intensity=0.3}, -- adds 30% black to background
-          -- fg = {rgb={0,0,255}, intensity=0.3}, -- adds 30% blue to foreground
-          -- fg = {rgb={120,120,120}, intensity=1}, -- all text will be gray
-          -- sp = {rgb={255,0,0}, intensity=0.5}, -- adds 50% red to special characters
-          -- you can also use functions for tint or any value part in the tint object
-          -- to create window-specific configurations
-          -- see the `Tinting` section of the README for more details.
-        },
+  -- Recipe can be any of 'default', 'minimalist', 'duo', and 'ripple'
+  -- Set animate = true to enable animations on any recipe.
+  -- See the docs for other config options.
+  recipe = {'default', {animate=false}},
+  ncmode = 'buffers', -- use 'windows' to fade inactive windows
+  fadelevel = 0.4, -- any value between 0 and 1. 0 is hidden and 1 is opaque.
+  tint = {
+    -- bg = {rgb={0,0,0}, intensity=0.3}, -- adds 30% black to background
+    -- fg = {rgb={0,0,255}, intensity=0.3}, -- adds 30% blue to foreground
+    -- fg = {rgb={120,120,120}, intensity=1}, -- all text will be gray
+    -- sp = {rgb={255,0,0}, intensity=0.5}, -- adds 50% red to special characters
+    -- you can also use functions for tint or any value part in the tint object
+    -- to create window-specific configurations
+    -- see the `Tinting` section of the README for more details.
+  },
 
-        -- Changes the real or theoretical background color. basebg can be used to give
-        -- transparent terminals accurating dimming.  See the 'Preparing a transparent terminal'
-        -- section in the README.md for more info.
-        -- basebg = [23,23,23],
-        basebg = '',
-
-        -- prevent a window or buffer from being styled. You 
-        blocklist = {
-          default = {
-            buf_opts = { buftype = {'prompt'} },
-            win_config = { relative = true },
-            -- buf_name = {'name1','name2', name3'},
-            -- buf_vars = { variable = {'match1', 'match2'} },
-            -- win_opts = { option = {'match1', 'match2' } },
-            -- win_vars = { variable = {'match1', 'match2'} },
-          },
-          -- any_rule_name1 = {
-          --   buf_opts = {}
-          -- },
-          -- only_behind_float_windows = {
-          --   buf_opts = function(win, current)
-          --     if (win.win_config.relative == '')
-          --       and (current and current.win_config.relative ~= '') then
-          --         return false
-          --     end
-          --     return true
-          --   end
-          -- },
-        },
-        -- Link connects windows so that they style or unstyle together.
-        -- Properties are matched against the active window. Same format as blocklist above
-        link = {},
-        groupdiff = true, -- links diffs so that they style together
-        groupscrollbind = false, -- link scrollbound windows so that they style together.
-
-        -- enable to bind to FocusGained and FocusLost events. This allows fading inactive
-        -- tmux panes.
-        enablefocusfading = false,
-
-        -- when nohlcheck is disabled the highlight tree will always be recomputed. You may
-        -- want to disable this if you have a plugin that creates dynamic highlights in
-        -- inactive windows. 99% of the time you shouldn't need to change this value.
-        nohlcheck = true,
+  -- Changes the real or theoretical background color. basebg can be used to give
+  -- transparent terminals accurating dimming.  See the 'Preparing a transparent terminal'
+  -- section in the README.md for more info.
+  -- basebg = [23,23,23],
+  basebg = '',
+  -- prevent a window or buffer from being styled. You 
+  blocklist = {
+    default = {
+      highlights = {
+        laststatus_3 = function(win, active)
+          -- Global statusline, laststatus=3, is currently disabled as multiple windows take ownership
+          -- of the StatusLine highlight (see #85).
+          if vim.go.laststatus == 3 then
+              -- you can also return tables (e.g. {'StatusLine', 'StatusLineNC'})
+              return 'StatusLine'
+          end
+        end,
+        -- Exact highlight names are supported:
+        -- 'WinSeparator',
+        -- Lua patterns are supported, just put the text between / symbols:
+        -- '/^StatusLine.*/' -- will match any highlight starting with "StatusLine"
+      },
+      buf_opts = { buftype = {'prompt'} },
+      win_config = { relative = true },
+      -- buf_name = {'name1','name2', name3'},
+      -- buf_vars = { variable = {'match1', 'match2'} },
+      -- win_opts = { option = {'match1', 'match2' } },
+      -- win_vars = { variable = {'match1', 'match2'} },
+    },
+    -- any_rule_name1 = {
+    --   buf_opts = {}
+    -- },
+    -- only_behind_float_windows = {
+    --   buf_opts = function(win, current)
+    --     if (win.win_config.relative == '')
+    --       and (current and current.win_config.relative ~= '') then
+    --         return false
+    --     end
+    --     return true
+    --   end
+    -- },
+  },
+  -- Link connects windows so that they style or unstyle together.
+  -- Properties are matched against the active window. Same format as blocklist above
+  link = {},
+  groupdiff = true, -- links diffs so that they style together
+  groupscrollbind = false, -- link scrollbound windows so that they style together.
+  -- enable to bind to FocusGained and FocusLost events. This allows fading inactive
+  -- tmux panes.
+  enablefocusfading = false,
+  -- Time in milliseconds before re-checking windows. This is only used when usecursorhold
+  -- is set to false.
+  checkinterval = 1000,
+  -- enables cursorhold event instead of using an async timer.  This may make Vimade
+  -- feel more performant in some scenarios. See h:updatetime.
+  usecursorhold = false,
+  -- when nohlcheck is disabled the highlight tree will always be recomputed. You may
+  -- want to disable this if you have a plugin that creates dynamic highlights in
+  -- inactive windows. 99% of the time you shouldn't need to change this value.
+  nohlcheck = true,
 }
 ```
 
@@ -523,6 +557,12 @@ vimade.setup(
   # enable to bind to FocusGained and FocusLost events. This allows fading inactive
   # tmux panes.
   enablefocusfading = False,
+  # Time in milliseconds before re-checking windows. This is only used when usecursorhold
+  # is set to false.
+  checkinterval = 1000,
+  # enables cursorhold event instead of using an async timer.  This may make Vimade
+  # feel more performant in some scenarios. See h:updatetime.
+  usecursorhold = false,
   # Basegroups are extra highlights that are faded using winhl (neovim only)
   basegroups = ['Folded', 'Search', 'SignColumn', 'CursorLine', 'CursorLineNr', 'DiffAdd', 'DiffChange', 'DiffDelete', 'DiffText', 'FoldColumn', 'Whitespace', 'NonText', 'SpecialKey', 'Conceal', 'EndOfBuffer', 'WinSeparator', 'LineNr', 'LineNrAbove', 'LineNrBelow'],
   enablebasegroups = True,
@@ -567,7 +607,7 @@ vimade.setup(
 | `link` | <sub>When set via **lua** or **python**, the top level named object can be a `function(win, active_win)=>bool`. Each nested object or value can also be a `function(relative_win_obj,active_win_obj)=>bool`.  `True` indicates linked, `False` not linked, `nil` indeterminate.</sub><br><br> | `nil` | Determines whether the current window should be linked and unhighlighted with the active window.  `groupdiff` and `groupscrollbind` tie into the default behavior of this object behind the scenes to unlink diffs.  See the block and linking section for more details.
 | `groupdiff` | `0` `1` `bool` | `1` | highlights and unhighlights diff windows together.
 | `groupscrollbind` | `0` `1` `bool` | `0` | highlights and unhighlights scrolllbound windows together.
-| `checkinterval` | `int` | `100`-`500` | Time in milliseconds before re-checking windows. Default varies depending on **Neovim**, **terminals**, and **gui vim**.
+| `checkinterval` | `int` | `1000` | Time in milliseconds before re-checking windows.
 | `usecursorhold` | `0` `1` `bool` | `0` | Whether to use cursorhold events instead of async timer. Setting this option **disables the timer**. This option defaults to `0` for most editor versions.  **gvim** defaults to `1` due to async timers breaking visual selections.  If you use this value, remember to set `:set updatetime` appropriately.
 | `enablefocusfading` | `0` `1` `bool` | `0` | Highlight the active window on application focus and blur events.  This can be desirable when switching applications, but requires additional setup for terminal and tmux.  See enablefocusfading section for more details (TODO link)
 | `normalid` | `int` | nil | The id of the Normal highlight.  **Vimade** will automatically set this, so you don't need to worry about it. You can override it though if you just want to play around.
@@ -786,6 +826,13 @@ For **lua** `defaults` are:
 ```lua
   blocklist = {
     default = {
+      highlights = {
+        laststatus_3 = function(win, active)
+          if vim.go.laststatus == 3 then
+              return 'StatusLine'
+          end
+        end,
+      },
       buf_opts = {buftype = {'prompt'}},
       win_config = {
         relative = true

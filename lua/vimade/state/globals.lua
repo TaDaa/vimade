@@ -129,16 +129,17 @@ local DEFAULTS = TYPE.extend(DEFAULT_RECIPE.Default(), {
     default = {
       highlights = {
         laststatus_3 = function(win, active)
-          -- see #85 prevent global statusline from flickering due to multiple windows impacting
-          -- StatusLine. laststatus=3 also causes some misalignment on WinSeparator, if you see
-          -- issues consider either also excluding 'WinSeparator' or tweaking the WinSeparator
-          -- guibg until you find a value that looks good.
+          -- Global statusline, laststatus=3, is currently disabled as multiple windows take ownership
+          -- of the StatusLine highlight (see #85).
           if vim.go.laststatus == 3 then
-            return 'StatusLine'
+              -- you can also return tables (e.g. {'StatusLine', 'StatusLineNC'})
+              return 'StatusLine'
           end
         end,
-        -- Also can specify names, example:
+        -- Exact highlight names are supported:
         -- 'WinSeparator',
+        -- Lua patterns are supported, just put the text between / symbols:
+        -- '/^StatusLine.*/' -- will match any highlight starting with "StatusLine"
       },
       buf_name = nil,
       -- terminal is temporarily disabled until proper fading is added
