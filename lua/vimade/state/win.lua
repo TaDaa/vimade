@@ -8,10 +8,15 @@ local NAMESPACE = require('vimade.state.namespace')
 local REAL_NAMESPACE = require('vimade.state.real_namespace')
 local LINK = require('vimade.config_helpers.link')
 local BLOCKLIST = require('vimade.config_helpers.blocklist')
-local HIGHLIGHTER = require('vimade.highlighter')
 local COLOR_UTIL = require('vimade.util.color')
 local COMPAT = require('vimade.util.compat')
 local TYPE = require('vimade.util.type')
+
+local HIGHLIGHTERS = {
+  require('vimade.highlighters.terminal'),
+  require('vimade.highlighters.namespace'),
+}
+
 local GLOBALS
 local FADER
 
@@ -19,7 +24,6 @@ M.__init = function(args)
   FADER = args.FADER
   GLOBALS = args.GLOBALS
   FADER.on('tick:before', function ()
-    M.ns_cache = {}
     M.current = nil
   end)
 end
@@ -38,26 +42,23 @@ local _update_state = function (next, current, state)
 end
 
 -- return without updating state
-M.get = function(wininfo)
-  return M.cache[tonumber(wininfo.winid)]
+M.get = function(winid)
+  return M.cache[winid]
 end
 
-M.unhighlight = function (winid)
-  local win = M.cache[winid]
-  if win then
-    win.nc = false
-    -- TODO this should just be moved into handle_terminal
-    if win.terminal_match then
-      vim.fn.matchdelete(win.terminal_match, winid)
-      win.terminal_match = nil
+M.unhighlight = function (win)
+  win.nc = false
+  for _, highlighter in ipairs(HIGHLIGHTERS) do
+    if not highlighter.is_type or highlighter.is_type(win) then
+      highlighter.unhighlight(win)
     end
   end
 end
 
-M.cleanup = function (wininfos)
+M.cleanup = function (windows)
   local map = {}
-  for key, wininfo in pairs(wininfos) do
-    map[tonumber(wininfo.winid)] = true
+  for key, winid in pairs(windows) do
+    map[winid] = true
   end
   for winid, value in pairs(M.cache) do
     if map[winid] == nil then
@@ -71,9 +72,7 @@ M.__create = function (winid)
   if M.cache[winid] == nil then
     local win = {
       winid = winid,
-      winnr = nil,
       bufnr = nil,
-      tabnr = nil,
       terminal = nil,
       width = -1,
       height = -1,
@@ -111,24 +110,12 @@ M.__create = function (winid)
   return M.cache[winid]
 end
 
--- note this means styles applied against the active styling may need additional consideration
-local handle_terminal = function(win, style_active)
-  if (style_active == 0 and win.terminal_match)
-    or (win.terminal_match and not win.terminal) then
-    vim.fn.matchdelete(win.terminal_match, win.winid)
-    win.terminal_match = nil
-  elseif (style_active > 0 and win.terminal and not win.terminal_match) then
-    win.terminal_match =vim.fn.matchadd('Normal', '.*', 0, -1, {window = win.winid})
-  end
-end
-
-M.refresh_active = function (wininfo)
-  local win = M.refresh(wininfo, true)
+M.refresh_active = function (winid)
+  local win = M.refresh(winid, true)
   return win
 end
 
-M.refresh = function (wininfo, is_active)
-  local winid = tonumber(wininfo.winid)
+M.refresh = function (winid, is_active)
   local win = M.__create(winid)
   if is_active then
     M.current = win
@@ -136,11 +123,7 @@ M.refresh = function (wininfo, is_active)
 
   win.state = GLOBALS.READY
   win.winid = winid
-  win.terminal = wininfo.terminal
-  win.winnr = tonumber(wininfo.winnr)
-  win.bufnr = tonumber(wininfo.bufnr)
-  win.tabnr = tonumber(wininfo.tabnr)
-
+  win.bufnr = vim.api.nvim_win_get_buf(winid)
   win.buf_name = vim.api.nvim_buf_get_name(win.bufnr)
   win.win_type = vim.fn.win_gettype(win.winid)
   win.win_config = vim.api.nvim_win_get_config(win.winid)
@@ -178,6 +161,10 @@ M.refresh = function (wininfo, is_active)
     end
   end
 
+  if blocked then
+    return M.unhighlight(win)
+  end
+
   local should_nc = false
   local hi_active = can_nc and GLOBALS.vimade_fade_active
   local hi_inactive = can_nc
@@ -191,7 +178,7 @@ M.refresh = function (wininfo, is_active)
   end
 
   local linked = false
-  if M.current and not is_active then
+  if M.current and not is_active and not blocked then
     for key, value in pairs(GLOBALS.link) do
       if type(value) == 'table' then
         linked = LINK.DEFAULT(win, M.current, value)
@@ -289,8 +276,7 @@ M.refresh = function (wininfo, is_active)
     or REAL_NAMESPACE.is_desync(win.ns.real)
     or not GLOBALS.nohlcheck
     or win.hi_key ~= hi_key
-    or BIT_BAND(GLOBALS.tick_state, GLOBALS.RECALCULATE) > 0)
-    then
+    or BIT_BAND(GLOBALS.tick_state, GLOBALS.RECALCULATE) > 0) then
     local ns = NAMESPACE.get_replacement(win, real_ns, hi_key, false)
     if ns.modified or win.hi_key ~= hi_key then
       redraw = true
@@ -301,22 +287,14 @@ M.refresh = function (wininfo, is_active)
   end
 
   if win.ns and win.ns.real.complete_highlights then
-    handle_terminal(win, style_active)
-    if style_active == 0 then
-      if win.current_ns ~= win.real_ns then
-        win.current_ns = win.real_ns
-        COMPAT.nvim_win_set_hl_ns(winid, win.current_ns)
+    for _, highlighter in ipairs(HIGHLIGHTERS) do
+      if not highlighter.is_type or highlighter.is_type(win) then
+        if style_active == 0 then
+          highlighter.unhighlight(win)
+        else
+          highlighter.highlight(win, redraw)
+        end
       end
-    elseif redraw then
-      if M.ns_cache[win.ns.vimade_ns] == nil then
-        M.ns_cache[win.ns.vimade_ns] = true
-        HIGHLIGHTER.set_highlights(win)
-      end
-      win.current_ns = win.ns.vimade_ns
-      COMPAT.nvim_win_set_hl_ns(winid, win.current_ns)
-    elseif BIT_BAND(GLOBALS.CHANGED, win.state) > 0 then
-      win.current_ns = win.ns.vimade_ns
-      COMPAT.nvim_win_set_hl_ns(winid, win.current_ns)
     end
   end
   return win

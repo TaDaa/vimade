@@ -2,7 +2,6 @@ local M = {}
 
 local TYPE = require('vimade.util.type')
 local COMPAT = require('vimade.util.compat')
-local HIGHLIGHTER = require('vimade.highlighter')
 local REAL_NAMESPACE = require('vimade.state.real_namespace')
 local GLOBALS
 

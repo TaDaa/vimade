@@ -10,7 +10,7 @@ local GLOBALS = require('vimade.state.globals')
 local duo_tint_to = function(config)
   return function (style, state)
     local to = style.resolve(TINT.Default().value(), state)
-    if to and style.win.tabnr == GLOBALS.current.tabnr then
+    if to then
       local pct = config.window_pct
       if not style.win.nc then
         pct = 0
@@ -36,7 +36,7 @@ local duo_fade_to = function(config)
     end
     local to = style.resolve(FADE.Default().value(), state)
     local pct = config.window_pct
-    if to and style.win.tabnr == GLOBALS.current.tabnr and style.win.bufnr == GLOBALS.current.bufnr then
+    if to and style.win.bufnr == GLOBALS.current.bufnr then
       pct = config.buffer_pct
     end
     return to + (1 - to) * (1 - pct)

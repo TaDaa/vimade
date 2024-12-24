@@ -5,7 +5,6 @@ local BIT_BAND = bit.band
 
 local TYPE = require('vimade.util.type')
 local COMPAT = require('vimade.util.compat')
-local HIGHLIGHTER = require('vimade.highlighter')
 local ANIMATOR = require('vimade.animator')
 local GLOBALS
 local FADER
