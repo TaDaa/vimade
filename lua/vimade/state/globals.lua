@@ -24,6 +24,7 @@ M.READY = 0
 M.ERROR = 1
 M.CHANGED = 2
 M.RECALCULATE = 4
+M.DISCARD_NS = 8
 -- some plugins (e.g. Neotree) add the highlights on window/buffer change. When nohlcheck,
 -- which prevents rechecking the namespaces for no reason, is enabled we tell the downstream
 -- logic to check namespaces on buf/win/tab change.
@@ -259,7 +260,7 @@ M.refresh = function (override_tick_state)
     is_dark = vim.go.background == 'dark',
     colorscheme = vim.g.colors_name,
     termguicolors = vim.go.termguicolors,
-  }, M, OTHER, BIT_BOR(M.RECALCULATE, M.CHANGED)))
+  }, M, OTHER, BIT_BOR(M.RECALCULATE, M.DISCARD_NS, M.CHANGED)))
   M.tick_state = BIT_BOR(M.tick_state, check_fields({
     'vimade_fade_active',
   }, {

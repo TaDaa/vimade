@@ -30,13 +30,22 @@ M.clear_winid = function (winid, will_self_reuse)
   M.winid_lookup[winid] = nil
   if current_win_ns ~= nil then
     current_win_ns.windows[winid] = nil
-
     if next(current_win_ns.windows) == nil then
       M.key_lookup[current_win_ns.key] = nil
       M.vimade_active_ns_lookup[current_win_ns.vimade_ns] = nil
       table.insert(M.free_ns, current_win_ns)
     end
   end
+end
+
+-- This discards and uncaches all namespaces managed by vimade. This is useful
+-- when the namespace reaches an unrecoverable state (e.g. switching between some
+-- colorschemes may break the namespace link state).
+M.discard_all = function()
+  for winid, state in pairs(M.winid_lookup) do
+    M.clear_winid(winid)
+  end
+  M.free_ns = {}
 end
 
 M.get_replacement = function (win, real_ns, hi_key, skip_create)

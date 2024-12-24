@@ -29,6 +29,10 @@ local update = function ()
     end
   end
 
+  if BIT_BAND(GLOBALS.tick_state, GLOBALS.DISCARD_NS) > 0 then
+    NAMESPACE.discard_all()
+  end
+
   if current.winid ~= -1 then
     WIN_STATE.refresh_active(current.winid)
   end
@@ -93,7 +97,7 @@ M.getInfo = function ()
 end
 
 M.redraw = function()
-  M.tick(BIT_BOR(GLOBALS.RECALCULATE, GLOBALS.CHANGED))
+  M.tick(BIT_BOR(GLOBALS.RECALCULATE, GLOBALS.DISCARD_NS, GLOBALS.CHANGED))
 end
 
 M.animate = function ()
