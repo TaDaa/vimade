@@ -1479,6 +1479,7 @@ If you find a feature gap, please file an issue or contribute!
 | 256 colors                                    | Yes    |       |              |            |
 | Per-window config (e.g. fadelevel, tint, etc) | Yes    |       |              |            |
 | Cleared highlights                            | Yes    | Yes   |              |            |
+| Compatible with other namespaces              | Yes    | Yes   |              |            |
 | Supports **Vim** + All versions of **Neovim** | Yes    |       |              |            |
 
 
