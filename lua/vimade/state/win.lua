@@ -92,7 +92,7 @@ M.__create = function (winid)
         active_buf = 0,
         nc = 0,
       },
-      real_ns = 0,
+      real_ns = nil,
       ns = nil,
       state = GLOBALS.READY,
       style = {},

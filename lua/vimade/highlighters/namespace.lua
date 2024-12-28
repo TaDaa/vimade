@@ -239,7 +239,7 @@ M.highlight = function(win, redraw)
 end
 
 M.unhighlight = function(win)
-  if win.current_ns ~= win.real_ns then
+  if win.current_ns ~= win.real_ns and win.real_ns then
     win.current_ns = win.real_ns
     COMPAT.nvim_win_set_hl_ns(win.winid, win.current_ns)
   end
