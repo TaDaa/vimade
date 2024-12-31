@@ -254,7 +254,7 @@ M.refresh = function (winid, is_active)
   -- this is to separate out the logic for inactive vs active.  we can use this for highlighting
   -- the active ns in the future
   local style_active = 0
-  if blocked == false then
+  if not blocked then
     for i, s in ipairs(win.style) do
       s.before(win, win.style_state)
       local style_key = s.key(win, style_state)
