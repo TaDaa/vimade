@@ -1373,6 +1373,44 @@ vimade.setup(
 ---
 </details>
 
+<details open>
+<summary>
+<a><ins>Recipe: Paradox</ins></a>
+</summary>
+
+<br>
+
+Manipulate contrast to match your insanity. Paradox flips your colorscheme on its head and adds some inversion to the active window. This
+recipe is mostly useful for improving contrast on some colorschemes.
+
+*<sub>::lua:: [source](https://github.com/TaDaa/vimade/tree/master/lua/vimade/recipe/paradox.lua) (see here for additional params)</sub>*
+
+```lua
+require('vimade').setup({recipe = {'paradox', {animate = true}}})
+```
+
+![paradox_recipe](https://raw.githubusercontent.com/TaDaa/tadaa.github.io/refs/heads/master/images/paradox.gif)
+
+For the truly insane (full inversion):
+
+*<sub>::lua::</sub>*
+```lua
+require('vimade').setup({
+  recipe = {'paradox', {
+      animate = true,
+      invert = {
+        start = 0,
+        to = 1,
+      }
+  }},
+})
+```
+
+** *Python support to follow*
+
+---
+</details>
+
 <details>
 <summary>
 <a><ins>Recipe: Ripple</ins></a>
