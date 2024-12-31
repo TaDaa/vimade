@@ -68,8 +68,8 @@ end
 
 --@param config {
   -- @optional invert = {
-    --  @otional start = 0.1
-    --  @otional to = 0.05
+    --  @otional start = 0.15
+    --  @otional to = 0.1
     --  @otional direction = DIRECTION.IN
     --  @otional duration = 1000
     --  @optional active = true (inverts the active window)
@@ -84,8 +84,8 @@ end
 M.Paradox = function(config)
   config = TYPE.shallow_copy(config)
   config.invert = config.invert or {}
-  config.invert.start = config.invert.start or 0.1
-  config.invert.to = config.invert.to or 0.05
+  config.invert.start = config.invert.start or 0.15
+  config.invert.to = config.invert.to or 0.1
   config.invert.direction = config.invert.direction or DIRECTION.IN
   config.invert.duration = config.invert.duration or 1000
   config.invert.active = config.invert.active or true
