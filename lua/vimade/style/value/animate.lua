@@ -1,3 +1,4 @@
+
 local math = require('math')
 local EASE = require('vimade.style.value.ease')
 local CONDITION = require('vimade.style.value.condition')
@@ -8,6 +9,7 @@ local TYPE = require('vimade.util.type')
 local M = {}
 local GLOBALS
 
+local MATH_FLOOR = math.floor
 local MATH_MIN = math.min
 local MATH_MAX = math.max
 local INTERPOLATE_FLOAT = COLOR_UTIL.interpolateFloat
@@ -125,7 +127,13 @@ M.Animate = function (config)
   local _delay = config.delay or DEFAULT_DELAY
   local _ease = config.ease or DEFAULT_EASE
   local _direction = config.direction or DEFAULT_DIRECTION
-  local _reset = config.reset or _direction ~= DIRECTION.IN_OUT
+  local _reset = config.reset
+  -- For direction IN_OUT the to & start values swap around, so
+  -- the reset value also needs to respect that
+  local _reset_swap = _direction == DIRECTION.IN_OUT
+  if _reset == nil then
+    _reset = true
+  end
   local _compare = config.compare or nil
   return function(style, state)
     local id
@@ -171,8 +179,12 @@ M.Animate = function (config)
     if type(reset) == 'function' then
       reset = reset(style, state)
     end
+    -- Deterministically round to the nearest 16ms, which would give close to 60fps. 60fps is more than
+    -- a good target value for editor animations and the imprecise rounding should not be user
+    -- perceivable, while also allowing us to fully benefit from high cache hit rates.
+    -- TODO make this configurable
+    local time = MATH_FLOOR((GLOBALS.now - (MATH_MAX(win.timestamps.nc, state.change_timestamp or 0) + delay)) / 16) * 16
     -- TODO this logic is nc specific and should be abstracted
-    local time = GLOBALS.now - (MATH_MAX(win.timestamps.nc, state.change_timestamp or 0) + delay)
     if (direction == DIRECTION.OUT and style._condition == CONDITION.ACTIVE and style.win.nc == false)
       or (direction == DIRECTION.IN and style._condition == CONDITION.INACTIVE and style.win.nc == true) then
        state.value = to
@@ -201,8 +213,8 @@ M.Animate = function (config)
     end
     if time <= 0 then
       if reset == true then
-        state.start = start
-        state.value = start
+        state.start = (_reset_swap and state.to) or start
+        state.value = (_reset_swap and state.to) or start
       else
         state.start = state.value
       end
@@ -210,6 +222,7 @@ M.Animate = function (config)
       ANIMATOR.schedule(win)
       return state.start
     end
+    state.to = to
     if time >= duration then
       state.value = to
       style._animating = false

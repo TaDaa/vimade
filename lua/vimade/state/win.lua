@@ -1,3 +1,4 @@
+
 local M = {}
 
 local bit = require('bit')
@@ -55,13 +56,9 @@ M.unhighlight = function (win)
   end
 end
 
-M.cleanup = function (windows)
-  local map = {}
-  for key, winid in pairs(windows) do
-    map[winid] = true
-  end
+M.cleanup = function (active_winids)
   for winid, value in pairs(M.cache) do
-    if map[winid] == nil then
+    if active_winids[winid] == nil then
       M.cache[winid] = nil
       NAMESPACE.clear_winid(winid)
     end
@@ -173,7 +170,7 @@ M.refresh = function (winid, is_active)
     should_nc = hi_active
   elseif GLOBALS.nc_buffers and win.is_active_buf then
     should_nc = hi_active
-  else
+  elseif (GLOBALS.nc_windows or GLOBALS.nc_buffers) then
     should_nc = hi_inactive
   end
 
@@ -194,6 +191,7 @@ M.refresh = function (winid, is_active)
   win.linked = linked
 
   -- check namespaces
+  -- TODO this should actually occur before blocked
   local active_ns = COMPAT.nvim_get_hl_ns({winid = win.winid})
   local real_ns
   if NAMESPACE.is_vimade_ns(active_ns) == true then
@@ -278,13 +276,16 @@ M.refresh = function (winid, is_active)
     or win.hi_key ~= hi_key
     or BIT_BAND(GLOBALS.tick_state, GLOBALS.RECALCULATE) > 0) then
     local ns = NAMESPACE.get_replacement(win, real_ns, hi_key, false)
-    if ns.modified or win.hi_key ~= hi_key then
+    if ns.modified then
       redraw = true
+    end
+    if ns.modified or ns ~= win.ns or win.hi_key ~= hi_key then
       win.state = BIT_BOR(GLOBALS.CHANGED, win.state)
     end
-    win.hi_key = hi_key
     win.ns = ns
   end
+
+  win.hi_key = hi_key
 
   if win.ns and win.ns.real.complete_highlights then
     for _, highlighter in ipairs(HIGHLIGHTERS) do

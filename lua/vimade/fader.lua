@@ -66,7 +66,12 @@ local update = function ()
   end
 
   if BIT_BAND(GLOBALS.tick_state, GLOBALS.CHANGED) > 0 then
-    WIN_STATE.cleanup(vim.api.nvim_list_wins())
+    local active_winids ={}
+    local winids = vim.api.nvim_list_wins()
+    for key, winid in pairs(winids) do
+      active_winids[winid] = true
+    end
+    WIN_STATE.cleanup(active_winids)
   end
 end
 
