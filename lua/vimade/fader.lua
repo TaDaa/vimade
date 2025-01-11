@@ -16,6 +16,10 @@ local REAL_NAMESPACE = require('vimade.state.real_namespace')
 local TINT = require('vimade.style.tint')
 local WIN_STATE = require('vimade.state.win')
 
+local events = require('vimade.util.events')()
+
+M.on = events.on
+
 -- internal only
 local update = function ()
   local windows = vim.api.nvim_tabpage_list_wins(0)
@@ -75,23 +79,6 @@ local update = function ()
   end
 end
 
-M.callbacks = {}
-M.on = function (name, callback)
-  if not M.callbacks[name] then
-    M.callbacks[name] = {}
-  end
-  table.insert(M.callbacks[name], callback)
-end
-
-M.notify = function (name)
-  local callbacks = M.callbacks[name]
-  if callbacks then
-    for k, callback in ipairs(callbacks) do
-      callback()
-    end
-  end
-end
-
 -- external --
 M.setup = function (config)
   return GLOBALS.setup(config)
@@ -114,13 +101,13 @@ M.tick = function (override_tick_state)
   local last_ei = vim.go.ei
   vim.go.ei ='all'
 
-  M.notify('tick:before')
+  events.notify('tick:before')
   GLOBALS.refresh(override_tick_state)
-  M.notify('tick:refresh')
+  events.notify('tick:refresh')
 
   update()
 
-  M.notify('tick:after')
+  events.notify('tick:after')
   vim.go.ei = last_ei
 end
 
