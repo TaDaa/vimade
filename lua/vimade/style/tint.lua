@@ -1,3 +1,4 @@
+
 local M = {}
 
 local CONDITION = require('vimade.style.value.condition')
@@ -75,8 +76,8 @@ M.Tint = function(config)
       .. (to_hl.bg and ((to_hl.bg or '') .. ',' .. (to_hl.ctermbg and ('t:' .. to_hl.ctermbg[1]..'-'..to_hl.ctermbg[2]..'-'..to_hl.ctermbg[3]) or '') .. ',' .. to_hl.bg_intensity) or '') .. '|'
       .. (to_hl.sp and ((to_hl.sp or '') .. to_hl.sp_intensity) or '')
     end
-    style.modify = function (hl, target)
-      if condition == false or not to_hl or hl.link then
+    style.modify = function (highlights, target)
+      if condition == false or not to_hl then
         return
       end
       if target.bg and to_hl.bg then
@@ -85,20 +86,24 @@ M.Tint = function(config)
       if target.ctermbg and to_hl.ctermbg then
         target.ctermbg = INTERPOLATE_256(target.ctermbg, to_hl.ctermbg, to_hl.bg_intensity)
       end
-      if hl.fg and to_hl.fg then
-        hl.fg = INTERPOLATE_24B(hl.fg, to_hl.fg, to_hl.fg_intensity)
-      end
-      if hl.sp and to_hl.sp then
-        hl.sp = INTERPOLATE_24B(hl.sp, to_hl.sp, to_hl.sp_intensity)
-      end
-      if hl.ctermfg and to_hl.ctermfg then
-        hl.ctermfg = INTERPOLATE_256(hl.ctermfg, to_hl.ctermfg, to_hl.fg_intensity)
-      end
-      if hl.bg and to_hl.bg then
-        hl.bg = INTERPOLATE_24B(hl.bg, to_hl.bg, to_hl.bg_intensity)
-      end
-      if hl.ctermbg and to_hl.ctermbg  then
-        hl.ctermbg = INTERPOLATE_256(hl.ctermbg, to_hl.ctermbg, to_hl.bg_intensity)
+      for _, hl in pairs(highlights) do
+        if not hl.link then
+          if hl.fg and to_hl.fg then
+            hl.fg = INTERPOLATE_24B(hl.fg, to_hl.fg, to_hl.fg_intensity)
+          end
+          if hl.sp and to_hl.sp then
+            hl.sp = INTERPOLATE_24B(hl.sp, to_hl.sp, to_hl.sp_intensity)
+          end
+          if hl.ctermfg and to_hl.ctermfg then
+            hl.ctermfg = INTERPOLATE_256(hl.ctermfg, to_hl.ctermfg, to_hl.fg_intensity)
+          end
+          if hl.bg and to_hl.bg then
+            hl.bg = INTERPOLATE_24B(hl.bg, to_hl.bg, to_hl.bg_intensity)
+          end
+          if hl.ctermbg and to_hl.ctermbg  then
+            hl.ctermbg = INTERPOLATE_256(hl.ctermbg, to_hl.ctermbg, to_hl.bg_intensity)
+          end
+        end
       end
     end
     return style

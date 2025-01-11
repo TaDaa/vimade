@@ -1,13 +1,8 @@
 local M = {}
 
 local CONDITION = require('vimade.style.value.condition')
-local GLOBALS
 
 local exclude_key_reducer = require('vimade.util.key_reducer')()
-
-M.__init = function (args)
-  GLOBALS = args.GLOBALS
-end
 
 -- @param config = {
 --  value= {'Folded', 'VertSplit', 'Normal', ...}, # list of names that should be skipped on the style array
@@ -81,12 +76,20 @@ M.Exclude = function(config)
       key = key .. ')'
       return key
     end
-    style.modify = function (hl, to_hl)
-      if condition == false or exclude[hl.name] then
+    style.modify = function (highlights, to_hl)
+      if condition == false then
         return
       end
+      local excluded_for_children = {} 
+      for name, _ in pairs(exclude) do
+        excluded_for_children[name] = highlights[name]
+        highlights[name] = nil
+      end
       for i, s in ipairs(children) do
-        s.modify(hl, to_hl)
+        s.modify(highlights, to_hl)
+      end
+      for name, value in pairs(excluded_for_children) do
+        highlights[name] = excluded_for_children[name]
       end
     end
     return style

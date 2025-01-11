@@ -4,11 +4,10 @@ local CONDITION = require('vimade.style.value.condition')
 local COLOR_UTIL = require('vimade.util.color')
 local TYPE = require('vimade.util.type')
 local VALIDATE = require('vimade.util.validate')
-local GLOBALS
 
-M.__init = function(args)
-  GLOBALS = args.GLOBALS
-end
+local INTERPOLATE_256 = COLOR_UTIL.interpolate256
+local INTERPOLATE_24B = COLOR_UTIL.interpolate24b
+local TO_RGB = COLOR_UTIL.toRgb
 
 -- @required
 -- number | {
@@ -44,25 +43,46 @@ M.Invert = function(config)
       end
       return 'INV-' .. (invert.fg or 0) .. '-' .. (invert.bg or 0) .. '-' .. (invert.sp or 0)
     end
-    style.modify = function (hl, to_hl)
-      if condition == false or hl.link or invert == nil then
+    style.modify = function (highlights, to_hl)
+      if condition == false or invert == nil then
         return
       end
-      for i, hi in pairs({hl, to_hl}) do
-        for j, key in pairs({'fg', 'bg', 'sp'}) do
-          local color = hi[key]
-          if color ~= nil then
-            hi[key] = COLOR_UTIL.interpolate24b(color, 0xFFFFFF - color, 1 - invert[key])
+      local color
+      if to_hl.fg then
+        to_hl.fg = INTERPOLATE_24B(to_hl.fg, 0xFFFFFF - to_hl.fg, 1 - invert.fg)
+      end
+      if to_hl.bg then
+        to_hl.bg = INTERPOLATE_24B(to_hl.bg, 0xFFFFFF - to_hl.bg, 1 - invert.bg)
+      end
+      if to_hl.sp then
+        to_hl.sp = INTERPOLATE_24B(to_hl.sp, 0xFFFFFF - to_hl.sp, 1 - invert.sp)
+      end
+      if to_hl.ctermfg then
+        color = TO_RGB(to_hl.ctermfg, true)
+        to_hl.ctermfg = INTERPOLATE_256(color, {255 - color[1], 255 - color[2], 255 - color[3]}, 1 - invert.fg)
+      end
+      if to_hl.ctermbg then
+        color = TO_RGB(to_hl.ctermbg, true)
+        to_hl.ctermbg = INTERPOLATE_256(color, {255 - color[1], 255 - color[2], 255 - color[3]}, 1 - invert.bg)
+      end
+      for _, hl in pairs(highlights) do
+        if not hl.link then
+          if hl.fg then
+            hl.fg = INTERPOLATE_24B(hl.fg, 0xFFFFFF - hl.fg, 1 - invert.fg)
           end
-        end
-        for j, keys in pairs({{'ctermfg', 'fg'}, {'ctermbg', 'bg'}}) do
-          local key = keys[1]
-          local i_key = keys[2]
-          local color = hi[key]
-          if color ~= nil then
-            color = COLOR_UTIL.toRgb(color, true)
-            local target = {255 - color[1], 255 - color[2], 255 -color[3]}
-            hi[key] = COLOR_UTIL.interpolate256(color, target , 1 - invert[i_key])
+          if hl.bg then
+            hl.bg = INTERPOLATE_24B(hl.bg, 0xFFFFFF - hl.bg, 1 - invert.bg)
+          end
+          if hl.sp then
+            hl.sp = INTERPOLATE_24B(hl.sp, 0xFFFFFF - hl.sp, 1 - invert.sp)
+          end
+          if hl.ctermfg then
+            color = TO_RGB(hl.ctermfg, true)
+            hl.ctermfg = INTERPOLATE_256(color, {255 - color[1], 255 - color[2], 255 - color[3]}, 1 - invert.fg)
+          end
+          if hl.ctermbg then
+            color = TO_RGB(hl.ctermbg, true)
+            hl.ctermbg = INTERPOLATE_256(color, {255 - color[1], 255 - color[2], 255 - color[3]}, 1 - invert.bg)
           end
         end
       end

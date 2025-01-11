@@ -82,19 +82,19 @@ M.Include = function(config)
       key = key .. ')'
       return key
     end
-    style.modify = function (hl, to_hl)
+    style.modify = function (highlights, to_hl)
       if condition == false then
         return
       end
-      if include[hl.name] then
-        -- This is an implicit unlink. We also have the unlink style available, but
-        -- anything that goes through include is not expected to be linked.
-        if hl.link then
-          hl.link = nil
-        end
-        for i, s in ipairs(children) do
-          s.modify(hl, to_hl)
-        end
+      local highlights_for_children = {}
+      for name, _ in pairs(include) do
+        highlights_for_children[name] = highlights[name]
+      end
+      for i, s in ipairs(children) do
+        s.modify(highlights_for_children, to_hl)
+      end
+      for name, value in pairs(highlights_for_children) do
+        highlights[name] = value
       end
     end
     return style

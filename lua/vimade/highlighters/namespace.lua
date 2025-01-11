@@ -187,32 +187,15 @@ M.set_highlights = function(win)
     ctermbg = normal_target.ctermbg,
     normal_bg = normal_target.normal_bg,
   }
+  nt_copy.name = normal_target.name
+  for _, s in ipairs(style) do
+    s.modify(highlights, nt_copy)
+  end
+
   for name, hi in pairs(highlights) do
     -- copies area required here as user mutations are expected. Deep copy due to cterm
     -- resuse the existing copy here for performance reasons and manually reassign
     -- all fields
-    nt_copy.name = normal_target.name
-    nt_copy.fg = normal_target.fg
-    nt_copy.bg = normal_target.bg
-    nt_copy.sp = normal_target.sp
-    nt_copy.ctermfg = normal_target.ctermfg
-    nt_copy.ctermbg = normal_target.ctermbg
-    nt_copy.normal_bg = normal_target.normal_bg
-
-    hi.name = name
-
-    --TODO(see https://github.com/TaDaa/vimade/issues/81)
-    --Don't enable this again below (it shouldn't be needed any more anyways)
-    -- set default fg highlights if they are unset
-    --if hi.fg == nil then
-    --end
-    --if hi.ctermfg == nil then
-    --end
-
-    for _, s in ipairs(style) do
-      s.modify(hi, nt_copy)
-    end
-
     hi.name = nil
 
     NVIM_SET_HL(vimade_ns, name, hi)

@@ -2,7 +2,7 @@ local M = {}
 
 local Include = require('vimade.style.include').Include
 local Exclude = require('vimade.style.exclude').Exclude
-local Unlink = require('vimade.style.unlink').Unlink
+local Link = require('vimade.style.link').Link
 local ANIMATE = require('vimade.style.value.animate')
 local FADE = require('vimade.style.fade')
 local TINT = require('vimade.style.tint')
@@ -11,6 +11,17 @@ local TYPE = require('vimade.util.type')
 local EXCLUDE_NAMES = {'LineNr', 'LineNrBelow', 'LineNrAbove', 'WinSeparator', 'EndOfBuffer'}
 local NO_VISIBILITY_NAMES = {'LineNr', 'LineNrBelow', 'LineNrAbove', 'EndOfBuffer'}
 local LOW_VISIBILITY_NAMES = {'WinSeparator'}
+
+local create_unlink = function(names)
+  local result = {}
+  for _, name in ipairs(names) do
+    table.insert(result, {
+      from = name,
+      to = nil
+    })
+  end
+  return result
+end
 
 local animate_minimalist = function (config)
   local animation = {
@@ -21,9 +32,9 @@ local animate_minimalist = function (config)
   }
   local result = {
     -- unlinks the targetted highlights ahead of time, this ensures that all styles apply on our selected names.
-    Unlink({
+    Link({
       condition = config.condition,
-      value = config.exclude_names,
+      value = create_unlink(config.exclude_names),
     }),
     TINT.Tint({
       condition = config.condition,
@@ -74,9 +85,9 @@ end
 local minimalist = function (config)
   return {
     -- unlinks the targetted highlights ahead of time, this ensures that all styles apply on our selected names.
-    Unlink({
+    Link({
       condition = config.condition,
-      value = config.exclude_names,
+      value = create_unlink(config.exclude_names),
     }),
     TINT.Default(config),
     Exclude({

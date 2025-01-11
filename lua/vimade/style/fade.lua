@@ -51,35 +51,39 @@ M.Fade = function(config)
       -- only needs to be keyed by fadelevel
       return 'F-' .. fade
     end
-    style.modify = function (hl, to_hl)
+    style.modify = function (highlights, to_hl)
       -- fade modifies all layers against the background
       -- skip links by default, use include to target them
-      if condition == false or hl.link or fade == nil then
+      if condition == false or fade == nil then
         return
       end
-      if to_hl.bg ~= nil then
-        if hl.fg ~= nil then
-          hl.fg = INTERPOLATE_24B(hl.fg, to_hl.bg, fade)
-        end
-        if hl.bg ~= nil then
-          hl.bg = INTERPOLATE_24B(hl.bg, to_hl.bg, fade)
-        end
-        if hl.sp ~= nil then
-          hl.sp = INTERPOLATE_24B(hl.sp, to_hl.bg, fade)
-        end
-      end
-      if hl.blend ~= nil then
-        --always assume blend is 100
-        --some easing functions can go beyond 100 and under 0, this causes a neovim error
-        --cap it here.
-        hl.blend = MATH_MAX(0, MATH_MIN(100, INTERPOLATE_LINEAR(hl.blend, 100, fade)))
-      end
-      if to_hl.ctermbg ~= nil then
-        if hl.ctermfg ~= nil then
-          hl.ctermfg = INTERPOLATE_256(hl.ctermfg, to_hl.ctermbg, fade)
-        end
-        if hl.ctermbg ~= nil then
-          hl.ctermbg = INTERPOLATE_256(hl.ctermbg, to_hl.ctermbg, fade)
+      for _, hl in pairs(highlights) do
+        if not hl.link then
+          if to_hl.bg ~= nil then
+            if hl.fg ~= nil then
+              hl.fg = INTERPOLATE_24B(hl.fg, to_hl.bg, fade)
+            end
+            if hl.bg ~= nil then
+              hl.bg = INTERPOLATE_24B(hl.bg, to_hl.bg, fade)
+            end
+            if hl.sp ~= nil then
+              hl.sp = INTERPOLATE_24B(hl.sp, to_hl.bg, fade)
+            end
+          end
+          if hl.blend ~= nil then
+            --always assume blend is 100
+            --some easing functions can go beyond 100 and under 0, this causes a neovim error
+            --cap it here.
+            hl.blend = MATH_MAX(0, MATH_MIN(100, INTERPOLATE_LINEAR(hl.blend, 100, fade)))
+          end
+          if to_hl.ctermbg ~= nil then
+            if hl.ctermfg ~= nil then
+              hl.ctermfg = INTERPOLATE_256(hl.ctermfg, to_hl.ctermbg, fade)
+            end
+            if hl.ctermbg ~= nil then
+              hl.ctermbg = INTERPOLATE_256(hl.ctermbg, to_hl.ctermbg, fade)
+            end
+          end
         end
       end
     end
