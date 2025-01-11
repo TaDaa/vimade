@@ -137,6 +137,8 @@ local DEFAULTS = TYPE.extend(DEFAULT_RECIPE.Default(), {
               return 'StatusLine'
           end
         end,
+        -- Prevent ActiveTabs from highlighting.
+        'TabLineSel',
         -- Exact highlight names are supported:
         -- 'WinSeparator',
         -- Lua patterns are supported, just put the text between / symbols:
@@ -148,11 +150,13 @@ local DEFAULTS = TYPE.extend(DEFAULT_RECIPE.Default(), {
       buf_vars = nil,
       win_opts = nil,
       win_vars = nil,
-      win_type = true,
-      win_config = {
-        relative = true
-      },
+      win_type = nil,
+      win_config = nil,
     },
+    block_inactive_floats = function (win, active)
+      return win.win_config.relative ~= '' and
+        (win ~= active or win.buf_opts.buftype =='terminal') and true or false
+    end,
   },
 })
 
@@ -290,8 +294,8 @@ M.refresh = function (override_tick_state)
 
   -- already checked --
   M.nc_windows = M.ncmode == 'windows'
-  M.nc_buffers = not M.nc_windows
-  -- if you don't choose one of the above, everything is highlighted
+  M.nc_buffers = M.ncmode == 'buffers'
+  -- if you don't choose one of the above, everything is highlighted. This is intentional! New mode is coming!!!
 
   if not M.global_ns or not M.nohlcheck
     or BIT_BAND(M.CHANGED, M.tick_state) > 0 then

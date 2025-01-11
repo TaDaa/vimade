@@ -123,18 +123,25 @@ buffers.
                     return 'StatusLine'
                 end
               end,
+              -- Prevent ActiveTabs from highlighting.
+              'TabLineSel',
               -- Exact highlight names are supported:
               -- 'WinSeparator',
               -- Lua patterns are supported, just put the text between / symbols:
               -- '/^StatusLine.*/' -- will match any highlight starting with "StatusLine"
             },
             buf_opts = { buftype = {'prompt'} },
-            win_config = { relative = true },
             -- buf_name = {'name1','name2', name3'},
             -- buf_vars = { variable = {'match1', 'match2'} },
             -- win_opts = { option = {'match1', 'match2' } },
             -- win_vars = { variable = {'match1', 'match2'} },
+            -- win_type = {'name1','name2', name3'},
+            -- win_config = { variable = {'match1', 'match2'} },
           },
+          default_block_floats = function (win, active)
+            return win.win_config.relative ~= '' and
+              (win ~= active or win.buf_opts.buftype =='terminal') and true or false
+          end,
           -- any_rule_name1 = {
           --   buf_opts = {}
           -- },
@@ -464,18 +471,25 @@ vimade.setup{
               return 'StatusLine'
           end
         end,
+        -- Prevent ActiveTabs from highlighting.
+        'TabLineSel',
         -- Exact highlight names are supported:
         -- 'WinSeparator',
         -- Lua patterns are supported, just put the text between / symbols:
         -- '/^StatusLine.*/' -- will match any highlight starting with "StatusLine"
       },
       buf_opts = { buftype = {'prompt'} },
-      win_config = { relative = true },
       -- buf_name = {'name1','name2', name3'},
       -- buf_vars = { variable = {'match1', 'match2'} },
       -- win_opts = { option = {'match1', 'match2' } },
       -- win_vars = { variable = {'match1', 'match2'} },
+      -- win_type = {'name1','name2', name3'},
+      -- win_config = { variable = {'match1', 'match2'} },
     },
+    default_block_floats = function (win, active)
+      return win.win_config.relative ~= '' and
+        (win ~= active or win.buf_opts.buftype =='terminal') and true or false
+    end,
     -- any_rule_name1 = {
     --   buf_opts = {}
     -- },
@@ -832,12 +846,14 @@ For **lua** `defaults` are:
               return 'StatusLine'
           end
         end,
+        'TabLineSel',
       },
       buf_opts = {buftype = {'prompt'}},
-      win_config = {
-        relative = true
-      },
     },
+    default_block_floats = function (win, active)
+      return win.win_config.relative ~= '' and
+        (win ~= active or win.buf_opts.buftype =='terminal') and true or false
+    end,
   },
 
 ```
