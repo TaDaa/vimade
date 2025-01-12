@@ -6,8 +6,8 @@ def setup(**kwargs):
 def getInfo():
   return FADER.getInfo()
 
-def unhighlightAll():
-  FADER.unhighlightAll()
+def disable():
+  FADER.disable()
 
 def invalidate():
   # distinction between buffer and signs invalidation is not needed, this basically just mean

@@ -140,6 +140,8 @@ def animate():
   only_these_windows = ANIMATOR.refresh()
   tick(GLOBALS.READY, only_these_windows)
 
+def disable():
+  unhighlightAll()
 
 def unhighlightAll(windows = None):
   if windows == None:

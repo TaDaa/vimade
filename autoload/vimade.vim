@@ -398,7 +398,7 @@ function! vimade#Disable()
   "disable vimade
   let g:vimade_running = 0
   call vimade#StopTimer()
-  call g:vimade_active_renderer.unhighlightAll()
+  call g:vimade_active_renderer.disable()
 endfunction
 
 function! vimade#UnhighlightAll()
@@ -815,6 +815,7 @@ let s:empty_renderer = {
     \ 'getInfo': function('vimade#Empty'),
     \ 'recalculate': function('vimade#Empty'),
     \ 'redraw': function('vimade#Empty'),
+    \ 'disable': function('vimade#Empty'),
     \ 'unhighlightAll': function('vimade#Empty'),
     \ 'update': function('vimade#Empty'),
     \ 'softInvalidateBuffer': function('vimade#Empty'),
@@ -830,6 +831,9 @@ function! s:Recalculate_Lua()
 endfunction
 function! s:Redraw_Lua()
   lua require('vimade').redraw()
+endfunction
+function! s:Disable_Lua()
+  lua require('vimade').disable()
 endfunction
 function! s:UnhighlightAll_Lua()
   lua require('vimade').unhighlightAll()
@@ -855,6 +859,7 @@ let s:lua_renderer = {
   \ 'getInfo': function('s:GetInfo_Lua'),
   \ 'recalculate': function('s:Recalculate_Lua'),
   \ 'redraw': function('s:Redraw_Lua'),
+  \ 'disable': function('s:Disable_Lua'),
   \ 'unhighlightAll': function('s:UnhighlightAll_Lua'),
   \ 'update': function('s:Update_Lua'),
   \ 'softInvalidateBuffer': function('s:SoftInvalidateBuffer_Lua'),
@@ -872,6 +877,9 @@ endfunction
 function! s:Redraw_Python()
   exec g:vimade_py_cmd "from vimade import bridge; bridge.unhighlightAll(); bridge.recalculate()"
   call vimade#CheckWindows()
+endfunction
+function! s:Disable_Python()
+  exec g:vimade_py_cmd "from vimade import bridge; bridge.disable()"
 endfunction
 function! s:UnhighlightAll_Python()
   exec g:vimade_py_cmd "from vimade import bridge; bridge.unhighlightAll()"
@@ -894,6 +902,7 @@ let s:python_renderer = {
   \ 'getInfo': function('s:GetInfo_Python'),
   \ 'recalculate': function('s:Recalculate_Python'),
   \ 'redraw': function('s:Redraw_Python'),
+  \ 'disable': function('s:Disable_Python'),
   \ 'unhighlightAll': function('s:UnhighlightAll_Python'),
   \ 'update': function('s:Update_Python'),
   \ 'softInvalidateBuffer': function('s:SoftInvalidateBuffer_Python'),

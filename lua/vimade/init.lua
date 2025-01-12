@@ -13,8 +13,8 @@ M.getInfo = function ()
   return FADER.getInfo()
 end
 
-M.unhighlightAll = function ()
-  FADER.unhighlightAll()
+M.disable = function ()
+  FADER.disable()
 end
 
 M.redraw = function ()

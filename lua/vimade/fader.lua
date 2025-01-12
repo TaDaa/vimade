@@ -6,11 +6,9 @@ local BIT_BOR = bit.bor
 local ANIMATE = require('vimade.style.value.animate')
 local ANIMATOR = require('vimade.animator')
 local COMPAT = require('vimade.util.compat')
-local EXCLUDE = require('vimade.style.exclude')
 local FADE = require('vimade.style.fade')
 local GLOBALS = require('vimade.state.globals')
 local HIGHLIGHTER = require('vimade.highlighters.namespace')
-local INCLUDE = require('vimade.style.include')
 local NAMESPACE = require('vimade.state.namespace')
 local REAL_NAMESPACE = require('vimade.state.real_namespace')
 local TINT = require('vimade.style.tint')
@@ -36,11 +34,9 @@ local update = function ()
   if BIT_BAND(GLOBALS.tick_state, GLOBALS.DISCARD_NS) > 0 then
     NAMESPACE.discard_all()
   end
-
   if current.winid ~= -1 then
     WIN_STATE.refresh_active(current.winid)
   end
-
   for i, winid in ipairs(windows) do
     if current.winid ~= winid then
       WIN_STATE.refresh(winid)
@@ -109,6 +105,10 @@ M.tick = function (override_tick_state)
 
   events.notify('tick:after')
   vim.go.ei = last_ei
+end
+
+M.disable = function()
+  M.unhighlightAll()
 end
 
 M.unhighlightAll = function ()
