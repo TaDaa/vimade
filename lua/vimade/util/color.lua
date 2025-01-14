@@ -100,13 +100,8 @@ M.interpolateFloat = function(source, target, fade)
   source = source or 0
   target = target or 0
   fade = fade or 1
-  -- Round floats to the closest 100th (helps with deterministic bucketing).
-  -- the output used from this is for fading and color manipulation, so this level
-  -- of granularity would not even be user perceivable.
-  -- TODO we may want to tweak this in the future.
-  return MATH_FLOOR((target + (source - target) * fade) * 100 + 0.5) / 100
+  return (target + (source - target) * fade)
 end
-
 M.interpolate256 = function(source, target, fade, prefer_color)
   prefer_color = prefer_color or false
   local source = type(source) == 'table' and source or RGB_256[source+1]

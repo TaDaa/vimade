@@ -19,11 +19,12 @@ local TABLE_REMOVE = table.remove
 -- how the calculation scales infinitely based on distance. TODO we should
 -- ensure that ripple is bucketed.
 --
--- Why 55?:
---   - ~11 per default settings for Default, Minimalist, and Paradox recipes.
---   - 33 per default settings for Duo (windows->buffers, buffers->active, windows->active)
---   - Marks and focus will add another potential 11 each
-local PENDING_LIMIT = 55
+-- Why 50?:
+--   - ~14 per default settings for Default, Minimalist, and Paradox recipes.
+--   - ~Duo takes more than 50 (roughly 80, but we don't need to cache every frame
+--        -- invalidations and recaching will automatically adjust the performance)
+--   - Marks and focus will add TBD (TODO determine if 50 is sufficient, likely is)
+local PENDING_LIMIT = 50
 
 local key_lookup = {}
 local winid_lookup = {}

@@ -179,10 +179,10 @@ M.Animate = function (config)
     if type(reset) == 'function' then
       reset = reset(style, state)
     end
-    -- Deterministically round to the nearest 32ms, which would give close to 30fps. 30fps visually looks good even on high
-    -- refresh monitors and increases performance while reducing memory costs due to the very high cache rate.
+    -- Deterministically round to the nearest 16ms, this seems to just look better more
+    -- consistently. 32ms would be better for bucketing, we need to revisit this.
     -- TODO make this configurable
-    local time = MATH_FLOOR((GLOBALS.now - (MATH_MAX(win.timestamps.nc, state.change_timestamp or 0) + delay)) / 32 + 0.5) * 32
+    local time = MATH_FLOOR((GLOBALS.now - (MATH_MAX(win.timestamps.nc, state.change_timestamp or 0) + delay)) / 16) * 16
     -- TODO this logic is nc specific and should be abstracted
     if (direction == DIRECTION.OUT and style._condition == CONDITION.ACTIVE and style.win.nc == false)
       or (direction == DIRECTION.IN and style._condition == CONDITION.INACTIVE and style.win.nc == true) then
@@ -228,7 +228,10 @@ M.Animate = function (config)
       return to
     end
     local elapsed = time / duration
-    elapsed = MATH_MIN(MATH_MAX(_ease(elapsed), 0), 1)
+    -- Round elapsed time to the closest 1000th (helps with deterministic bucketing).
+    -- the output used from this is for fading and color manipulation, so this level
+    -- of granularity would not even be user perceivable.
+    elapsed = MATH_FLOOR(MATH_MIN(MATH_MAX(_ease(elapsed), 0), 1) * 1000 + 0.5) / 1000
     state.value = _interpolate(to, state.start, elapsed, style, state)
     style._animating = true
     ANIMATOR.schedule(win)
