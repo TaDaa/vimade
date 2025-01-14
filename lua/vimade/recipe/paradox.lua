@@ -71,7 +71,7 @@ end
     --  @otional start = 0.15
     --  @otional to = 0.1
     --  @otional direction = DIRECTION.IN
-    --  @otional duration = 1000
+    --  @otional duration = DEFAULT_DURATION
     --  @optional active = true (inverts the active window)
     -- }
   -- @optional condition: CONDITION = CONDITION.INACTIVE
@@ -87,7 +87,6 @@ M.Paradox = function(config)
   config.invert.start = config.invert.start or 0.15
   config.invert.to = config.invert.to or 0.1
   config.invert.direction = config.invert.direction or DIRECTION.IN
-  config.invert.duration = config.invert.duration or 1000
   config.invert.active = config.invert.active or true
   return {
     style = config.animate and animate_paradox(config) or paradox(config),

@@ -8,9 +8,10 @@ local TABLE_INSERT = table.insert
 local TABLE_REMOVE = table.remove
 
 -- we want a high enough number for good probability of collisions
--- during an animation. 200 should provide more than enough for basic
+-- during an animation. 55 should provide more than enough for basic
 -- configurations. The animation itself needs to round time to nearest
--- good value (~16ms) to ensure the cache hit-rate is high enough.
+-- good value (~32ms) to ensure the cache hit-rate is high enough. We also
+-- perform float rounding to ensure that the cache rate is reasonably high.
 ---
 -- The worst case here are long duration animations and animations that
 -- are impossible to be deterministic. The ripple recipe is a presents
@@ -18,11 +19,11 @@ local TABLE_REMOVE = table.remove
 -- how the calculation scales infinitely based on distance. TODO we should
 -- ensure that ripple is bucketed.
 --
--- Why 200?:
---   - 36 per default settings for Default, Minimalist, and Paradox recipes.
---   - 109 per default settings for Duo (36 in/out start/window, 36 in/out start/buffer, 36 in/out window/buffer)
---   - Marks and focus will add another potential 72 to the above (TODO update this accordingly when ready)
-local PENDING_LIMIT = 200
+-- Why 55?:
+--   - ~11 per default settings for Default, Minimalist, and Paradox recipes.
+--   - 33 per default settings for Duo (windows->buffers, buffers->active, windows->active)
+--   - Marks and focus will add another potential 11 each
+local PENDING_LIMIT = 55
 
 local key_lookup = {}
 local winid_lookup = {}

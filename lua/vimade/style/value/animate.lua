@@ -179,11 +179,10 @@ M.Animate = function (config)
     if type(reset) == 'function' then
       reset = reset(style, state)
     end
-    -- Deterministically round to the nearest 16ms, which would give close to 60fps. 60fps is more than
-    -- a good target value for editor animations and the imprecise rounding should not be user
-    -- perceivable, while also allowing us to fully benefit from high cache hit rates.
+    -- Deterministically round to the nearest 32ms, which would give close to 30fps. 30fps visually looks good even on high
+    -- refresh monitors and increases performance while reducing memory costs due to the very high cache rate.
     -- TODO make this configurable
-    local time = MATH_FLOOR((GLOBALS.now - (MATH_MAX(win.timestamps.nc, state.change_timestamp or 0) + delay)) / 16) * 16
+    local time = MATH_FLOOR((GLOBALS.now - (MATH_MAX(win.timestamps.nc, state.change_timestamp or 0) + delay)) / 32 + 0.5) * 32
     -- TODO this logic is nc specific and should be abstracted
     if (direction == DIRECTION.OUT and style._condition == CONDITION.ACTIVE and style.win.nc == false)
       or (direction == DIRECTION.IN and style._condition == CONDITION.INACTIVE and style.win.nc == true) then
