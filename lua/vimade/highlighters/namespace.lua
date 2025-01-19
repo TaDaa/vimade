@@ -141,7 +141,9 @@ M.set_highlights = function(win)
   NVIM_SET_HL(vimade_ns, 'vimade_control', {bg=0x123456, fg=0xFEDCBA})
 
   -- Pre-check blocked highlights by exact match.
+  local blocked = {}
   for _, name in ipairs(blocked_highlights.exact) do
+    blocked[name] = highlights[name]
     highlights[name] = nil
   end
   -- Pre-check blocked highlights by pattern. We cache the lookup each tick
@@ -158,6 +160,7 @@ M.set_highlights = function(win)
       end
     end
     for k, name in ipairs(cached) do
+      blocked[name] = highlights[name]
       highlights[name] = nil
     end
   end
@@ -166,13 +169,22 @@ M.set_highlights = function(win)
   -- in our namespace.  Ensures compatibility with highlights that are unset after calculation.
   vimade_highlights.vimade_0 = nil
   for name, highlight in pairs(vimade_highlights) do
-    if highlights[name] == nil then
+    if highlights[name] == nil and blocked[name] == nil then
       -- despite the neovim docs, using an empty {} here actually clears the highlight and does
       -- not inherit color information from the global namespace.  Instead we hack the behavior
       -- by linking the namespace to its global value.
       NVIM_SET_HL(vimade_ns, name, {link = name})
       vimade_highlights[name] = nil
     end
+  end
+
+  -- See #89 - This sets blocked highlights to the color that they should have been. This prevents
+  -- blocked highlights from linking to a color that would have been manipulated.
+  for name, hi in pairs(blocked) do
+    hi.link = nil
+    hi.name = nil
+    vimade_highlights[name] = hi
+    NVIM_SET_HL(vimade_ns, name, hi)
   end
 
   highlights.vimade_0 = nil
