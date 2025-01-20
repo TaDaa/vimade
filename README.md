@@ -27,6 +27,22 @@
 </tbody>
 </table>
 
+> [!IMPORTANT]
+> ## Announcement
+> ### New Features:
+> <sub> Neovim 0.10+ only</sub>
+>   - `:VimadeFocus`
+>       
+>     New command that provides Limelight, but with syntax highlighting!?
+>   - `:VimadeMark`
+> 
+>      New command that prevent certain areas within a window from being faded!
+>   - `ncmode='focus'` 
+>   
+>      A new config mode that instructs Vimade to only highlight when `:VimadeFocus` is active.
+>   - `paradox`
+>      
+>      A new recipe that inverts colors in the active window by a low percentage.  Makes low-contrast colorschemes more readable.  Looks beautiful when combined with `Ayu`!
 
 
 
@@ -39,9 +55,12 @@ buffers.
 
 ## What is required?
 
-**Neovim 0.8.0+**: This plugin supports a lua-only code path, you are all set!
+> [!IMPORTANT]
+> `focus` features require **Neovim 0.10.+**
 
-**Vim7.4+** and **Neovim < 0.8.0**: Python or Python3 support is required. If using these older versions of Neovim, you'll need to install `pynvim`.
+> **Neovim 0.8.0+**: This plugin supports a lua-only code path, you are all set!
+  
+> **Vim7.4+** and **Neovim < 0.8.0**: Python or Python3 support is required. If using these older versions of Neovim, you'll need to install `pynvim`.
 
 ## Features
 - [X] Fade or highlight windows or buffers.
@@ -94,8 +113,15 @@ buffers.
         -- Set animate = true to enable animations on any recipe.
         -- See the docs for other config options.
         recipe = {'default', {animate=false}},
-        ncmode = 'buffers', -- use 'windows' to fade inactive windows
+        -- ncmode = 'windows' will fade inactive windows.
+        -- ncmode = 'focus' will only fade after you activate the `:VimadeFocus` command.
+        ncmode = 'buffers',
         fadelevel = 0.4, -- any value between 0 and 1. 0 is hidden and 1 is opaque.
+        -- Changes the real or theoretical background color. basebg can be used to give
+        -- transparent terminals accurating dimming.  See the 'Preparing a transparent terminal'
+        -- section in the README.md for more info.
+        -- basebg = [23,23,23],
+        basebg = '',
         tint = {
           -- bg = {rgb={0,0,0}, intensity=0.3}, -- adds 30% black to background
           -- fg = {rgb={0,0,255}, intensity=0.3}, -- adds 30% blue to foreground
@@ -105,19 +131,13 @@ buffers.
           -- to create window-specific configurations
           -- see the `Tinting` section of the README for more details.
         },
-
-        -- Changes the real or theoretical background color. basebg can be used to give
-        -- transparent terminals accurating dimming.  See the 'Preparing a transparent terminal'
-        -- section in the README.md for more info.
-        -- basebg = [23,23,23],
-        basebg = '',
         -- prevent a window or buffer from being styled. You 
         blocklist = {
           default = {
             highlights = {
               laststatus_3 = function(win, active)
-                -- Global statusline, laststatus=3, is currently disabled as multiple windows take ownership
-                -- of the StatusLine highlight (see #85).
+                -- Global statusline, laststatus=3, is currently disabled as multiple windows take
+                -- ownership of the StatusLine highlight (see #85).
                 if vim.go.laststatus == 3 then
                     -- you can also return tables (e.g. {'StatusLine', 'StatusLineNC'})
                     return 'StatusLine'
@@ -173,6 +193,72 @@ buffers.
         -- want to disable this if you have a plugin that creates dynamic highlights in
         -- inactive windows. 99% of the time you shouldn't need to change this value.
         nohlcheck = true,
+        focus = {
+           providers = {
+              filetypes = {
+                default = {
+                  -- If you use mini.indentscope, snacks.indent, or hlchunk, you can also highlight
+                  -- using the same indent scope!
+                  -- {'snacks', {}},
+                  -- {'mini', {}},
+                  -- {'hlchunk', {}},
+                  {'treesitter', {
+                    min_node_size = 2, 
+                    min_size = 1,
+                    max_size = 0,
+                    -- exclude types either too large and/or mundane
+                    exclude = {
+                      'script_file',
+                      'stream',
+                      'document',
+                      'source_file',
+                      'translation_unit',
+                      'chunk',
+                      'module',
+                      'stylesheet',
+                      'statement_block',
+                      'block',
+                      'pair',
+                      'program',
+                      'switch_case',
+                      'catch_clause',
+                      'finally_clause',
+                      'property_signature',
+                      'dictionary',
+                      'assignment',
+                      'expression_statement',
+                      'compound_statement',
+                    }
+                  }},
+                  -- if treesitter fails or there isn't a good match, fallback to blanks
+                  -- (similar to limelight)
+                  {'blanks', {
+                    min_size = 1,
+                    max_size = '35%'
+                  }},
+                  -- if blanks fails to find a good match, fallback to static 35%
+                  {'static', {
+                    size = '35%'
+                  }},
+                },
+                -- You can make custom configurations for any filetype.  Here are some examples.
+                -- markdown ={{'blanks', {min_size=0, max_size='50%'}}, {'static', {max_size='50%'}}}
+                -- javascript = {
+                  -- -- only use treesitter (no fallbacks)
+                --   {'treesitter', { min_node_size = 2, include = {'if_statement', ...}}},
+                -- },
+                -- typescript = {
+                --   {'treesitter', { min_node_size = 2, exclude = {'if_statement'}}}, 
+                --   {'static', {size = '35%'}}
+                -- },
+                -- java = {
+                  -- -- mini with a fallback to blanks
+                  -- {'mini', {min_size = 1, max_size = 20}},
+                  -- {'blanks', {min_size = 1, max_size = '100%' }}, 
+                -- },
+              },
+            }
+          },
       }
     }}
   ```
@@ -442,7 +528,9 @@ vimade.setup{
   -- Set animate = true to enable animations on any recipe.
   -- See the docs for other config options.
   recipe = {'default', {animate=false}},
-  ncmode = 'buffers', -- use 'windows' to fade inactive windows
+  -- ncmode = 'windows' will fade inactive windows.
+  -- ncmode = 'focus' will only fade after you activate the `:VimadeFocus` command.
+  ncmode = 'buffers',
   fadelevel = 0.4, -- any value between 0 and 1. 0 is hidden and 1 is opaque.
   tint = {
     -- bg = {rgb={0,0,0}, intensity=0.3}, -- adds 30% black to background
@@ -613,7 +701,7 @@ vimade.setup(
 | option | values/type | default | description |
 | -      | -           | -       | -           |
 | `renderer` | `'auto'` `'python'` `'lua'` <br> | `'auto'` | `auto` automatically assigns **vim** users to **python** and detects if **neovim**  users have the requires features for **lua**.  For **neovim** users on **lua** mode, the **python** logic is never run. **Neovim** users with missing features will be set to **python** and need **pynvim** installed.
-| `ncmode` | `'windows'` `'buffers'` | `'buffers'` | highlight or unhighlight `buffers` or `windows` together
+| `ncmode` | `'windows'` `'buffers'` `'focus'` | `'buffers'` | highlight or unhighlight `buffers` or `windows` together.  `focus` only highlights when `:VimadeFocus` is activated (`focus` currently neovim only).
 | `fadelevel` | `float [0-1]` `function(style,state)=>float` | `0.4` | The amount of fade opacity that should be applied to fg-text (`0` is invisible and `1` is no fading)
 | `tint` | <sub>When set via **lua** or **python**, each object or number can also be a function that returns the corresponding value component</sub><br><br><sub>`{'fg':{'rgb':[255,255,255], 'intensity':1, 'bg':{'rgb':[0,0,0], 'intensity':1}, 'sp':{'fg':[0,0,255], 'intensity':0.5}}}`</sub> | `nil` | The amount of tint that can be applied against each highlight component (fg, bg, sp). Intensity is a float value [0-1], where 1 is the most intense and 0 is not tinted.  See the tinting tutorial for more details.
 | `basebg` | <sub> `'#FFFFFF'` `[255,255,255]` `0xFFFFFF` </sub> | `nil` | This value manipulates the target background color. This is most useful for transparent windows, where the *Normal* bg is *NONE*.  Set this value to a good target value to improve fading accuracy.
@@ -1473,6 +1561,8 @@ vimade.setup(recipe = ['ripple', {'animate': True}])
 | `VimadeToggle` |  Toggle between enabled/disabled states.
 | `VimadeRedraw` |  Force vimade to recalculate and redraw every highlight.
 | `VimadeInfo` |  Provides debug information for Vimade.  Please include this info in bug reports.
+| `VimadeFocus` |  Neovim-only. Highlights around the cursor using your configured providers. This command has subcommands viewable via autocomplete. This is a toggle command.
+| `VimadeMark` |  Neovim-only. Mark an area that should not be highlighted in inactive windows. This command has subcommands viewable via autocomplete. This is a toggle command, selecting a range and using it marks the area.  If a mark is found within the range, it is removed.
 | `VimadeWinDisable` | Disables fading for the current window.
 | `VimadeWinEnable` | Enables fading for the current window.
 | `VimadeBufDisable` | Disables fading for the current buffer.
@@ -1536,6 +1626,12 @@ If you find a feature gap, please file an issue or contribute!
 | Compatible with other namespaces              | Yes    | Yes   |              |            |
 | Supports **Vim** + All versions of **Neovim** | Yes    |       |              |            |
 
+#### Related plugins to `:VimadeFocus` and `:VimadeMark`:
+
+- [limelight](https://github.com/junegunn/limelight.vim)
+- [snacks.nvim](https://github.com/folke/snacks.nvim/blob/main/docs/dim.md)
+- [twilight.nvim](https://github.com/folke/twilight.nvim)
+- [focushere.nvim](https://github.com/kelvinauta/focushere.nvim)
 
 ## Contributing
 
