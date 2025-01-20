@@ -1,5 +1,6 @@
 local M = {}
 
+local MATH_CEIL = math.ceil
 local DEEP_COMPARE
 local DEEP_COPY
 local SHALLOW_EXTEND
@@ -19,6 +20,15 @@ M.num_to_bool = function (maybe_num, default)
   else
     return true
   end
+end
+
+M.str_to_pct = function(pct)
+  if type(pct) == 'string' then
+    if pct:sub(-1) == '%' then
+      return pct:sub(1,-2) / 100
+    end
+  end
+  return nil
 end
 
 M.shallow_compare = function (left, right)
@@ -111,6 +121,16 @@ M.deep_extend = function (base, ...)
     SHALLOW_EXTEND(base, target)
   end
   return base
+end
+
+M.style_concat = function (...)
+  local result = {}
+  for _, target in ipairs({...}) do
+    for __, value in ipairs(target) do
+      table.insert(result, value)
+    end
+  end
+  return result
 end
 
 M.resolve_all_fn = function (obj, ...)

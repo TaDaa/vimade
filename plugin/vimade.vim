@@ -85,6 +85,11 @@ command! VimadeOverrideEndOfBuffer call vimade#OverrideEndOfBuffer()
 "highlights that are distracting in faded windows.
 command! VimadeOverrideAll call vimade#OverrideAll()
 
+"" EXPERIMENTAL - Loads the current lua-only commands for Neovim (VimadeFocus & VimadeMark)
+if has('nvim')
+  lua require('vimade.focus.commands')
+endif
+
 let g:vimade_plugin_current_directory = resolve(expand('<sfile>:p:h').'/../lib')
 
 if (!exists('g:vimade.lazy') || !g:vimade.lazy) && !exists('g::vimade_loaded')

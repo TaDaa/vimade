@@ -137,7 +137,7 @@ M.Animate = function (config)
   local _compare = config.compare or nil
   return function(style, state)
     local id
-    local win = style.win
+    local win = style.win.area_owner or style.win
     if _custom_id then
       state = state.custom
       if type(_custom_id) == 'function' then
@@ -184,25 +184,26 @@ M.Animate = function (config)
     -- TODO make this configurable
     local time = MATH_FLOOR((GLOBALS.now - (MATH_MAX(win.timestamps.nc, state.change_timestamp or 0) + delay)) / 16) * 16
     -- TODO this logic is nc specific and should be abstracted
-    if (direction == DIRECTION.OUT and style._condition == CONDITION.ACTIVE and style.win.nc == false)
-      or (direction == DIRECTION.IN and style._condition == CONDITION.INACTIVE and style.win.nc == true) then
+    if (direction == DIRECTION.OUT and style._condition == CONDITION.ACTIVE and win.nc == false)
+      or (direction == DIRECTION.IN and (style._condition == CONDITION.INACTIVE or style._condition == CONDITION.INACTIVE_OR_FOCUS) and win.nc == true) then
        state.value = to
        state.start = to
+       -- TODO when setting animating it should apply to the style and all parents
        style._animating = false
        return to
-    elseif (direction == DIRECTION.OUT and style._condition == CONDITION.ACTIVE and style.win.nc == true)
-      or (direction == DIRECTION.IN and style._condition == CONDITION.INACTIVE and style.win.nc == false) then
+    elseif (direction == DIRECTION.OUT and style._condition == CONDITION.ACTIVE and win.nc == true)
+      or (direction == DIRECTION.IN and (style._condition == CONDITION.INACTIVE or style._condition == CONDITION.INACTIVE_OR_FOCUS) and win.nc == false) then
         local swp = start
         start = to
         to = swp
-    elseif (direction == DIRECTION.OUT and style._condition == CONDITION.INACTIVE and style.win.nc == false)
-      or (direction == DIRECTION.IN and style._condition == CONDITION.ACTIVE and style.win.nc == true) then
+    elseif (direction == DIRECTION.OUT and (style._condition == CONDITION.INACTIVE or style._condition == CONDITION.INACTIVE_OR_FOCUS) and win.nc == false)
+      or (direction == DIRECTION.IN and style._condition == CONDITION.ACTIVE and win.nc == true) then
       state.value = start
       state.start = start
       style._animating = false
       return start
-    elseif (direction == DIRECTION.OUT and style._condition == CONDITION.INACTIVE and style.win.nc == true)
-      or (direction == DIRECTION.IN and style._condition == CONDITION.ACTIVE and style.win.nc == false) then
+    elseif (direction == DIRECTION.OUT and style._condition == CONDITION.INACTIVE and win.nc == true)
+      or (direction == DIRECTION.IN and style._condition == CONDITION.ACTIVE and win.nc == false) then
       -- pass
     end
 
@@ -218,10 +219,11 @@ M.Animate = function (config)
         state.start = state.value
       end
       style._animating = true
-      ANIMATOR.schedule(win)
+      ANIMATOR.schedule(style)
       return state.start
     end
     state.to = to
+    state.start = start
     if time >= duration then
       state.value = to
       style._animating = false
@@ -234,7 +236,7 @@ M.Animate = function (config)
     elapsed = MATH_FLOOR(MATH_MIN(MATH_MAX(_ease(elapsed), 0), 1) * 1000 + 0.5) / 1000
     state.value = _interpolate(to, state.start, elapsed, style, state)
     style._animating = true
-    ANIMATOR.schedule(win)
+    ANIMATOR.schedule(style)
     return state.value
   end
 end

@@ -1,4 +1,3 @@
-
 local M = {}
 
 local bit = require('bit')
@@ -12,6 +11,7 @@ local BLOCKLIST = require('vimade.config_helpers.blocklist')
 local COLOR_UTIL = require('vimade.util.color')
 local COMPAT = require('vimade.util.compat')
 local TYPE = require('vimade.util.type')
+local FOCUS = require('vimade.focus')
 
 local HIGHLIGHTERS = {
   require('vimade.highlighters.terminal'),
@@ -67,6 +67,7 @@ end
 
 M.__create = function (winid)
   if M.cache[winid] == nil then
+    local area = FOCUS.get(winid)
     local win = {
       winid = winid,
       bufnr = nil,
@@ -80,6 +81,10 @@ M.__create = function (winid)
       hi_key = '',
       is_active_win = nil,
       is_active_buf = nil,
+      area_owner = nil,
+      area = area,
+      is_focus = area and area.is_focus, -- should never change
+      is_mark = area and area.is_mark, -- should never change
       style_state = {
         animations = {},
         custom = {}
@@ -133,28 +138,43 @@ M.refresh = function (winid, is_active)
   local is_active_win = win.winid == GLOBALS.current.winid
   local is_active_buf = win.bufnr == GLOBALS.current.bufnr
 
-  if is_active_win ~= win.is_active_win then
-    win.is_active_win = is_active_win
-    win.timestamps.active_win = GLOBALS.now
-  end
-  if is_active_buf ~= win.is_active_buf then
-    win.is_active_buf = is_active_buf
-    win.timestamps.active_win = GLOBALS.now
+  -- area timestamps and 'active' status is inherited from the owner window
+  -- it does not need to be set or relied on.
+  if not win.area then
+    if is_active_win ~= win.is_active_win then
+      win.is_active_win = is_active_win
+      win.timestamps.active_win = GLOBALS.now
+    end
+    if is_active_buf ~= win.is_active_buf then
+      win.is_active_buf = is_active_buf
+      win.timestamps.active_win = GLOBALS.now
+    end
+  else
+    local area_owner = M.get(win.area.source.winid)
+    if area_owner then
+      win.area_owner = area_owner
+    end
+    if  win.area.hide then
+      return
+    end
   end
 
   local can_nc = not (vim.b[win.bufnr].vimade_disabled == 1
     or vim.w[win.winid].vimade_disabled == 1)
 
   local blocked = false
-  for key, value in pairs(GLOBALS.blocklist) do
-    if type(value) == 'table' then
-      blocked = BLOCKLIST.DEFAULT(win, M.current, value)
-    elseif type(value) == 'function' then
-      blocked = value(win, M.current)
-    end
-    if blocked == true then
-      can_nc = false
-      break
+  -- areas should skip the blocklist in all scenarios
+  if not win.area then
+    for key, value in pairs(GLOBALS.blocklist) do
+      if type(value) == 'table' then
+        blocked = BLOCKLIST.DEFAULT(win, M.current, value)
+      elseif type(value) == 'function' then
+        blocked = value(win, M.current)
+      end
+      if blocked == true then
+        can_nc = false
+        break
+      end
     end
   end
 

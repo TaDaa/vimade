@@ -4,8 +4,7 @@ local bit = require('bit')
 local BIT_BAND = bit.band
 local BIT_BOR = bit.bor
 
-local DIRECTION = require('vimade.style.value.direction')
-local EXCLUDE = require('vimade.style.exclude')
+local FOCUS = require('vimade.focus')
 local TYPE = require('vimade.util.type')
 local REAL_NAMESPACE = require('vimade.state.real_namespace')
 local DEFAULT_RECIPE = require('vimade.recipe.default')
@@ -37,6 +36,7 @@ M.tick_state = M.READY
 M.now = vim.loop.now()
 M.global_ns = nil-- used to cache namespace 0 at the global level
 M.vimade_fade_active = false
+M.vimade_focus_active = false
 M.basebg = nil
 M.normalid = 0
 M.normalncid = 0
@@ -67,6 +67,7 @@ local CURRENT = {
 }
 local OTHER = {
   vimade_fade_active = false,
+  vimade_focus_active = false,
   is_dark = false,
 }
 local DEFAULTS = TYPE.extend(DEFAULT_RECIPE.Default(), {
@@ -267,8 +268,10 @@ M.refresh = function (override_tick_state)
   }, M, OTHER, BIT_BOR(M.RECALCULATE, M.DISCARD_NS, M.CHANGED)))
   M.tick_state = BIT_BOR(M.tick_state, check_fields({
     'vimade_fade_active',
+    'vimade_focus_active',
   }, {
     vimade_fade_active = vim.g.vimade_fade_active == 1,
+    vimade_focus_active = FOCUS.global_focus_enabled(),
   }, M, OTHER, M.CHANGED))
   M.tick_state = BIT_BOR(M.tick_state, check_fields({
     'ncmode',
@@ -293,9 +296,9 @@ M.refresh = function (override_tick_state)
   M.style = vimade.style or DEFAULTS.style
 
   -- already checked --
-  M.nc_windows = M.ncmode == 'windows'
+  M.nc_windows = M.ncmode == 'windows' or (M.ncmode == 'focus' and M.vimade_focus_active)
   M.nc_buffers = M.ncmode == 'buffers'
-  -- if you don't choose one of the above, everything is highlighted. This is intentional! New mode is coming!!!
+  -- if you don't choose one of the above, everything is highlighted
 
   if not M.global_ns or not M.nohlcheck
     or BIT_BAND(M.CHANGED, M.tick_state) > 0 then

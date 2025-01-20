@@ -4,65 +4,123 @@ local ANIMATE = require('vimade.style.value.animate')
 local CONDITION = require('vimade.style.value.condition')
 local DIRECTION = require('vimade.style.value.direction')
 local FADE = require('vimade.style.fade')
+local GLOBALS = require('vimade.state.globals')
 local INVERT = require('vimade.style.invert')
 local TINT = require('vimade.style.tint')
 local TYPE = require('vimade.util.type')
+local Component = require('vimade.style.component').Component
+local Link = require('vimade.style.link').Link
+local Invert = INVERT.Invert
+local Fade = FADE.Fade
+local Tint = TINT.Tint
 
-local animate_paradox = function (config)
-  local animation = {
+local default_fade = FADE.Default().value()
+local default_tint = TINT.Default().value()
+
+local paradox = function (config)
+  local invert_condition = function(style)
+    if config.invert.active and (not style.win.terminal and not (style.win.area_owner or style.win).nc) then
+      return true
+    elseif not config.invert.active and (style.win.area_owner or style.win).nc then
+      return true
+    end
+    return false
+  end
+
+  local animation = config.animate and {
     duration = config.duration,
     delay = config.delay,
     ease = config.ease,
     direction = config.direction,
-  }
+  } or nil
   return {
-    TINT.Tint({
-      condition = config.condition,
-      value = ANIMATE.Tint(TYPE.extend({}, animation, {
-        to = TINT.Default().value(),
-      }))
+    Component('Mark', {
+      condition = CONDITION.IS_MARK,
+      style = {
+        Link({
+          condition = CONDITION.ALL,
+          value = {{from='NormalFloat', to='Normal'}, {from='NormalNC', to='Normal'}}
+        }),
+        Tint({
+          condition = CONDITION.INACTIVE,
+          value = animation and ANIMATE.Tint(TYPE.extend({}, animation, {
+            to = default_tint,
+          })) or default_tint
+        }),
+        Invert({
+          condition = config.invert.active and CONDITION.ACTIVE or CONDITION.INACTIVE,
+          value = config.invert.to
+        }),
+        Invert({
+          condition = CONDITION.ALL,
+          value = 0.02,
+        }),
+      }
     }),
-    FADE.Fade({
-      condition = config.condition,
-      value = ANIMATE.Number(TYPE.extend({}, animation, {
-        to = FADE.Default().value(),
-        start = 1,
-      }))
+    Component('Focus', {
+      condition = CONDITION.IS_FOCUS,
+      style = {
+        Link({
+          condition = CONDITION.ALL,
+          value = {{from='NormalFloat', to='Normal'}, {from='NormalNC', to='Normal'}}
+        }),
+        Tint({
+          condition = CONDITION.INACTIVE,
+          value = animation and ANIMATE.Tint(TYPE.extend({}, animation, {
+            to = default_tint,
+          })) or default_tint
+        }),
+        Fade({
+          condition = CONDITION.INACTIVE,
+          value = animation and ANIMATE.Number(TYPE.extend({}, animation, {
+            to = default_fade,
+            start = 1,
+          })) or default_fade
+        }),
+        Invert({
+          condition = invert_condition,
+          value = animation and ANIMATE.Invert(TYPE.extend({}, animation, {
+            to = config.invert.focus_to,
+            start = config.invert.start,
+            duration = config.invert.duration,
+            direction = config.invert.direction,
+          })) or config.invert.focus_to
+        })
+      }
     }),
-    INVERT.Invert({
-      condition = function(style)
-        if config.invert.active and (not style.win.terminal and not style.win.nc) then
-          return true
-        elseif not config.invert.active and style.win.nc then
-          return true
-        end
-        return false
-      end,
-      value = ANIMATE.Invert(TYPE.extend({}, animation, {
-        to = config.invert.to,
-        start = config.invert.start,
-        duration = config.invert.duration,
-        direction = config.invert.direction,
-      }))
-    }),
-  }
-end
-
-local paradox = function(config)
-  return {
-    TINT.Default(config),
-    FADE.Default(config),
-    INVERT.Invert({
-      condition = function(style)
-        if config.invert.active and (not style.win.terminal or not style.win.nc) then
-          return true
-        elseif not config.invert.active and style.win.nc then
-          return true
-        end
-        return false
-      end,
-      value = config.invert.to,
-    }),
+    Component('Pane', {
+      condition = CONDITION.IS_PANE,
+      style = {
+        Tint({
+          condition = CONDITION.INACTIVE,
+          value = animation and ANIMATE.Tint(TYPE.extend({}, animation, {
+            to = default_tint,
+          })) or default_tint
+        }),
+        Fade({
+          condition = CONDITION.INACTIVE_OR_FOCUS,
+          value = animation and ANIMATE.Number(TYPE.extend({}, animation, {
+            to = FADE.Default().value(),
+            start = function (style, state)
+              if GLOBALS.vimade_focus_active then
+                return default_fade(style, state)
+              else
+                return 1
+              end
+            end,
+          })) or default_fade
+        }),
+        Invert({
+          condition = invert_condition,
+          value = animation and ANIMATE.Invert(TYPE.extend({}, animation, {
+            to = config.invert.to,
+            start = config.invert.start,
+            duration = config.invert.duration,
+            direction = config.invert.direction,
+          })) or config.invert.to
+        }),
+      }
+    })
   }
 end
 
@@ -85,11 +143,12 @@ M.Paradox = function(config)
   config = TYPE.shallow_copy(config)
   config.invert = config.invert or {}
   config.invert.start = config.invert.start or 0.15
-  config.invert.to = config.invert.to or 0.1
-  config.invert.direction = config.invert.direction or DIRECTION.IN
-  config.invert.active = config.invert.active or true
+  config.invert.to = config.invert.to or 0.08
+  config.invert.focus_to = config.invert.focus_to or 0.08
+  config.invert.active = config.invert.active == nil and true or config.invert.active
+  config.invert.direction = config.invert.direction and config.invert.direction or (config.invert.active and DIRECTION.IN or DIRECTION.OUT)
   return {
-    style = config.animate and animate_paradox(config) or paradox(config),
+    style = paradox(config),
     ncmode = 'windows',
   }
 end
