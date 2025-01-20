@@ -58,10 +58,8 @@ local update = function ()
 
   -- Now check the areas.
   for winid, _ in pairs(areas) do
-    if vim.api.nvim_win_is_valid(winid) then
-      WIN_STATE.refresh(winid)
-      TABLE_INSERT(windows, winid)
-    end
+    WIN_STATE.refresh(winid)
+    TABLE_INSERT(windows, winid)
   end
 
   -- Neovim will sometimes corrupt namespaces. This happens frequently in 0.8.0 and much less

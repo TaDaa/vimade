@@ -118,6 +118,9 @@ M.refresh_active = function (winid)
 end
 
 M.refresh = function (winid, is_active)
+  if not vim.api.nvim_win_is_valid(winid) then
+    return
+  end
   local win = M.__create(winid)
   if is_active then
     M.current = win
