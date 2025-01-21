@@ -64,6 +64,8 @@ buffers.
 
 ## Features
 - [X] Fade or highlight windows or buffers.
+- [X] Fade colors around the cursor (limelight w/ syntax highlighting - Neovim 0.10+)
+- [X] Mark areas that won't fade (Neovim 0.10+)
 - [X] Link windows so they change together (e.g. diffsplit)
 - [X] Blocklist specific windows or buffers from customization.
 - [X] Set Custom tints for a unique visual experience.
