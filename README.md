@@ -50,7 +50,7 @@
 
 **Vimade** helps you maintain focus on the active part of the screen, especially when working with many
 open windows. It let's you dim, fade, tint, animate, and customize colors in your windows and
-buffers.
+buffers.  You can also fade around the active scope and mark areas that won't be faded.
 
 
 ## What is required?
