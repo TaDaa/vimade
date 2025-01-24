@@ -140,8 +140,16 @@ local DEFAULTS = TYPE.extend(DEFAULT_RECIPE.Default(), {
         end,
         -- Prevent ActiveTabs from highlighting.
         'TabLineSel',
-        -- Exact highlight names are supported:
-        -- 'WinSeparator',
+        -- Pmenu should only affect menus like the cmdline autocomplete, which are linked to the active window.
+        -- When using Focus mode, these need to be disabled.
+        'Pmenu',
+        'PmenuSel',
+        'PmenuKind',
+        'PmenuKindSel',
+        'PmenuExtra',
+        'PmenuExtraSel',
+        'PmenuSbar',
+        'PmenuThumb',
         -- Lua patterns are supported, just put the text between / symbols:
         -- '/^StatusLine.*/' -- will match any highlight starting with "StatusLine"
       },

@@ -4,7 +4,9 @@ M.global_focus_enabled = false
 
 local ANIMATOR = require('vimade.animator')
 local DEFAULTS = require('vimade.focus.defaults')
+local WIN_STATE
 local GLOBALS
+local FADER
 
 local MATH_MAX = math.max
 local MATH_MIN = math.min
@@ -87,7 +89,9 @@ local close_area = function(area)
 end
 
 M.__init = function(args)
+  FADER = args.FADER
   GLOBALS = args.GLOBALS
+  WIN_STATE = args.WIN_STATE
   ANIMATOR.on('animator:after', function()
     -- deactivate any animating focus floats
     for _, area in pairs(AREAS_SELF_LOOKUP) do
@@ -100,7 +104,7 @@ end
 
 
 local update_tab_events = function()
-  local is_active_in_tab = has_areas_active_in_tab()
+  local is_active_in_tab = has_areas_active_in_tab() or M.global_focus_enabled
   if vim.fn.exists('VimadeFocusTab') == 1 or not is_active_in_tab then
     if not is_active_in_tab then
       pcall(vim.api.nvim_del_augroup_by_name, 'VimadeFocusTab')
@@ -117,9 +121,7 @@ local update_tab_events = function()
     end
     existing_timer = vim.defer_fn(function()
       existing_timer = nil
-      M.update({
-        prevent_events = true
-      })
+      FADER.tick()
     end, time_ms)
   end
 
@@ -130,9 +132,7 @@ local update_tab_events = function()
   vim.api.nvim_create_autocmd({'CursorMoved', 'CursorMovedI', 'TextChanged', 'TextChangedT'}, {
     group = group,
     callback = function()
-      M.update({
-        prevent_events = true
-      })
+      defer_update()
     end
   })
   -- IncSearch also needs to trigger
@@ -285,13 +285,18 @@ M.update_area = function(config, cache)
       cache.globals.mode = vim.fn.mode():sub(1,1):lower()
     end
 
+    local win_state = WIN_STATE.get(winid)
     if not win_cached then
       win_cached = {}
       cache[winid] = win_cached
       win_cached.info = vim.fn.getwininfo(winid)[1]
       win_cached.filetype = vim.bo[area.source.bufnr]['ft']
       win_cached.cursor = vim.api.nvim_win_get_cursor(winid)
-      win_cached.config = vim.api.nvim_win_get_config(winid)
+      win_cached.config = (win_state and win_state.win_config) or vim.api.nvim_win_get_config(winid)
+    end
+    if not win_state or win_state.blocked then
+      close_area(area)
+      return
     end
 
     local info = win_cached.info
@@ -729,9 +734,7 @@ vim.api.nvim_create_autocmd({'TabEnter'}, {
   callback = function ()
     vim.defer_fn(
     function()
-      M.update({
-        prevent_events = true
-      })
+      FADER.tick()
       update_tab_events()
     end, 0)
   end

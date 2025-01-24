@@ -29,7 +29,8 @@ M.IS_MARK = function (style, state)
   return style.win.is_mark and true or false
 end
 M.IS_FOCUS = function (style, state)
-  return style.win.is_focus and true or false
+  -- prevent terminal focus highlighting (loses colors)
+  return (style.win.is_focus and not style.win.terminal) and true or false
 end
 M.IS_AREA = function(style, state)
   return style.win.area and true or false

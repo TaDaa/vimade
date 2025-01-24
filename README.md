@@ -147,8 +147,14 @@ buffers.  You can also fade around the active scope and mark areas that won't be
               end,
               -- Prevent ActiveTabs from highlighting.
               'TabLineSel',
-              -- Exact highlight names are supported:
-              -- 'WinSeparator',
+              'Pmenu',
+              'PmenuSel',
+              'PmenuKind',
+              'PmenuKindSel',
+              'PmenuExtra',
+              'PmenuExtraSel',
+              'PmenuSbar',
+              'PmenuThumb',
               -- Lua patterns are supported, just put the text between / symbols:
               -- '/^StatusLine.*/' -- will match any highlight starting with "StatusLine"
             },
@@ -563,8 +569,14 @@ vimade.setup{
         end,
         -- Prevent ActiveTabs from highlighting.
         'TabLineSel',
-        -- Exact highlight names are supported:
-        -- 'WinSeparator',
+        'Pmenu',
+        'PmenuSel',
+        'PmenuKind',
+        'PmenuKindSel',
+        'PmenuExtra',
+        'PmenuExtraSel',
+        'PmenuSbar',
+        'PmenuThumb',
         -- Lua patterns are supported, just put the text between / symbols:
         -- '/^StatusLine.*/' -- will match any highlight starting with "StatusLine"
       },
@@ -937,6 +949,14 @@ For **lua** `defaults` are:
           end
         end,
         'TabLineSel',
+        'Pmenu',
+        'PmenuSel',
+        'PmenuKind',
+        'PmenuKindSel',
+        'PmenuExtra',
+        'PmenuExtraSel',
+        'PmenuSbar',
+        'PmenuThumb',
       },
       buf_opts = {buftype = {'prompt'}},
     },
