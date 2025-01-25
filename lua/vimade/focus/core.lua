@@ -132,7 +132,7 @@ local update_tab_events = function()
   vim.api.nvim_create_autocmd({'CursorMoved', 'CursorMovedI', 'TextChanged', 'TextChangedT'}, {
     group = group,
     callback = function()
-      defer_update()
+      FADER.tick()
     end
   })
   -- IncSearch also needs to trigger
