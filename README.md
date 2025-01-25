@@ -27,24 +27,6 @@
 </tbody>
 </table>
 
-> [!IMPORTANT]
-> ## Announcement
-> ### New Features:
-> <sub> Neovim 0.10+ only</sub>
->   - `:VimadeFocus`
->       
->     New command that provides Limelight, but with syntax highlighting!?
->   - `:VimadeMark`
-> 
->      New command that prevent certain areas within a window from being faded!
->   - `ncmode='focus'` 
->   
->      A new config mode that instructs Vimade to only highlight when `:VimadeFocus` is active.
->   - `paradox`
->      
->      A new recipe that inverts colors in the active window by a low percentage.  Makes low-contrast colorschemes more readable.  Looks beautiful when combined with `Ayu`!
-
-
 
 ## What is this?
 
@@ -63,6 +45,23 @@ buffers.  You can also fade around the active scope and mark areas that won't be
 > **Vim7.4+** and **Neovim < 0.8.0**: Python or Python3 support is required. If using these older versions of Neovim, you'll need to install `pynvim`.
 
 ## Features
+
+> [!IMPORTANT]
+> #### New Features:
+> <sub> Neovim 0.10+ only</sub>
+>   - `:VimadeFocus`
+>       
+>     New command that provides Limelight, but with syntax highlighting!?
+>   - `:VimadeMark`
+> 
+>      New command that prevent certain areas within a window from being faded!
+>   - `ncmode='focus'` 
+>   
+>      A new config mode that instructs Vimade to only highlight when `:VimadeFocus` is active.
+>   - `paradox`
+>      
+>      A new recipe that inverts colors in the active window by a low percentage.  Makes low-contrast colorschemes more readable.  Looks beautiful when combined with `Ayu`!
+
 - [X] Fade or highlight windows or buffers.
 - [X] Fade colors around the cursor (limelight w/ syntax highlighting - Neovim 0.10+)
 - [X] Mark areas that won't fade (Neovim 0.10+)
