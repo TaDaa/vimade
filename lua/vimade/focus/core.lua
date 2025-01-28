@@ -26,6 +26,7 @@ local get_filtered_opt_keys = function(winid)
   local opts = vim.fn.getwinvar(winnr, '&')
   opts.scroll = nil
   opts.scrollbind = nil
+  opts.winbar = nil
   OPT_KEYS = vim.tbl_keys(opts)
   return OPT_KEYS
 end
@@ -211,7 +212,9 @@ local get_area = function(config)
   if not area.winid or not vim.api.nvim_win_is_valid(area.winid) then
     area.winid = vim.api.nvim_open_win(bufnr, false, {
       relative = 'editor',
-      height = 1,
+      -- set to height 2 due to plugins that set winbar to all windows
+      -- if the height isn't large enough this automatically throws E36 Not enough room
+      height = 2,
       width = 1,
       hide = true,
       row = 0,
@@ -293,6 +296,7 @@ M.update_area = function(config, cache)
       win_cached.filetype = vim.bo[area.source.bufnr]['ft']
       win_cached.cursor = vim.api.nvim_win_get_cursor(winid)
       win_cached.config = (win_state and win_state.win_config) or vim.api.nvim_win_get_config(winid)
+      win_cached.winbar = vim.wo[winid].winbar
     end
     if not win_state or win_state.blocked then
       close_area(area)
@@ -305,7 +309,8 @@ M.update_area = function(config, cache)
     local rows = cache.globals.lines
     local cmdheight = cache.globals.cmdheight
     local wincol = info.wincol
-    local winrow = info.winrow
+    -- when winbar is enabled, we need to push the winrow down
+    local winrow = info.winrow + ((win_cached.winbar and win_cached.winbar ~= '') and 1 or 0)
     local width = info.width
     local topline = info.topline
     local botline = info.botline
@@ -467,6 +472,10 @@ M.update_area = function(config, cache)
     local opt_keys = get_filtered_opt_keys(winid)
     local area_opts = vim.wo[area.winid]
     local source_opts = vim.wo[winid]
+    -- explicity unset winbar as some plugins try to stick it every window
+    -- including floating windows.
+    -- TODO(maybe it would be cool to have something here esp for marks...)
+    area_opts.winbar = nil
     for _, key in ipairs(opt_keys) do
       local source_value = source_opts[key]
       if source_value ~= area_opts[key] then
