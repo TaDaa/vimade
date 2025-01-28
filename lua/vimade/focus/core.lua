@@ -85,8 +85,10 @@ local close_area = function(area)
   end
 
   AREAS_SELF_LOOKUP[area.winid] = nil
-  AREAS[area.id] = nil
-  area.id = nil
+  if area.id then
+    AREAS[area.id] = nil
+    area.id = nil
+  end
 end
 
 M.__init = function(args)
