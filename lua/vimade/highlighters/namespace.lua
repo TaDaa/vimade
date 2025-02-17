@@ -199,7 +199,14 @@ M.set_highlights = function(win)
     ctermbg = normal_target.ctermbg,
     normal_bg = normal_target.normal_bg,
   }
+
   nt_copy.name = normal_target.name
+  -- See #92. Highlights that link to blocked highlights likely should not be blocked.
+  for name, hi in pairs(highlights) do
+    if blocked[hi.link] then
+      hi.link = nil
+    end
+  end
   for _, s in ipairs(style) do
     s.modify(highlights, nt_copy)
   end
@@ -209,7 +216,6 @@ M.set_highlights = function(win)
     -- resuse the existing copy here for performance reasons and manually reassign
     -- all fields
     hi.name = nil
-
     NVIM_SET_HL(vimade_ns, name, hi)
     vimade_highlights[name] = hi
   end
