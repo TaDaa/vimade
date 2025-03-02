@@ -94,6 +94,7 @@ M.__create = function (winid)
         active_buf = 0,
         nc = 0,
       },
+      winhl = nil,
       real_ns = nil,
       ns = nil,
       state = GLOBALS.READY,
@@ -216,13 +217,17 @@ M.refresh = function (winid, is_active)
   -- check namespaces
   -- TODO this should actually occur before blocked
   local active_ns = COMPAT.nvim_get_hl_ns({winid = win.winid})
+  local winhl
   local real_ns
   if NAMESPACE.is_vimade_ns(active_ns) == true then
     real_ns = win.real_ns
+    winhl = win.winhl
   else
-    real_ns = active_ns == -1 and 0 or active_ns
+    winhl = vim.wo[win.winid].winhl
+    real_ns = winhl and 0 or (active_ns == -1 and 0 or active_ns)
   end
-  win.real_ns =  real_ns
+  win.real_ns = real_ns
+  win.winhl = winhl
   vim.w[win.winid]._vimade_real_ns = real_ns
 
   if (should_nc and not win.nc) or (not should_nc and win.nc) then
@@ -269,7 +274,7 @@ M.refresh = function (winid, is_active)
     end
   end
 
-  local hi_key = win.real_ns .. ':' 
+  local hi_key = (winhl or win.real_ns) .. ':' 
   hi_key = hi_key .. ':' .. basebg_key
 
   -- this is to separate out the logic for inactive vs active.  we can use this for highlighting

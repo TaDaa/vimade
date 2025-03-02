@@ -202,6 +202,10 @@ M.set_highlights = function(win)
 
   nt_copy.name = normal_target.name
   -- See #92. Highlights that link to blocked highlights likely should not be blocked.
+  -- Additionally, highlights that link directly to Normal and NormalNC
+  -- must be unlinked.
+  blocked.Normal = true
+  blocked.NormalNC = true
   for name, hi in pairs(highlights) do
     if blocked[hi.link] then
       hi.link = nil
@@ -240,9 +244,21 @@ M.highlight = function(win, redraw)
 end
 
 M.unhighlight = function(win)
-  if win.current_ns ~= win.real_ns and win.real_ns then
-    win.current_ns = win.real_ns
-    COMPAT.nvim_win_set_hl_ns(win.winid, win.current_ns)
+  if win.current_ns ~= win.real_ns then
+    if win.winhl then
+      win.current_ns = win.real_ns
+      -- Related to #92 - use the global namespace when a winhl existed
+      -- this seems to automatically put winhl back in place, although seems
+      -- counterintuitive.
+      COMPAT.nvim_win_set_hl_ns(win.winid, 0)
+      -- TODO: For some reason resetting winhl breaks snacks.dashboard:
+      -- Adding the following line causes winhl to persist after the buffer changes
+      -- so don't use for now.
+      -- vim.wo[win.winid].winhl = win.winhl
+    elseif win.real_ns then
+      win.current_ns = win.real_ns
+      COMPAT.nvim_win_set_hl_ns(win.winid, win.current_ns)
+    end
   end
 end
 
