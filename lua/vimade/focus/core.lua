@@ -745,7 +745,9 @@ vim.api.nvim_create_autocmd({'TabEnter'}, {
   callback = function ()
     vim.defer_fn(
     function()
-      FADER.tick()
+      if FADER then
+        FADER.tick()
+      end
       update_tab_events()
     end, 0)
   end
