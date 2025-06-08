@@ -180,6 +180,7 @@ M.refresh = function (winid, is_active)
         break
       end
     end
+    win.blocked = blocked
   end
 
   if blocked then
