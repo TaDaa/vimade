@@ -707,18 +707,28 @@ function! vimade#Tick(num)
   endtry
 endfunction
 
+function! vimade#BypassPause(fn)
+  if g:vimade_paused
+    call vimade#Unpause()
+    call a:fn()
+    call vimade#Pause()
+  else
+    call a:fn()
+  endif
+endfunction
+
 function! vimade#FadeActive()
   "immediately fade current buffer
   "deferred shouldn't be used here due to usage of pause in tmux flow
   let g:vimade_fade_active=1
-  call vimade#CheckWindows()
+  call vimade#BypassPause(function('vimade#CheckWindows'))
 endfunction
 
 function! vimade#UnfadeActive()
   "immediately unfade current buffer
   "deferred shouldn't be used here due to usage of pause in tmux flow
   let g:vimade_fade_active=0
-  call vimade#CheckWindows()
+  call vimade#BypassPause(function('vimade#CheckWindows'))
 endfunction
 
 function! vimade#GetNvimHi(id)
