@@ -202,7 +202,7 @@ M.Animate = function (config)
       state.start = start
       style._animating = false
       return start
-    elseif (direction == DIRECTION.OUT and style._condition == CONDITION.INACTIVE and win.nc == true)
+    elseif (direction == DIRECTION.OUT and (style._condition == CONDITION.INACTIVE or style._condition == CONDITION.INACTIVE_OR_FOCUS) and win.nc == true)
       or (direction == DIRECTION.IN and style._condition == CONDITION.ACTIVE and win.nc == false) then
       -- pass
     end

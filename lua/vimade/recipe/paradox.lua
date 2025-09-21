@@ -126,10 +126,11 @@ end
 
 --@param config {
   -- @optional invert = {
-    --  @otional start = 0.15
-    --  @otional to = 0.1
-    --  @otional direction = DIRECTION.IN
-    --  @otional duration = DEFAULT_DURATION
+    --  @optional start = 0.15
+    --  @optional to = 0.08
+    --  @optional focus_to = 0.08
+    --  @optional direction = DIRECTION.IN
+    --  @optional duration = DEFAULT_DURATION
     --  @optional active = true (inverts the active window)
     -- }
   -- @optional condition: CONDITION = CONDITION.INACTIVE
