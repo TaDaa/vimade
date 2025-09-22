@@ -405,7 +405,7 @@ function! vimade#UnhighlightAll()
   if winnr() == 0
     return
   endif
-  call g:vimade_active_renderer.unhighlightAll()
+  call g:vimade_active_renderer.disable()
 endfunction
 
 function! vimade#Toggle()
@@ -826,7 +826,6 @@ let s:empty_renderer = {
     \ 'recalculate': function('vimade#Empty'),
     \ 'redraw': function('vimade#Empty'),
     \ 'disable': function('vimade#Empty'),
-    \ 'unhighlightAll': function('vimade#Empty'),
     \ 'update': function('vimade#Empty'),
     \ 'softInvalidateBuffer': function('vimade#Empty'),
     \ 'softInvalidateSigns': function('vimade#Empty'),
@@ -844,9 +843,6 @@ function! s:Redraw_Lua()
 endfunction
 function! s:Disable_Lua()
   lua require('vimade').disable()
-endfunction
-function! s:UnhighlightAll_Lua()
-  lua require('vimade').unhighlightAll()
 endfunction
 function! s:Update_Lua()
   lua require('vimade').update()
@@ -870,7 +866,6 @@ let s:lua_renderer = {
   \ 'recalculate': function('s:Recalculate_Lua'),
   \ 'redraw': function('s:Redraw_Lua'),
   \ 'disable': function('s:Disable_Lua'),
-  \ 'unhighlightAll': function('s:UnhighlightAll_Lua'),
   \ 'update': function('s:Update_Lua'),
   \ 'softInvalidateBuffer': function('s:SoftInvalidateBuffer_Lua'),
   \ 'softInvalidateSigns': function('s:SoftInvalidateSigns_Lua'),
@@ -885,14 +880,11 @@ function! s:Recalculate_Python()
   exec g:vimade_py_cmd "from vimade import bridge; bridge.recalculate()"
 endfunction
 function! s:Redraw_Python()
-  exec g:vimade_py_cmd "from vimade import bridge; bridge.unhighlightAll(); bridge.recalculate()"
+  exec g:vimade_py_cmd "from vimade import bridge; bridge.disable(); bridge.recalculate()"
   call vimade#CheckWindows()
 endfunction
 function! s:Disable_Python()
   exec g:vimade_py_cmd "from vimade import bridge; bridge.disable()"
-endfunction
-function! s:UnhighlightAll_Python()
-  exec g:vimade_py_cmd "from vimade import bridge; bridge.unhighlightAll()"
 endfunction
 function! s:Update_Python()
   exec g:vimade_py_cmd "from vimade import bridge; bridge.update()"
@@ -913,7 +905,6 @@ let s:python_renderer = {
   \ 'recalculate': function('s:Recalculate_Python'),
   \ 'redraw': function('s:Redraw_Python'),
   \ 'disable': function('s:Disable_Python'),
-  \ 'unhighlightAll': function('s:UnhighlightAll_Python'),
   \ 'update': function('s:Update_Python'),
   \ 'softInvalidateBuffer': function('s:SoftInvalidateBuffer_Python'),
   \ 'softInvalidateSigns': function('s:SoftInvalidateSigns_Python'),
