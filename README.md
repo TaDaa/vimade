@@ -363,6 +363,40 @@ buffers.  You can also fade around the active scope and mark areas that won't be
     require('lazy').setup({spec = {'tadaa/vimade', event = 'VeryLazy'}})
     ```
 
+- If you are a user of **[LazyVim](https://github.com/LazyVim/LazyVim)**, as of v13.x, Folke's comprehensive [Snacks.nvim](https://github.com/folke/snacks.nvim) is integrated and offers many quality of life features. One such feature is [Snacks-toggle](https://github.com/folke/snacks.nvim/blob/main/docs/toggle.md) integration:
+
+  _<sub>::lua::LazyVim::</sub>_
+
+  ```lua
+  return {
+    "tadaa/vimade",
+    event = "VeryLazy",
+    dependencies = {
+      "folke/snacks.nvim",
+      opts = {
+        toggle = {},
+      },
+    },
+    opts = function(_, opts)
+      opts.recipe = { "ripple", { animate = false } }
+      opts.checkinterval = 500
+
+      Snacks.toggle({
+        name = "Vimade",
+        get = function()
+          return vim.g.vimade_running == 1
+        end,
+        ---@diagnostic disable-next-line: unused-local
+        set = function(state)
+          vim.cmd("VimadeToggle")
+        end,
+      }):map("<leader>uv")
+
+      return opts
+    end,
+  }
+  ```
+
 - For **Vim** or more granular control, enable `vimade.lazy` and call `vimade#Load()`:
 
   &nbsp;  *<sub>::vimscript::</sub>*
