@@ -349,7 +349,7 @@ class Globals(object):
     # update wincolor links (this is a global change)
     linkwincolor = vimade.get('linkwincolor', self._DEFAULTS['linkwincolor']) if bool(int(self.features['has_wincolor'])) else []
     _linkwincolor = ','.join(linkwincolor)
-    if _linkwincolor != self._linkwincolor:
+    if _linkwincolor != self._linkwincolor or self.tick_state & self.INVALIDATE_HIGHLIGHTS:
       self.linkwincolor = linkwincolor
       self._linkwincolor = _linkwincolor
       eval_linkwincolor = []
