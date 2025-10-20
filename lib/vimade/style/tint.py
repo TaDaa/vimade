@@ -93,7 +93,7 @@ class Tint():
         + str(to_hl['fg'] != None and (str(to_hl['fg'] or '') + ',' + (str(to_hl['ctermfg'][0])+'-'+str(to_hl['ctermfg'][1])+'-'+str(to_hl['ctermfg'][2])) + ',' + str(to_hl['fg_intensity'])) or '') + '|' \
         + (to_hl['bg'] != None and (str(to_hl['bg'] or '') + ',' + (str(to_hl['ctermbg'][0])+'-'+str(to_hl['ctermbg'][1])+'-'+str(to_hl['ctermbg'][2])) + ',' + str(to_hl['bg_intensity'])) or '') + '|'
         + (to_hl['sp'] != None and (str(to_hl['sp'] or '') + str(to_hl['sp_intensity'])) or '')
-      def modify(self, hl, target):
+      def modify(self, highlights, target):
         if self.condition == False:
           return
         to_hl = self.to_hl
@@ -103,16 +103,17 @@ class Tint():
           target['bg'] = COLOR_UTIL.interpolate24b(target['bg'], to_hl['bg'], to_hl['bg_intensity'])
         if target['ctermbg'] != None and to_hl['ctermbg'] != None:
           target['ctermbg'] = COLOR_UTIL.interpolate256(target['ctermbg'], to_hl['ctermbg'], to_hl['bg_intensity'])
-        if hl['fg'] != None and to_hl['fg'] !=None:
-          hl['fg'] = COLOR_UTIL.interpolate24b(hl['fg'], to_hl['fg'], to_hl['fg_intensity'])
-        if hl['bg'] != None and to_hl['bg'] != None:
-          hl['bg'] = COLOR_UTIL.interpolate24b(hl['bg'], to_hl['bg'], to_hl['bg_intensity'])
-        if hl['sp'] != None and to_hl['sp'] != None:
-          hl['sp'] = COLOR_UTIL.interpolate24b(hl['sp'], to_hl['sp'], to_hl['sp_intensity'])
-        if hl['ctermfg'] != None and to_hl['ctermfg'] != None:
-          hl['ctermfg'] = COLOR_UTIL.interpolate256(hl['ctermfg'], to_hl['ctermfg'], to_hl['fg_intensity'])
-        if hl['ctermbg'] != None and to_hl['ctermbg'] != None:
-          hl['ctermbg'] = COLOR_UTIL.interpolate256(hl['ctermbg'], to_hl['ctermbg'], to_hl['bg_intensity'])
+        for hl in highlights.values():
+          if hl['fg'] != None and to_hl['fg'] !=None:
+            hl['fg'] = COLOR_UTIL.interpolate24b(hl['fg'], to_hl['fg'], to_hl['fg_intensity'])
+          if hl['bg'] != None and to_hl['bg'] != None:
+            hl['bg'] = COLOR_UTIL.interpolate24b(hl['bg'], to_hl['bg'], to_hl['bg_intensity'])
+          if hl['sp'] != None and to_hl['sp'] != None:
+            hl['sp'] = COLOR_UTIL.interpolate24b(hl['sp'], to_hl['sp'], to_hl['sp_intensity'])
+          if hl['ctermfg'] != None and to_hl['ctermfg'] != None:
+            hl['ctermfg'] = COLOR_UTIL.interpolate256(hl['ctermfg'], to_hl['ctermfg'], to_hl['fg_intensity'])
+          if hl['ctermbg'] != None and to_hl['ctermbg'] != None:
+            hl['ctermbg'] = COLOR_UTIL.interpolate256(hl['ctermbg'], to_hl['ctermbg'], to_hl['bg_intensity'])
         return
     parent.attach = __Tint
   def value(parent, replacement = None):

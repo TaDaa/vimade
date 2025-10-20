@@ -51,16 +51,21 @@ class Include():
       def key(self, win, state):
         if self.condition == False:
           return ''
-        style_key = ','.join([s.key(win, state) for j, s in enumerate(self.style)])
-        if len(style_key) == 0:
+        style_keys = [s.key(win, state) for j, s in enumerate(self.style)]
+        style_key = ','.join([s for s in style_keys if s])
+        if not style_key:
           return ''
         return 'I-' + ','.join(self.include.values()) + '(' \
             + style_key + ')'
-      def modify(self, hl, to_hl):
+      def modify(self, highlights, to_hl):
         if self.condition == False:
           return
-        # we don't need to foce set the bg,ctermbg here for Vim as targetting works slightly differently
-        if hl['name'] in self.include:
-          for s in self.style:
-            s.modify(hl, to_hl)
+        highlights_for_children = {}
+        for name in self.include:
+          if name in highlights:
+            highlights_for_children[name] = highlights[name]
+        for s in self.style:
+          s.modify(highlights_for_children, to_hl)
+        for (name, value) in highlights_for_children.items():
+          highlights[name] = value
     self.attach = __Include

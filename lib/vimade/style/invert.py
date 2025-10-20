@@ -46,21 +46,31 @@ class Invert():
           return ''
         # TODO shrink
         return 'INV-' + str(self.invert.get('fg',0)) + '-' + str(self.invert.get('bg',0)) + '-' + str(self.invert.get('sp',0))
-      def modify(self, hl, to_hl):
+      def modify(self, highlights, to_hl):
         if self.condition == False or not self.invert:
           return
         invert = self.invert
-        for hi in (hl, to_hl):
+        for key in ('fg', 'bg', 'sp'):
+          color = to_hl.get(key)
+          if color != None:
+            to_hl[key] = COLOR_UTIL.interpolate24b(color, 0XFFFFFF - color, 1 - invert[key])
+        for (key, i_key) in (('ctermfg', 'fg'), ('ctermbg', 'bg')):
+          color = to_hl.get(key)
+          if color != None:
+            color = COLOR_UTIL.toRgb(color, True)
+            target = [255 - color[0], 255 - color[1], 255 - color[2]]
+            to_hl[key] = COLOR_UTIL.interpolate256(color, target, 1 - invert[i_key])
+        for hl in highlights.values():
           for key in ('fg', 'bg', 'sp'):
-            color = hi.get(key)
+            color = hl.get(key)
             if color != None:
-              hi[key] = COLOR_UTIL.interpolate24b(color, 0XFFFFFF - color, 1 - invert[key])
+              hl[key] = COLOR_UTIL.interpolate24b(color, 0XFFFFFF - color, 1 - invert[key])
           for (key, i_key) in (('ctermfg', 'fg'), ('ctermbg', 'bg')):
-            color = hi.get(key)
+            color = hl.get(key)
             if color != None:
               color = COLOR_UTIL.toRgb(color, True)
               target = [255 - color[0], 255 - color[1], 255 - color[2]]
-              hi[key] = COLOR_UTIL.interpolate256(color, target, 1 - invert[i_key])
+              hl[key] = COLOR_UTIL.interpolate256(color, target, 1 - invert[i_key])
     parent.attach = __Invert
   def value(parent, replacement = None):
     if replacement != None:

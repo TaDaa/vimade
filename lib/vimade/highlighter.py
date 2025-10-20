@@ -287,12 +287,14 @@ def create_highlights(win, to_process, skip_transpose = False, name_override = N
 
     result = []
     attrs_eval = []
+    attrs_eval_ids = []
     base_keys = []
     for id in to_process:
       cache_key = str(id) + base_key_suffix
       if not cache_key in M.base_id_cache:
         M.base_id_cache[cache_key] = {}
         base_keys.append(cache_key)
+        attrs_eval_ids.append(id)
         attrs_eval.append(hi_string % id)
 
     if len(attrs_eval):
@@ -301,7 +303,7 @@ def create_highlights(win, to_process, skip_transpose = False, name_override = N
       # this occurs b/c another window might redo the highlight due to clear_color on the current window.
       # There is a performance gain but it's not worth maintaining the logic.
       attrs = IPC.eval_and_return('[' + ','.join(attrs_eval) + ']')
-      attrs = _process_hl_results(attrs, to_process)
+      attrs = _process_hl_results(attrs, attrs_eval_ids)
       for i, cache_key in enumerate(base_keys):
         base = M.base_id_cache.get(cache_key)
         base_hi = defaultHi(attrs[i], fg_wincolorhl)
@@ -309,25 +311,37 @@ def create_highlights(win, to_process, skip_transpose = False, name_override = N
         base['base_key'] = str(base_hi['ctermfg']) + ',' + str(base_hi['ctermbg']) + ',' + str(base_hi['fg']) + ',' + str(base_hi['bg']) + ',' + str(base_hi['sp'])
     to_create = []
     style = win['style']
+    highlights = {}
+    hi_target = TYPE.shallow_copy(target)
+
     for id in to_process:
       base = M.base_id_cache[str(id) + base_key_suffix]
       base_hi = base['hi']
+      name = name_override if name_override else base_hi['name']
+      if name in highlights:
+        continue
       # selective copy (we cache other keys that should not be exposed)
       # copy the target for the style run
       hi_attrs = {
-          'name': name_override if name_override else base_hi['name'], # base name
+          'name': name,
           'ctermfg': base_hi['ctermfg'],
           'ctermbg': base_hi['ctermbg'],
           'fg': base_hi['fg'],
           'bg': base_hi['bg'],
           'sp': base_hi['sp'] }
-      hi_target = TYPE.shallow_copy(target)
       ### below logic prevents basebg from applying to VimadeWC (otherwise background is altered for Vim)
-      if hi_attrs['name'] == 'Normal':
+      if name == 'Normal':
         hi_attrs['ctermbg'] = None
         hi_attrs['bg'] = None
-      for s in style:
-        s.modify(hi_attrs, hi_target)
+      highlights[name] = hi_attrs
+
+    for s in style:
+      s.modify(highlights, hi_target)
+
+    for id in to_process:
+      base = M.base_id_cache[str(id) + base_key_suffix]
+      name = name_override if name_override else base['hi']['name']
+      hi_attrs = highlights[name]
       cache_key = win['hi_key'] + ':' + base['base_key'] + ':' + str(hi_attrs['ctermfg']) + ',' + str(hi_attrs['ctermbg']) + ',' + str(hi_attrs['fg']) + ',' + str(hi_attrs['bg']) + ',' + str(hi_attrs['sp'])
       vimade_hi = M.vimade_id_cache.get(cache_key)
 
