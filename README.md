@@ -24,7 +24,7 @@
 </tbody>
 </table>
 
-**Vimade** helps you maintain focus on what matters. It dims, fades, and tints inactive windows and buffers. It can also provide "limelight" or "twilight" style highlighting around your cursor, but with a key difference: **Vimade preserves syntax highlighting**, allowing you to stay in context while focusing on the code that matters most. With extensive customization options, pre-built recipes, and smooth animations, Vimade lets you create a truly unique and focused coding environment.
+**Vimade** helps you maintain focus on what matters. It dims, fades, and tints inactive windows and buffers. It can also provide "limelight" or "twilight" style highlighting around your cursor, but with a key difference: **Vimade preserves syntax highlighting**, allowing you to stay in context while focusing on the code that matters most. With extensive customization options, pre-built recipes, smooth animations, and sub-millisecond performance, Vimade provides a feature-rich, "batteries included" experience out-of-the-box, letting you create a truly unique and focused coding environment.
 
 ## 🚀 Getting Started
 
@@ -666,6 +666,7 @@ This table highlights some of the features that make only Vimade stand out:
 | Group diffs and scroll-bound windows | Yes |
 | Advanced block-listing and linking | Yes |
 | Smooth animations | Yes |
+| High performance | Lua: **~0.5ms-1.4ms per frame** <br> Python: varies, but expect **~0.5-6ms per frame** |
 | Composable recipes | Yes |
 | Support for 256 colors and `termguicolors` | Yes |
 | Per-window configuration | Yes |
