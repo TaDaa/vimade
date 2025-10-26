@@ -654,7 +654,8 @@ Links one highlight group to another.
 
 Vimade is the original syntax-aware dimming and fading plugin for Vim and
 Neovim. While other window fading plugins have emerged, Vimade
-is a powerful and flexible option with a rich feature set.
+is a powerful and flexible option with a rich feature set and the only option that correctly
+handles plugin namespaces.
 
 This table highlights some of the features that make only Vimade stand out:
 | Feature | Vimade |
