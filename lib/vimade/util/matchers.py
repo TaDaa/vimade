@@ -171,7 +171,7 @@ def match_primitive(target, value):
     else:
       return M.match_falsy(value)
   elif (type(target) in (int, float, str)) and (type(value) in (int, float, str)):
-    return target + '' == value + ''
+    return str(target) + '' == str(value) + ''
   else:
     return target == value
 
