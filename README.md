@@ -24,7 +24,18 @@
 </tbody>
 </table>
 
-**Vimade** helps you maintain focus on what matters. It dims, fades, and tints inactive windows and buffers. It can also provide "limelight" or "twilight" style highlighting around your cursor, but with a key difference: **Vimade preserves syntax highlighting**, allowing you to stay in context while focusing on the code that matters most. With extensive customization options, pre-built recipes, smooth animations, and sub-millisecond performance, Vimade provides a feature-rich, "batteries included" experience out-of-the-box, letting you create a truly unique and focused coding environment.
+**Vimade** helps you maintain focus on what matters. It dims, fades, and tints inactive windows and buffers. It can also provide "limelight" or "twilight" style highlighting around your cursor, but with a key difference: **Vimade preserves syntax highlighting**, allowing you to stay in context while focusing on the code that matters most.
+
+Vimade offers a powerful and flexible way to customize your coding environment with:
+
+*   🎨 **Pre-built Recipes:** Get started quickly with a variety of visual styles.
+*   🔋 **Batteries Included:** Works out-of-the-box with no configuration necessary.
+*   ✨ **Smooth Animations:** Enjoy a fluid and visually appealing experience.
+*   🌈 **Extensive Customization:** Tailor every aspect of the fading and tinting to your liking.
+*   🧩 **Unmatched Compatibility:** Compatible with all colorschemes and plugins.
+*   ⏰ **Sub-millisecond Performance:** Keep your editor snappy and responsive.
+
+Create a truly unique and focused coding environment with Vimade.
 
 ## 🚀 Getting Started
 
