@@ -32,7 +32,7 @@ Vimade offers a powerful and flexible way to customize your coding environment w
 *   🔋 **Batteries Included:** Works out-of-the-box with no configuration necessary.
 *   ✨ **Smooth Animations:** Enjoy a fluid and visually appealing experience.
 *   🌈 **Extensive Customization:** Tailor every aspect of the fading and tinting to your liking.
-*   🧩 **Unmatched Compatibility:** Compatible with all colorschemes and plugins.
+*   🧩 **Unmatched Compatibility:** Works with all colorschemes and **even other plugin namespaces**.
 *   ⏰ **Sub-millisecond Performance:** Keep your editor snappy and responsive.
 
 Create a truly unique and focused coding environment with Vimade.
