@@ -1,326 +1,905 @@
-*vimade.txt*
-                                                                      *vimade*
+*vimade.txt*       Neovim/Vim plugin for dimming, fading, and tinting inactive windows
 
 ==============================================================================
-CONTENTS                                                     *vimade-contents*
-  1. Intro......................................................|vimade-intro|
-  2. Contributing........................................|vimade-contributing|
-  3. Support..................................................|vimade-support|
-  4. Configuration.............................................|vimade-config|
-  5. Commands................................................|vimade-commands|
-  6. custom-fades........................................|vimade-custom-fades|
-  7. normalnc................................................|vimade-normalnc|
-  8. FAQ/Help....................................................|vimade-help|
+CONTENTS                                      *vimade-contents*
+
+  1. Introduction...........................................|vimade-introduction|
+  2. Getting Started........................................|vimade-getting-started|
+  3. Guides.................................................|vimade-guides|
+  4. Configuration..........................................|vimade-configuration|
+  5. Commands...............................................|vimade-commands|
+  6. Recipes................................................|vimade-recipes|
+  7. Creating Recipes.......................................|vimade-creating-recipes|
+  8. Similar Plugins........................................|vimade-similar-plugins|
+  9. API....................................................|vimade-api|
+  10. Contributing..........................................|vimade-contributing|
 
 ==============================================================================
-INTRO                                                           *vimade-intro*
+INTRODUCTION                                  *vimade-introduction*
 
-Vimade is an eye catching plugin that fades your inactive buffers.  You can
-think of Vimade as  2-dimensional infinite syntax list that adjusts itself by
-reacting to color changes (background, foreground, NormalNC, and colorscheme),
-word wrap, diff groups.  Vimade also implements its own 256 color based fading
-that does its best to preserve colors instead  of rounding to greys.
+Vimade helps you maintain focus on what matters. It dims, fades, and tints
+inactive windows and buffers. It can also provide "limelight" or "twilight"
+style highlighting around your cursor, but with a key difference: Vimade
+preserves syntax highlighting, allowing you to stay in context while focusing
+on the code that matters most.
 
-==============================================================================
-CONTRIBUTING                                             *vimade-contributing*
+Vimade offers a powerful and flexible way to customize your coding environment
+with:
 
-Open a bug report at 'https://github.com/TaDaa/vimade'.  Please include
-'VimadeInfo' in the report and the more information the better, but I will
-gladly look into everything (even just general slowness).
-
-==============================================================================
-SUPPORT                                                       *vimade-support*
-
-Vim/NVIM support:
-  * Vim 8+
-  * NVIM
-  * GUI
-  * terminals (256 color and 'set termguicolors')
-  * tmux
-
-Terminal support:
-  * All terminals are supported when at least 256 colors are active and a
-    background highlight has been specified.
-
-Terminals with background detection:
-(Vimade can detect the background color inherited from terminal settings)
-  * iTerm
-  * Tilix
-  * Kitty
-  * Gnome
-  * Rxvt
-  * Other terminals that support the ansi codes \033]11;?\007 or
-    \033]11;?\033\\
+- Pre-built Recipes: Get started quickly with a variety of visual styles.
+- Batteries Included: Works out-of-the-box with no configuration necessary.
+- Smooth Animations: Enjoy a fluid and visually appealing experience.
+- Extensive Customization: Tailor every aspect of the fading and tinting to
+  your liking.
+- Unmatched Compatibility: Works with all colorschemes and even other plugin
+  namespaces.
+- Sub-millisecond Performance: Keep your editor snappy and responsive.
 
 ==============================================================================
-CONFIGURATION                                                  *vimade-config*
+GETTING STARTED                               *vimade-getting-started*
 
-                                                            *g:vimade_running*
-This flag is used to control whether or not vimade should be running.  This
-can be useful to toggle vimade during startup.  Alternatively, you may as also
-use VimadeDisable, VimadeEnable, call vimade#Disable, call vimade#Enable
-respectively
+Neovim 0.8+ uses a pure Lua implementation. Some features, like focus mode,
+require Neovim 0.10+. For Vim and older versions of Neovim, Python is required.
 
-                                                                    *g:vimade*
-The vimade configuration object
-
-                                                           *g:vimade.normalid*
-If not specified, the normalid is determined when vimade is first loaded.
-normalid provides the id of the "Normal" highlight which is used to calculate
-fading.  You can override this config with another highlight group.
-
-                                                         *g:vimade.normalncid*
-If not specified, the normalncid is determined when vimade is first loaded.
-normalncid provides the id of the "NormalNC" highlight which is used to
-calculate fading for inactive buffers in NVIM.  You can override this config
-with another highlight group.
-
-                                                             *g:vimade.basefg*
-basefg can either be six digit hexidecimal color, rgb array
-[0-255,0-255,0-255], or cterm code (in terminal).  Basefg is only used to
-calculate the default fading that should be applied to Normal text.  By
-default basefg is calculated as the "Normal" highlight guifg or ctermfg.
-
-                                                             *g:vimade.basebg*
-basebg can be either be six digit hexidecimal color, rgb array
-[0-255,0-255,0-255], or cterm code (in terminal).  basebg is used as the color
-that text is faded against.  You can override this config with another
-hexidecimal color.  A cool feature of basebg is to use it to change the tint
-of faded text even if its not your background!
-
-                                                          *g:vimade.fadelevel*
-Amount of fading applied between text and basebg.  0 will make the text the
-same color as the background and 1 applies no fading.  The default value is
-0.4.  If you are using terminal, you may need to tweak this value to get
-better results.
-
-                                                         *g:vimade.colbufsize*
-The number of cols left and right of the determined scroll area that should be
-precalculated. Reduce this value to improve performance. Default is 15 for gui
-vim and 5 for terminals/gvim.
-
-                                                         *g:vimade.rowbufsize*
-The number of rows above and below of the determined scroll area that should
-be precalculated. Reduce this value to improve performance Default is 15 for
-gui vim and 0 for terminals/gvim.
-
-                                                      *g:vimade.checkinterval*
-The amount of time in milliseconds that vimade should check the screen for
-changes.  This config is mainly used to detect resize and scroll changes that
-occur on inactive windows. Checkinterval does nothing on gvim, if you want to
-control the refresh time, see 'h updatetime'. Default is 100 for gui vim and
-500 for neovim/terminal.
-
-                                                      *g:vimade.usecursorhold*
-Disables the timer running in the background and instead relies `OnCursorHold`
-and `updatetime` (see h:updatetime).  The default value is `0` except on
-Windows GVIM, which defaults to `1` due to the timer breaking movements.  If
-you find that the timer is causing performance problems or other issues you
-can disable it by setting this option to `1`.
-
-                                                   *g:vimade.detecttermcolors*
-Detect the terminal background and foreground colors.  This will work for Vim8
-+ iTerm, Tilix, Kitty, Gnome, Rxvt, and other editors that support the
-following query (```\033]11;?\007``` or ```\033]11;?\033\\```).  Default is 0.
-This feature can cause unwanted side effects during startup and should be
-enabled at your own risk
-
-                                                       *g:vimade.enablescroll*
-Enables fading while scrolling inactive windows.  This is only useful in gui
-vim and does have a performance cost.  By default this setting is enabled in
-gui vim and disabled for terminals.
-
-                                                        *g:vimade.enablesigns*
-Enabled by default for vim/nvim versions that support sign priority and causes
-signs to be faded when switching buffers. Only visible signs are faded. This
-feature can cause performance issues on older nvim/vim versions that don't
-support sign priority.  Use signsretentionperiod to control the duration that
-vimade checks for sign updates after switching buffers.
-
-                                                            *g:vimade.signsid*
-The starting id that Vimade should use when creating new signs. By default Vim
-requires numeric values to create signs and its possible that collisions may
-occur between plugins.  If you need to override this value for compatibility,
-please open an issue as well.  Default is 13100.
-
-                                               *g:vimade.signsretentionperiod*
-Amount of time in milliseconds that faded buffers should be tracked for sign
-changes.  Default value is 4000.
-
-                                                        *g:vimade.fademinimap*
-Enables a special fade effect for `severin-lemaignan/vim-minimap`.  Setting
-vimade.fademinimap to 0 disables the special fade.  Default is 1.
-
-                                                       *g:vimade.fadepriority*
-Controls the highlighting priority. You may want to tweak this value to make
-Vimade play nicely with other highlighting plugins and behaviors. For example,
-if you want hlsearch to show results on all buffers, you may want to lower
-this value to 0. Default is 10.
-
-                                                      *g:vimade.signspriority*
-Controls the signs fade priority. You may need to change this value if you
-find that not all signs are fading properly. Please also open a defect if you
-need to tweak this value as Vimade strives to minimize manual configuration
-where possible. Default is 31.
-
-                                                          *g:vimade.groupdiff*
-Controls whether or not diffs will fade/unfade together.  If you want diffs to
-be treated separately, set this value to 0. Default is 1
-
-                                                    *g:vimade.groupscrollbind*
-Controls whether or not scrollbound windows will fade/unfade together.  If you
-want scrollbound windows to unfade together, set this to 1.  Default is 0.
-
-                                                  *g:vimade.enablefocusfading*
-Fades the current active window on focus blur and unfades when focus gained.
-This can be desirable when switching applications or TMUX splits.
-  * Install 'tmux-plugins/vim-tmux-focus-events' using your preferred plugin
-    manager
-  * Add `set -g focus-events on` to your tmux.conf
-  * Neovim should work at this point, If you are using Vim you may also need
-    the following snippet to the very end of your vimrc
+------------------------------------------------------------------------------
+lazy.nvim (lua)                               *vimade-lazy-nvim*
 
 >
- if has('gui_running') == 0 && has('nvim') == 0
-    call feedkeys(":silent execute '!' | redraw!\<CR>")
- endif
+  {
+    "tadaa/vimade",
+    opts = {
+      recipe = {"default", {animate = true}},
+      fadelevel = 0.4,
+    }
+  }
 <
+------------------------------------------------------------------------------
+vim-plug (vimscript)                          *vimade-vim-plug*
 
-                                                         *g:vimade.basegroups*
-Neovim only setting that specifies the basegroups/built-in highlight groups
-that will be faded using winhl when switching windows
-
-                                                   *g:vimade.enablebasegroups*
-Neovim only setting.  Enabled by default and allows basegroups/built-in
-highlight fading using winhl.  This allows fading of built-in highlights such
-as Folded, Search, etc.
-
-                                                   *g:vimade.enabletreesitter*
-EXPERIMENTAL FEATURE Neovim only setting.  Disabled by default and hooks
-vimade into the internals of treesitter.
-
-==============================================================================
-COMMANDS                                                     *vimade-commands*
-
-:VimadeEnable                                                  *:VimadeEnable*
-  Enables Vimade
-
-:VimadeDisable                                                *:VimadeDisable*
-  Unfades all buffers, signs, and disables Vimade
-
-:VimadeWinDisable                                          *:VimadeWinDisable*
-  Disables the current window
-
-:VimadeBufDisable                                          *:VimadeBufDisable*
-  Disables the current buffer
-
-:VimadeFadeActive                                          *:VimadeFadeActive*
-  Fades the current buffer
-
-:VimadeUnfadeActive                                      *:VimadeUnfadeActive*
-  Unfades the current buffer
-
-:VimadeWinEnable                                            *:VimadeWinEnable*
-  Enables the current window
-
-:VimadeBufEnable                                            *:VimadeBufEnable*
-  Enables the current buffer
-
-:VimadeToggle                                                  *:VimadeToggle*
-  Toggles Vimade between enabled and disabled states
-
-:VimadeInfo                                                      *:VimadeInfo*
-  Prints debug information that should be included in bug reports
-
-:VimadeRedraw                                                  *:VimadeRedraw*
-  Recalculates all fades and redraws all inactive buffers and signs
-
-:VimadeFadeLevel {value}                                    *:VimadeFadeLevel*
-  Changes vimade_fadelevel to the {value} specified.  {value} can be between
-  0.0 and 1.0
-
-:VimadeFadePriority {value}                              *:VimadeFadePriority*
-  Changes vimade_fadepriority to the {value} specified.  This can be useful
-  when combining Vimade with other plugins that also highlight using matches
-
-:VimadeOverrideFolded                                  *:VimadeOverrideFolded*
-  Overrides the Folded highlight by creating a link to the Vimade base fade.
-  This should produce acceptable results for colorschemes that include Folded
-  highlights that are distracting in faded windows.
-
-:VimadeOverrideSignColumn                          *:VimadeOverrideSignColumn*
-  EXPERIMENTAL -- Overrides the SignColumn highlight by creating a link to the
-  Vimade base fade. This should produce acceptable results for colorschemes
-  that include Folded highlights that are distracting in faded windows.
-
-:VimadeOverrideLineNr                                  *:VimadeOverrideLineNr*
-  EXPERIMENTAL -- Overrides the LineNr highlight by creating a link to the
-  Vimade base fade. This should produce acceptable results for colorschemes
-  that include Folded highlights that are distracting in faded windows.
-
-:VimadeOverrideSplits                                  *:VimadeOverrideSplits*
-  EXPERIMENTAL -- Overrides the VertSplit highlight by creating a link to the
-  Vimade base fade. This should produce acceptable results for colorschemes
-  that include Folded highlights that are distracting in faded windows.
-
-:VimadeOverrideNonText                                *:VimadeOverrideNonText*
-  EXPERIMENTAL -- Overrides the NonText highlight by creating a link to the
-  Vimade base fade. This should produce acceptable results for colorschemes
-  that include Folded highlights that are distracting in faded windows.
-
-:VimadeOverrideEndOfBuffer                        *:VimadeOverrideEndOfBuffer*
-  EXPERIMENTAL -- Overrides the EndOfBuffer highlight by creating a link to
-  the Vimade base fade. This should produce acceptable results for
-  colorschemes that include Folded highlights that are distracting in faded
-  windows.
-
-:VimadeOverrideAll                                        *:VimadeOverrideAll*
-  EXPERIMENTAL -- Overrides static highlights by creating a link to the Vimade
-  base fade. This should produce acceptable results for colorschemes that
-  include Folded highlights that are distracting in faded windows.
-
-==============================================================================
-CUSTOM-FADES                                             *vimade-custom-fades*
-
-Vimade allows you to specify custom tints using basebg.  You can alter this
-value to any hex code or rgb array (e.g '#ff0000' or [255,0,0]) and the text
-of inactive buffers will fade towards the specified color.  You may need to
-adjust the VimadeFadeLevel for favorable results.
-
-For example:
 >
-  let vimade.basebg='#ff00000'
-  VimadeFadeLevel 0.6
+  Plug 'TaDaa/vimade'
 <
-Will change the tint to red and favor/mix with the original syntax colors
+------------------------------------------------------------------------------
+Configure with lua (Neovim only)              *vimade-lua-config*
+
+>
+  require('vimade').setup({
+    recipe = {'default', {animate = true}},
+    fadelevel = 0.4,
+  })
+<
+------------------------------------------------------------------------------
+Configure with vimscript                      *vimade-vimscript-config*
+
+>
+  let g:vimade = {}
+  let g:vimade.fadelevel = 0.4
+<
+------------------------------------------------------------------------------
+Configure with python                         *vimade-python-config*
+
+>
+  function! SetupMyVimadeConfig()
+  python << EOF
+  from vimade import vimade
+  vimade.setup(
+    recipe = ['default', {'animate':True}],
+    fadelevel = 0.4,
+   )
+  EOF
+  endfunction
+  # SetupMyVimadeConfig will be called lazily after python becomes available.
+  # You can call vimade.setup(...) whenever you want.
+  au! User Vimade#PythonReady call SetupMyVimadeConfig()
+<
+==============================================================================
+GUIDES                                        *vimade-guides*
+
+------------------------------------------------------------------------------
+Important note on configuration               *vimade-config-note*
+
+Vimade treats the `setup()` command as an overlay. Each time you call it, it
+will override any previous settings. Therefore, if you want to combine
+multiple settings, you must include them all in the same `setup()` call. If
+you want to reset the overlay to defaults, just call `setup()` with no
+options.
+
+Correct: ~
+>
+  require('vimade').setup({
+    recipe = {'minimalist', {animate = true}},
+    fadelevel = 0.3,
+  })
+<
+Incorrect: ~
+>
+  require('vimade').setup({recipe = {'minimalist', {animate = true}}})
+  require('vimade').setup({fadelevel = 0.3}) -- This will override the recipe setting!
+<
+------------------------------------------------------------------------------
+Choosing an ncmode                            *vimade-ncmode-guide*
+
+Vimade can fade inactive windows in a few different ways. You can control this
+behavior with the `ncmode` option.
+
+- `'buffers'`: (Default) Fades all windows that do not share the same buffer
+  as the active window. This is useful if you have the same buffer open in
+  multiple splits and you want them all to remain highlighted.
+- `'windows'`: Fades all inactive windows. This is a good choice if you want a
+  clear distinction between the window you are currently working in and all
+  other windows.
+- `'focus'`: (Neovim 0.10+) Only fades when the `:VimadeFocus` command is
+  active. This is useful for on-demand highlighting.
+
+Most users should try each option to see what they like best.
+
+lua ~
+>
+  require('vimade').setup{ncmode = 'buffers'} -- or 'windows' or 'focus'
+<
+vimscript ~
+>
+  let g:vimade.ncmode = 'buffers' " or 'windows' or 'focus'
+<
+python ~
+>
+  from vimade import vimade
+  vimade.setup(ncmode='buffers') # or 'windows' or 'focus'
+<
+------------------------------------------------------------------------------
+Preparing a transparent terminal              *vimade-transparent-terminal*
+
+When using a transparent terminal, your `Normal` highlight group has a
+background of `NONE`. Vimade needs to know the actual background color to
+properly calculate faded colors. For the best results, you should set the
+`basebg` option.
+
+1. Place your transparent terminal over a pure white background (`#FFFFFF`).
+2. Use a color picker to determine the hex code of the background color of
+   your terminal.
+3. Set `basebg` to this value in your configuration. You may need to darken it
+   slightly to get the best results.
+
+lua ~
+>
+  require('vimade').setup{basebg = '#2d2d2d'} -- or {45, 45, 45}
+<
+vimscript ~
+>
+  let g:vimade.basebg = '#2d2d2d' " or [45, 45, 45]
+<
+python ~
+>
+  from vimade import vimade
+  vimade.setup(basebg='#2d2d2d') # or [45, 45, 45]
+<
+------------------------------------------------------------------------------
+Fixing Issues with tmux                       *vimade-tmux-fixes*
+
+If you are having issues with Vimade in tmux, here are a few things to try:
+
+- 256 Colors: Vimade requires a 256 color terminal. By default, tmux may set
+  `t_Co` to 8. It is recommended that you set `export TERM=xterm-256color`
+  before starting Vim. You can also set `set termguicolors` inside Vim if your
+  terminal supports it for an even more accurate level of fading.
+- Focus Events: If you want windows to fade when switching between tmux
+  panes, you need to enable focus events.
+  1. Enable focus fading in Vimade: `let g:vimade.enablefocusfading = 1`
+  2. Add `set -g focus-events on` to your `tmux.conf`.
+  3. For Vim users, you may also need to install the
+     `tmux-plugins/vim-tmux-focus-events` plugin.
+
+------------------------------------------------------------------------------
+[Tutorial] Fading only behind floating windows *vimade-floating-window-tutorial*
+
+You can configure Vimade to only fade windows when a floating window is open.
+This is useful if you only want to dim the background when you are focused on a
+floating window, like a popup or a dialog.
+
+This can be achieved with a `blocklist` function that checks if the current
+window is a floating window.
+
+Lua: ~
+>
+  require('vimade').setup({
+    blocklist = {
+      demo_tutorial = function (win, current) 
+        -- current can be nil
+        if (win.win_config.relative == '') and (current and current.win_config.relative ~= '') then
+          return false
+        end
+        return true
+      end
+    }
+  })
+<
+Python: ~
+>
+  from vimade import vimade
+  from vimade.state import globals
+  g_tick_id = -1
+  g_popup_visible = False
+  g_popup_winids = []
+  def refresh_popup_visible():
+    global g_popup_visible
+    global g_popup_winids
+    g_popup_winids = vim.eval('popup_list()')
+    any_visible = False
+    for winid in g_popup_winids:
+      if vim.eval(f'popup_getpos({winid})["visible"]') == '1':
+        any_visible = True
+        break
+    if any_visible != g_popup_visible:
+      g_popup_visible = any_visible
+      if g_popup_visible:
+        # A popup is visible, so fade the background including active win
+        vim.command('VimadeFadeActive')
+      else:
+        # No popups are visible, so clear the fade including active win
+        vim.command('VimadeUnfadeActive')
+  def only_behind_float_windows (win, current):
+    global g_tick_id
+    # This is a performance optimization. We only run the expensive
+    # refresh_popup_state() function once per "tick" (screen refresh),
+    # not for every single window being checked.
+    if g_tick_id != globals.tick_id:
+      g_tick_id = globals.tick_id
+      refresh_popup_visible()
+    return not g_popup_visible or win.winid in g_popup_winids
+
+  vimade.setup(blocklist = {
+    'demo_tutorial': only_behind_float_windows,
+  })
+<
+==============================================================================
+CONFIGURATION                               *vimade-configuration*
+
+------------------------------------------------------------------------------
+OPTIONS                                       *vimade-options*
+
+*g:vimade*
+  A dictionary of options to configure Vimade.
+
+`recipe`                                      *g:vimade.recipe*
+  Type: `table`
+  Default: `{'default', {}}`
+  Specifies a recipe to use for styling. A recipe is a pre-configured set of
+  styles and options. Any other configuration will overlay the recipe config.
+  This can only be configured through a `vimade.setup()` function call.
+
+`ncmode`                                      *g:vimade.ncmode*
+  Type: `string`
+  Default: `'buffers'`
+  - `'buffers'`: Fades all windows that do not share the same buffer as the
+    active window.
+  - `'windows'`: Fades all inactive windows.
+  - `'focus'`: (Neovim 0.10+) Only fades when the `:VimadeFocus` command is
+    active.
+
+`fadelevel`                                   *g:vimade.fadelevel*
+  Type: `float` or `function`
+  Default: `0.4`
+  The amount of fade to apply to inactive windows. A value between `0.0`
+  (completely faded) and `1.0` (not faded at all).
+
+`tint`                                        *g:vimade.tint*
+  Type: `table` or `function`
+  Default: `{}`
+  Apply a color tint to inactive windows. The `tint` option is a table that can
+  contain `fg`, `bg`, and `sp` keys. Each of these keys is a table that can
+  contain `rgb` and `intensity` keys. The `rgb` key is a table of 3 values
+  (red, green, blue) from 0-255. The `intensity` is a value from 0.0-1.0 that
+  determines how much of the color to apply.
+
+  lua ~
+>
+    require('vimade').setup{ tint = { fg = { rgb = {255, 0, 0}, intensity = 0.5}, bg = { rgb = {0, 0, 0}, intensity = 0.2}}}}
+< 
+  vimscript ~
+>
+    let g:vimade.tint = { 'fg': {'rgb': [255, 0, 0], 'intensity': 0.5}, 'bg': {'rgb': [0, 0, 0], 'intensity': 0.2}}
+< 
+  python ~
+>
+    vimade.setup(tint = { 'fg':{'rgb':[255,0,0], 'intensity':0.5}, 'bg':{'rgb':[0,0,0], 'intensity':0.2}})
+< 
+
+`basebg`                                      *g:vimade.basebg*
+  Type: `string` or `table`
+  Default: `nil`
+  The base background color for transparent terminals.
+
+  Examples:
+    - `'#2d2d2d'`
+    - Lua: `{45,45,45}`
+    - Vimscript/Python: `[45,45,45]`
+
+`blocklist`                                   *g:vimade.blocklist*
+  Type: `table` or `function`
+  Default: (see below)
+  A list of windows or buffers to exclude from fading. This can be a table of
+  rules or a function that returns `true` to block a window. Each rule is a
+  table of conditions that must be met for the window to be blocked. The
+  available conditions are:
+  - `buf_name`: Matches against the buffer name.
+  - `win_type`: Matches against the window type.
+  - `buf_opts`: Matches against the buffer options.
+  - `buf_vars`: Matches against the buffer variables.
+  - `win_opts`: Matches against the window options.
+  - `win_vars`: Matches against the window variables.
+  - `win_config`: Matches against the window configuration.
+  - `highlights`: (Neovim only) A list of highlight groups to exclude from
+    fading. This can be a list of strings or a function that returns a list
+    of strings. You can also use a pattern by surrounding the string with `/`.
+
+  Default (lua): ~
+>
+    blocklist = {
+        default = {
+          highlights = {
+            laststatus_3 = function(win, active) 
+              if vim.go.laststatus == 3 then
+                  return 'StatusLine'
+              end
+            end,
+            'TabLineSel',
+            'Pmenu',
+            'PmenuSel',
+            'PmenuKind',
+            'PmenuKindSel',
+            'PmenuExtra',
+            'PmenuExtraSel',
+            'PmenuSbar',
+            'PmenuThumb',
+          },
+          buf_opts = {buftype = {'prompt'}},
+        },
+        default_block_floats = function (win, active)
+          return win.win_config.relative ~= '' and
+            (win ~= active or win.buf_opts.buftype =='terminal') and true or false
+        end,
+      }
+< 
+
+  Default (python): ~
+>
+  blocklist = {
+    'default': {
+      'buf_opts': {
+        'buftype': ['popup', 'prompt']
+      },
+      'win_type': True,
+      'win_config': {
+        'relative': True
+       },
+    }
+  }
+< 
+
+`link`                                        *g:vimade.link*
+  Type: `table` or `function`
+  Default: `{}`
+  A list of windows to style together. When windows are linked, they are
+  styled together, meaning they will both be considered "active" or "inactive"
+  based on the rules. This can be a table of rules or a function that returns
+  `true` to link a window. Each rule is a table of conditions that must be
+  met for the window to be linked.
+  - `buf_name`: Matches against the buffer name.
+  - `win_type`: Matches against the window type.
+  - `buf_opts`: Matches against the buffer options.
+  - `buf_vars`: Matches against the buffer variables.
+  - `win_opts`: Matches against the window options.
+  - `win_vars`: Matches against the window variables.
+  - `win_config`: Matches against the window configuration.
+
+  By default, Vimade links diff windows (if `groupdiff` is `true`) and
+  scroll-bound windows (if `groupscrollbind` is `true`).
+
+  Tutorial Example: Linking Windows with `linked_window` ~
+  Let's say you want to link two windows so they always have the same fade
+  state. You can achieve this by setting a window-local variable, for
+  example, `linked_window`, to `1` in both windows. Then, configure Vimade's
+  `link` option to recognize this variable.
+
+  Step 1: Set a window-local variable in both windows ~
+>
+    :let w:linked_window = 1
+< 
+
+  Step 2: Configure Vimade to link windows based on this variable ~
+
+  lua ~
+>
+    require('vimade').setup({
+      link = {
+        my_linked_windows = function(win, active)
+          return win.win_vars.linked_window == 1 and active.win_vars.linked_window == 1
+        end,
+      },
+    })
+< 
+  vimscript ~
+>
+    let g:vimade.link = {
+      \ 'my_linked_windows': {
+      \   'win_vars': {'linked_window': 1},
+      \ },
+      \ }
+< 
+
+`groupdiff`                                   *g:vimade.groupdiff*
+  Type: `boolean`
+  Default: `true`
+  When `true`, all windows in diff mode are treated as a single entity.
+
+`groupscrollbind`                             *g:vimade.groupscrollbind*
+  Type: `boolean`
+  Default: `false`
+  When `true`, all windows with the `'scrollbind'` option enabled are treated
+  as a single entity.
+
+`enablefocusfading`                           *g:vimade.enablefocusfading*
+  Type: `boolean`
+  Default: `false`
+  When `true`, Vimade will fade the entire editor when it loses focus and
+  unfade it upon gaining focus.
+
+`checkinterval`                               *g:vimade.checkinterval*
+  Type: `integer`
+  Default: `1000`
+  The interval in milliseconds for checking window states. This option is
+  ignored if `usecursorhold` is enabled.
+
+`usecursorhold`                               *g:vimade.usecursorhold*
+  Type: `boolean`
+  Default: `false`
+  When `true`, Vimade will use the `CursorHold` event to trigger updates
+  instead of a timer.
+
+`lazy`                                        *g:vimade.lazy*
+  Type: `boolean`
+  Default: `false`
+  When set to `true`, Vimade is disabled at startup. You will need to
+  manually call `:VimadeEnable` or `vimade#Load()` to enable it.
+
+  Neovim(lazy.nvim): ~
+  For lazy loading with `lazy.nvim`, you can use the `event` key to specify
+  when to load the plugin. For example, to load Vimade on the `VeryLazy`
+  event:
+>
+    require('lazy').setup({spec = {{'tadaa/vimade', event = 'VeryLazy'}}})
+<
+  Vimscript/Python: ~
+  To lazy load with vimscript, you can set `g:vimade.lazy` to 1 and then
+  call `vimade#Load()` on an autocommand:
+>
+    let g:vimade = {}
+    let g:vimade.lazy = 1
+    au WinEnter * ++once call vimade#Load()
+<
+
+`renderer`                                    *g:vimade.renderer*
+  Type: `string`
+  Default: `'auto'`
+  Specifies the rendering engine for Vimade.
+
+`nohlcheck`                                   *g:vimade.nohlcheck*
+  Type: `boolean`
+  Default: `true`
+  (Lua only) This option controls how often Vimade checks for updates to
+  highlight namespaces. Setting to `false` will cause vimade to fully
+  recheck all namespaces for changes each frame. This should not be needed
+  except for debugging purposes.
+
+`enablesigns`                                 *g:vimade.enablesigns*
+  Type: `boolean`
+  Default: `True`
+  (Python only) Whether or not to fade signs.
+
+`signsid`                                     *g:vimade.signsid*
+  Type: `integer`
+  Default: `13100`
+  (Python only) The starting ID for placing Vimade signs.
+
+`signsretentionperiod`                        *g:vimade.signsretentionperiod*
+  Type: `integer`
+  Default: `4000`
+  (Python only) The amount of time after a window becomes inactive to check
+  for sign updates.
+
+`fademinimap`                                 *g:vimade.fademinimap*
+  Type: `boolean`
+  Default: `true`
+  (Python only) Enables a special fade effect for
+  `severin-lemaignan/vim-minimap`.
+
+`matchpriority`                               *g:vimade.matchpriority*
+  Type: `integer`
+  Default: `10`
+  (Python only) Controls the highlighting priority.
+
+`linkwincolor`                                *g:vimade.linkwincolor*
+  Type: `table`
+  Default: `{}`
+  (Python only) **Vim only** option when **wincolor** is supported. List of
+  highlights that will be linked to `Normal`.
+
+`disablebatch`                                *g:vimade.disablebatch*
+  Type: `boolean`
+  Default: `false`
+  (Python only) Disables IPC batching. Should not be needed except for
+  debugging issues. Enabling this will greatly reduce performance.
+
+`enablebasegroups`                            *g:vimade.enablebasegroups*
+  Type: `boolean`
+  Default: `true`
+  (Python only) Only old **Neovim**. Allows winlocal winhl for the basegroups
+  listed below.
+
+`basegroups`                                  *g:vimade.basegroups*
+  Type: `table`
+  Default: (every built-in highlight)
+  (Python only) Only old **Neovim**. Fades the listed highlights in addition
+  to the buffer text.
+
+`enabletreesitter`                            *g:vimade.enabletreesitter*
+  Type: `boolean`
+  Default: `false`
+  (Python only) Only old **Neovim**. Uses treesitter to directly query
+  highlight groups instead of relying on `synID`.
 
 ==============================================================================
-NORMALNC                                                     *vimade-normalnc*
+COMMANDS                                      *vimade-commands*
 
-If you are using NVIM and enable NormalNC ('hi NormalNC guibg=[color]'),
-Vimade will fade using the NormalNC color, which means you can make a pretty
-sleek looking Vim experience.  It might take some effort, but I find the best
-experience to be with background colors that produce lower contrast levels.
+`:VimadeEnable`                               *:VimadeEnable*
+  Enables **Vimade**.
+
+`:VimadeDisable`                              *:VimadeDisable*
+  Disable and remove all **Vimade** highlights.
+
+`:VimadeToggle`                               *:VimadeToggle*
+  Toggle between enabled/disabled states.
+
+`:VimadeRedraw`                               *:VimadeRedraw*
+  Force vimade to recalculate and redraw every highlight.
+
+`:VimadeInfo`                                 *:VimadeInfo*
+  Provides debug information for Vimade.
+
+`:VimadeFocus` [...args]                       *:VimadeFocus*
+  Neovim-only. Highlights around the cursor using your configured providers.
+  When used with no subcommand, it toggles the focus highlight. This command
+  has the following subcommands:
+    `toggle`: Toggles the focus highlight. (Default)
+    `toggle-on`: Enables the focus highlight.
+    `toggle-off`: Disables the focus highlight.
+
+`:VimadeMark` [...args]                        *:VimadeMark*
+  Neovim-only. Mark an area that should not be highlighted in inactive
+  windows. When used with no subcommand, it toggles the mark for the current
+  selection. This command has the following subcommands:
+    `set`: Marks the current selection.
+    `remove`: Removes marks within the current selection.
+    `remove-win`: Removes all marks in the current window.
+    `remove-buf`: Removes all marks in the current buffer.
+    `remove-tab`: Removes all marks in the current tab.
+    `remove-all`: Removes all marks.
+
+`:VimadeWinDisable`                           *:VimadeWinDisable*
+  Disables fading for the current window.
+
+`:VimadeWinEnable`                            *:VimadeWinEnable*
+  Enables fading for the current window.
+
+`:VimadeBufDisable`                           *:VimadeBufDisable*
+  Disables fading for the current buffer.
+
+`:VimadeBufEnable`                            *:VimadeBufEnable*
+  Enables fading for the current buffer.
+
+`:VimadeFadeActive`                           *:VimadeFadeActive*
+  Fades the current active window.
+
+`:VimadeUnfadeActive`                         *:VimadeUnfadeActive*
+  Unfades the current active window.
+
+`:VimadeFadeLevel [0.0-1.0]`                  *:VimadeFadeLevel*
+  Sets the FadeLevel config and forces an immediate redraw.
+
+`:VadeFadePriority [0+]`                      *:VadeFadePriority*
+  Sets the FadePriority config and forces an immediate redraw.
+
+`:VimadeOverrideFolded`                       *:VimadeOverrideFolded*
+  (Recommended for Vim users) Overrides the Folded highlight.
+
+`:VimadeOverrideSignColumn`                   *:VimadeOverrideSignColumn*
+  (Recommended for Vim users) Overrides the SignColumn highlight.
+
+`:VimadeOverrideLineNr`                       *:VimadeOverrideLineNr*
+  (Recommended for Vim users) Overrides the LineNr highlight.
+
+`:VimadeOverrideSplits`                       *:VimadeOverrideSplits*
+  (Recommended for Vim users) Overrides the VertSplit highlight.
+
+`:VimadeOverrideNonText`                      *:VimadeOverrideNonText*
+  (Recommended for Vim users) Overrides the NonText highlight.
+
+`:VimadeOverrideEndOfBuffer`                  *:VimadeOverrideEndOfBuffer*
+  (Recommended for Vim users) Overrides the EndOfBuffer highlight.
+
+`:VimadeOverrideAll`                          *:VimadeOverrideAll*
+  (Recommended for Vim users) Combines all VimadeOverride commands.
 
 ==============================================================================
-FAQ/HELP                                                         *vimade-help*
+RECIPES                                       *vimade-recipes*
 
-I am using GVIM and my mappings are not working
-*Add `let g:vimade.usecursorhold=1` to your vimrc*
+`default`                                     *vimade-recipe-default*
+  The standard Vimade experience.
+>
+  require("vimade").setup({recipe = {"default", {animate = true}}})
+< 
+`minimalist`                                  *vimade-recipe-minimalist*
+  Hides low-value inactive highlights like line numbers and the end-of-buffer
+  marker.
+>
+  require("vimade").setup({recipe = {"minimalist", {animate = true}}})
+< 
+`duo`                                         *vimade-recipe-duo*
+  A balanced approach between window and buffer fading.
+>
+  require("vimade").setup({recipe = {"duo", {animate = true}}})
+< 
+`paradox`                                     *vimade-recipe-paradox*
+  Inverts the colors of the active window for a high-contrast look. (Neovim
+  only)
+>
+  require("vimade").setup({recipe = {"paradox", {animate = true}}})
+< 
+`ripple`                                      *vimade-recipe-ripple*
+  Gradually fades windows based on their distance from the active window.
+>
+  require("vimade").setup({recipe = {"ripple", {animate = true}}})
+< 
+==============================================================================
+CREATING RECIPES                              *vimade-creating-recipes*
 
-What about Vim < 8?
-*Vim 7.4 is currently untested/experimental, but may work if you add `let
-  g:vimade.usecursorhold=1` to your vimrc*
-My colors look off in terminal mode!
-*Make sure that you either use a supported terminal or colorscheme or manually
-  define the fg and bg for 'Normal'.  You can also manually define the tint in
-  your vimade config (g:vimade.basebg and g:vimade.basefg)*
+Recipes are the heart of Vimade's customization. A recipe is simply a
+collection of styles that are applied to inactive windows. You can mix and
+match styles to create your own unique look and feel. All of Vimade's built-in
+recipes are just a collection of the styles listed below, with varying degrees
+of complexity.
 
-Tmux is not working!
-*Vimade only works in 256 color mode and by default TMUX may set t_Co to 8.
-  it is recommended that you set `export TERM=xterm-256color` before starting
-  vim.  You can also set `set termguicolors` inside vim if your term supports
-  it for an even more accurate level of fading.*
+To create a recipe, you define a list of styles in your configuration. Each
+style is a Lua table with a specific set of options.
 
+Here is an example of a simple recipe:
 
-vim:tw=78:ts=8:ft=help:norl:
+Lua: ~
+>
+  require('vimade').setup({
+    style = {
+      -- Fade inactive windows by 60%
+      require('vimade.style.fade').Fade({value = 0.4}),
+      -- Tint the foreground of inactive windows with a blue color
+      require('vimade.style.tint').Tint({
+        value = {
+          fg = {rgb = {100, 100, 255}, intensity = 0.2},
+        }
+      }),
+    }
+  })
+< 
+Python: ~
+>
+  from vimade import vimade
+  from vimade.style.fade import Fade
+  from vimade.style.tint import Tint
+
+  vimade.setup(
+    style = [
+      # Fade inactive windows by 60%
+      Fade(value = 0.4),
+      # Tint the foreground of inactive windows with a blue color
+      Tint(
+        value = {
+          'fg': {'rgb': [100, 100, 255], 'intensity': 0.2},
+        }
+      ),
+    ]
+  )
+< 
+If you create a style combination that you find particularly useful, you can
+abstract it into your own recipe. Recipes are located in the
+`lua/vimade/recipe/` directory. If you believe your recipe would be beneficial
+to other users, please feel free to open a pull request to add it to Vimade!
+
+------------------------------------------------------------------------------
+Available Styles                            *vimade-available-styles*
+
+Here is a list of the available styles and their options:
+
+`Fade`                                          *vimade-style-fade*
+  Fades the highlights of inactive windows.
+
+  `value`
+    Type: `number` or `function`
+    Default: `nil`
+    The target fade level. A value between `0.0` (completely faded) and `1.0`
+    (not faded).
+
+  `condition`
+    Type: `function`
+    Default: `CONDITION.INACTIVE`
+    A function that determines if the style should be applied.
+
+`Tint`                                          *vimade-style-tint*
+  Tints the highlights of inactive windows.
+
+  `value`
+    Type: `table` or `function`
+    Default: `nil`
+    A table with `fg`, `bg`, and `sp` keys, each with `rgb` and `intensity`
+    values.
+
+  `condition`
+    Type: `function`
+    Default: `CONDITION.INACTIVE`
+    A function that determines if the style should be applied.
+
+`Invert`                                      *vimade-style-invert*
+  Inverts the colors of inactive windows.
+
+  `value`
+    Type: `number` or `table` or `function`
+    Default: `nil`
+    The inversion level from `0.0` to `1.0`. Can be a single number or a table
+    with `fg`, `bg`, and `sp` keys.
+
+  `condition`
+    Type: `function`
+    Default: `CONDITION.INACTIVE`
+    A function that determines if the style should be applied.
+
+`Include`                                    *vimade-style-include*
+  Applies nested styles to a specific list of highlight groups.
+
+  `value`
+    Type: `table`
+    Default: `nil`
+    A list of highlight group names.
+
+  `style`
+    Type: `table`
+    Default: `nil`
+    A list of styles to apply to the included highlight groups.
+
+  `condition`
+    Type: `function`
+    Default: `CONDITION.INACTIVE`
+    A function that determines if the style should be applied.
+
+`Exclude`                                    *vimade-style-exclude*
+  Applies nested styles to all highlight groups except for a specific list.
+
+  `value`
+    Type: `table`
+    Default: `nil`
+    A list of highlight group names to exclude.
+
+  `style`
+    Type: `table`
+    Default: `nil`
+    A list of styles to apply to the not-excluded highlight groups.
+
+  `condition`
+    Type: `function`
+    Default: `CONDITION.INACTIVE`
+    A function that determines if the style should be applied.
+
+`Component`                                  *vimade-style-component*
+  A container style that groups other styles under a name and a condition.
+  This is useful for creating logical groups of styles that can be enabled or
+  disabled together.
+
+  `name`
+    Type: `string`
+    Default: `nil`
+    The name of the component.
+
+  `style`
+    Type: `table`
+    Default: `nil`
+    A list of styles to be included in the component.
+
+  `condition`
+    Type: `function`
+    Default: `CONDITION.INACTIVE`
+    A function that determines if the component's styles should be applied.
+
+`Link`                                        *vimade-style-link*
+  Links one highlight group to another.
+
+  `value`
+    Type: `table`
+    Default: `nil`
+    A list of tables, each with a `from` and `to` key specifying the
+    highlight group to link from and to.
+
+  `condition`
+    Type: `function`
+    Default: `CONDITION.INACTIVE`
+    A function that determines if the linking should be applied.
+
+==============================================================================
+API                                           *vimade-api*
+
+Vimade provides a Lua and Python API for more advanced customization.
+
+------------------------------------------------------------------------------
+lua API                                       *vimade-lua-api*
+
+The Lua API is available in the `vimade` module.
+
+`vimade.setup(config)`
+  Sets up Vimade with the given configuration.
+
+`vimade.getInfo()`
+  Returns debug information for Vimade.
+
+`vimade.disable()`
+  Disables Vimade and removes all highlights.
+
+`vimade.redraw()`
+  Forces Vimade to recalculate and redraw every highlight.
+
+`vimade.update()`
+  Triggers an update of the Vimade state.
+
+------------------------------------------------------------------------------
+Python API                                    *vimade-python-api*
+
+The Python API is available in the `vimade` module.
+
+`vimade.setup(**kwargs)`
+  Sets up Vimade with the given configuration.
+
+`vimade.getInfo()`
+  Returns debug information for Vimade.
+
+`vimade.disable()`
+  Disables Vimade and removes all highlights.
+
+`vimade.invalidate()`
+  Re-checks the screen state.
+
+`vimade.recalculate()`
+  Forces Vimade to recalculate and redraw every highlight.
+
+`vimade.update()`
+  Triggers an update of the Vimade state.
+
+==============================================================================
+CONTRIBUTING                                  *vimade-contributing*
+
+Contributions are always welcome! Whether you have a feature request, a bug
+report, or a question, please feel free to open an issue or a pull request.
+
+------------------------------------------------------------------------------
+Recipes                                       *vimade-contributing-recipes*
+
+If you've created a recipe that you think others would enjoy, please consider
+sharing it! Recipes are a great way to contribute to the Vimade community. You
+can find the existing recipes in the `lua/vimade/recipe/` directory.
+
+------------------------------------------------------------------------------
+Bug Reports and Feature Requests              *vimade-contributing-issues*
+
+If you encounter a bug or have an idea for a new feature, please open an issue
+on the GitHub repository. When opening an issue, please provide as much detail
+as possible, including:
+
+- Your Vim/Neovim version
+- The output of `:VimadeInfo`
+- Steps to reproduce the issue
+
+Thanks for your interest in contributing to Vimade!
