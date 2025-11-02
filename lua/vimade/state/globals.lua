@@ -30,6 +30,7 @@ M.DISCARD_NS = 8
 M.HLCHECK = 8
 
 M.vimade_lua = {}
+M.recipe_vim = {}
 
 M.tick_id = 0
 M.tick_state = M.READY
@@ -188,9 +189,13 @@ local check_fields = function (fields, next, current, defaults, return_state)
   return modified and return_state or M.READY
 end
 
-M.setup = function (config)
-  local overlay = {}
-  local recipe = config and config.recipe
+local _get_recipe = function(recipe)
+  if not recipe then
+    return {}
+  end
+  if type(recipe) == 'string' then
+    recipe = {recipe}
+  end
   if recipe and #recipe > 0 then
     if type(recipe[1]) == 'string' then
       local required = {}
@@ -203,15 +208,24 @@ M.setup = function (config)
         file = string.lower(name)
       end
       name = string.upper(string.sub(name,1,1)) .. string.lower(string.sub(name, 2))
-      local module = require('vimade.recipe.' .. file)
-      module = module[name]
-      recipe = module(recipe[2] or {})
-      overlay = TYPE.extend(overlay, recipe)
+      local success, module = pcall(require, 'vimade.recipe.' .. file)
+      if success then
+        module = module[name]
+        recipe = module(recipe[2] or {})
+      else
+        recipe = {}
+      end
+      return TYPE.extend({}, recipe)
     end
   end
-  config.recipe = nil
-  overlay = TYPE.extend(overlay, TYPE.deep_copy(config))
+  return {}
+end
+
+
+M.setup = function (config)
   local external_overlay = {}
+  local recipe = _get_recipe(config and config.recipe)
+  overlay = TYPE.extend(recipe, TYPE.deep_copy(config))
   for i, field in ipairs({'usecursorhold', 'checkinterval', 'enablefocusfading', 'normalid', 'normalncid'}) do
     if config[field] ~= nil then
       external_overlay[field] = config[field]
@@ -247,8 +261,16 @@ M.refresh = function (override_tick_state)
   M.now = vim.loop.now()
   M.tick_id = next_tick_id()
   M.tick_state = override_tick_state or M.READY
-  -- no reason to re-copy vimade_lua we aren't going to change it
-  local vimade = TYPE.shallow_extend(TYPE.deep_copy(vim.g.vimade), M.vimade_lua)
+  local vimade = TYPE.deep_copy(vim.g.vimade)
+  if M.vimade_lua.recipe == nil then
+    local recipe = vimade.recipe
+    if recipe ~= nil and vim.g.__vimade_recipe_applied ~= 1 then
+      vim.g.__vimade_recipe_applied = 1
+      M.recipe_vim = _get_recipe(recipe)
+    end
+    vimade = TYPE.shallow_extend(vimade, M.recipe_vim)
+  end
+  vimade = TYPE.shallow_extend(vimade, M.vimade_lua)
   local current = {
     winid = tonumber(vim.api.nvim_get_current_win()),
     bufnr = tonumber(vim.api.nvim_get_current_buf()),

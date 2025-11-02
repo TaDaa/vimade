@@ -85,11 +85,11 @@ require('vimade').setup({
 
 <details>
 <summary><a><ins>Configure with vimscript</ins></a></summary>
+<br>
 
-> Recipes are not available via vimscript configuration (use either python or lua)
-
-```
+```vim
 let g:vimade = {}
+let g:vimade.recipe = ['default', {'animate': 0}]
 let g:vimade.fadelevel = 0.4
 ```
 
@@ -450,7 +450,7 @@ Gradually fades windows based on their distance from the active window.
 
 | Option | Description |
 |---|---|
-| **`recipe`**<br><sub>`table`<br>_Default:_ `{'default', {}}`</sub> | Specifies a recipe to use for styling. A recipe is a pre-configured set of styles and options. Any other configuration will overlay the recipe config. See the [Recipes](#-recipes) section for available recipes.<br><br><ins>Example (lua):</ins></a><pre><code>require('vimade').setup({recipe = {'minimalist', {animate = true}}})</code></pre><br><ins>Example (python):</ins></a><pre><code>vimade.setup(recipe = ['minimalist', {'animate': True}])</code></pre> |
+| **`recipe`**<br><sub>`table`<br>_Default:_ `{'default', {}}`</sub> | Specifies a recipe to use for styling. A recipe is a pre-configured set of styles and options. Any other configuration will overlay the recipe config. See the [Recipes](#-recipes) section for available recipes.<br><br><ins>Example (lua):</ins></a><pre><code>require('vimade').setup({recipe = {'minimalist', {animate = true}}})</code></pre><br><ins>Example (vimscript):</ins></a><pre><code>let g:vimade.recipe = ['minimalist', {'animate': 1}]</code></pre><br><ins>Example (python):</ins></a><pre><code>vimade.setup(recipe = ['minimalist', {'animate': True}])</code></pre> |
 | **`ncmode`**<br><sub>`string`<br>_Default:_ `'buffers'`</sub> | - **`'buffers'`**: Fades all windows that do not share the same buffer as the active window. This is useful if you have the same buffer open in multiple splits and you want them all to remain highlighted.<br><br>- **`'windows'`**: Fades all inactive windows. This is a good choice if you want a clear distinction between the window you are currently working in and all other windows.<br><br>- **`'focus'`** (Neovim 0.10+): Only fades when the `:VimadeFocus` command is active. This is useful for on-demand highlighting.<br><br> |
 | **`fadelevel`**<br><sub>`float` or `function`<br>_Default:_ `0.4`</sub> | The amount of fade to apply to inactive windows. A value between `0.0` (completely faded) and `1.0` (not faded at all). |
 | **`tint`**<br><sub>`table` or `function`<br>_Default:_ `{}`</sub> | Apply a color tint to inactive windows. The `tint` option is a table that can contain `fg`, `bg`, and `sp` keys. Each of these keys is a table that can contain `rgb` and `intensity` keys. The `rgb` key is a table of 3 values (red, green, blue) from 0-255. The `intensity` is a value from 0.0-1.0 that determines how much of the color to apply.<br><br><ins>Example (lua):</ins></a><sub><pre><code>require('vimade').setup({</code><br><code>  tint = {</code><br><code>    fg = { rgb = {255, 0, 0}, intensity = 0.5},</code><br>    bg = { rgb = {0, 0, 0}, intensity = 0.2}}})</pre></code></sub><br><ins>Example (vimscript):</ins></a><sub><pre><code>let g:vimade.tint = {</code><br><code>  \ 'fg': {'rgb': [255, 0, 0], 'intensity': 0.5},</code><br><code>  \ 'bg': {'rgb': [0, 0, 0], 'intensity': 0.2}}</code></pre></sub><br><ins>Example (python):</ins></a><sub><pre><code>vimade.setup(</code><br><code>  tint = { </code><br><code>    'fg':{'rgb':[255,0,0], 'intensity':0.5},</code><br><code>    'bg':{'rgb':[0,0,0], 'intensity':0.2}})</pre></code></sub> |

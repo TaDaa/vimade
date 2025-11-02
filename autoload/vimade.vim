@@ -188,16 +188,24 @@ function! vimade#GetDefaults()
     "basebg can be either be six digit hexidecimal color, rgb array [0-255,0-255,0-255], or cterm code (in terminal).  basebg is used as the color that text is faded against.  You can override this config with another hexidecimal color.  A cool feature of basebg is to use it to change the tint of faded text even if its not your background!
 
     let g:vimade_defaults.basebg = ''
+    "
+    ""@setting vimade.recipe
+    "Supported:     ['default', {}], ['minimalist', {}], ['duo', {'animate: 0'}]
+    " The second argument in the array overrides the recipe settings (e.g.
+    " {'animate: 1'})
+    " May also specify recipe as just 'default' or ['default']
+
+    " unset - but automatically picked up if user changes and has not set via
+    " overlay
+    let g:vimade_defaults.recipe = 'default'
+    let g:vimade.__recipe = 'default' 
+    let g:__vimade_recipe_applied = 0 
 
     ""@setting vimade.ncmode
     "Supported:     lua, python
     "Whether to fade active windows or buffers.  Options are 'windows' or 'buffers'.  Defaults to 'buffers'.
 
     let g:vimade_defaults.ncmode = 'buffers'
-
-    ""@setting vimade.fadecondition
-    "Supported:     lua, python
-    "TODO docs
 
     "Can be set via vim object
     ""@setting vimade.blocklist
@@ -589,6 +597,7 @@ function! vimade#StartAnimationTimer()
   if g:vimade_features.has_timer_start && !exists('g:vimade_animation_running')
     let g:vimade_animation_running = 1
     if !exists('g:vimade_animation_timer')
+      " TODO for vim this should be lower -- otherwise feels jerky
       let g:vimade_animation_timer = timer_start(16, 'vimade#DoAnimations', {'repeat': -1})
     else
       call timer_pause(g:vimade_animation_timer, 0)
@@ -659,6 +668,11 @@ function! vimade#UpdateState()
   endif
   if !has_key(g:vimade, '$extended')
     call vimade#ExtendState()
+  endif
+  let l:recipe = get(g:vimade, 'recipe')
+  if l:recipe isnot g:vimade.__recipe
+    let g:vimade.__recipe = l:recipe
+    let g:__vimade_recipe_applied = 0
   endif
   let normalid = vimade#GetMaybeFromOverlay('normalid')
   if normalid == "" || normalid == 0 || normalid == v:null

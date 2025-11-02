@@ -73,6 +73,7 @@ Configure with vimscript                      *vimade-vimscript-config*
 
 >
   let g:vimade = {}
+  let g:vimade.recipe = ['default', {'animate': 0}]
   let g:vimade.fadelevel = 0.4
 <
 ------------------------------------------------------------------------------
@@ -83,7 +84,7 @@ Configure with python                         *vimade-python-config*
   python << EOF
   from vimade import vimade
   vimade.setup(
-    recipe = ['default', {'animate':True}],
+    recipe = ['default', {'animate':False}],
     fadelevel = 0.4,
    )
   EOF
@@ -257,7 +258,7 @@ CONFIGURATION                               *vimade-configuration*
 ------------------------------------------------------------------------------
 OPTIONS                                       *vimade-options*
 
-*g:vimade*
+`g:vimade`
   A dictionary of options to configure Vimade.
 
 `recipe`                                      *g:vimade.recipe*
@@ -265,7 +266,22 @@ OPTIONS                                       *vimade-options*
   Default: `{'default', {}}`
   Specifies a recipe to use for styling. A recipe is a pre-configured set of
   styles and options. Any other configuration will overlay the recipe config.
-  This can only be configured through a `vimade.setup()` function call.
+  See |vimade-recipes| for available recipes.
+
+  Example (lua):
+>
+  require('vimade').setup({recipe = {'minimalist', {animate = true}}})
+<
+
+  Example (vimscript):
+>
+  let g:vimade.recipe = ['minimalist', {'animate': 0}]
+<
+
+  Example (python):
+>
+  vimade.setup(recipe = ['minimalist', {'animate': False}])
+<
 
 `ncmode`                                      *g:vimade.ncmode*
   Type: `string`

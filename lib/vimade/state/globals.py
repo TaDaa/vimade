@@ -104,6 +104,7 @@ class Globals(object):
       'SIGNS': 32,
       'features': features,
       'vimade_py': {},
+      'recipe_vim': {},
       'tick_id': 1000,
       'tick_state': 0,
       'vimade_fade_active': False,
@@ -200,10 +201,11 @@ class Globals(object):
       tick_id = 1000
     return tick_id
 
-  def setup(self, **kwargs):
-    overlay = {}
-    external_overlay = {}
-    recipe = kwargs.get('recipe')
+  def _get_recipe(self, recipe):
+    if not recipe:
+      return {}
+    if type(recipe) == str:
+      recipe = [recipe]
     if recipe and len(recipe) > 0:
       if type(recipe[0]) == str:
         required = recipe[0].split(':')
@@ -212,13 +214,19 @@ class Globals(object):
         if not file and name:
           file = name.lower()
         name = name[0].upper() + name[1:].lower()
-        module = self.import_module('vimade.recipe.' + file)
-        module = module.__getattribute__(name)
-        recipe = module(**(recipe[1] if len(recipe) > 1 else {}))
-        overlay = self.TYPE.extend(overlay, recipe)
-    if 'recipe' in kwargs:
-      del kwargs['recipe']
-    overlay = self.TYPE.extend(overlay, self.TYPE.deep_copy(kwargs))
+        try:
+          module = self.import_module('vimade.recipe.' + file)
+          module = module.__getattribute__(name)
+          recipe = module(**(recipe[1] if len(recipe) > 1 else {}))
+        except:
+          recipe = {}
+        return self.TYPE.extend({}, recipe)
+    return {}
+
+  def setup(self, **kwargs):
+    external_overlay = {}
+    recipe = self._get_recipe(kwargs.get('recipe'))
+    overlay = self.TYPE.extend(recipe, self.TYPE.deep_copy(kwargs))
     for field in ['usecursorhold', 'checkinterval', 'enablefocusfading', 'normalid', 'normalncid']:
       value = overlay.get(field)
       if value != None:
@@ -249,7 +257,7 @@ class Globals(object):
       winid,
       winnr,
       bufnr,
-      tabnr) = self.IPC.mem_safe_eval('['+','.join([
+      tabnr, recipe_applied) = self.IPC.mem_safe_eval('['+','.join([
       '&background',
       'exists("g:colors_name") ? g:colors_name : ""',
       '&termguicolors',
@@ -259,12 +267,20 @@ class Globals(object):
       'winnr()',
       'bufnr()',
       'tabpagenr()',
+      'g:__vimade_recipe_applied',
     ])+']')
     # we need the actual converted object here for config. This coercion is
     # required for consistency between nvim and vim.
     # some versions of vim return bytes instead of str
     # output of coerceTypes is essentially already a deep copy
-    vimade = self.TYPE.shallow_extend(self.IPC.coerceTypes(self.vim.vars['vimade']), self.vimade_py)
+    vimade_vim = self.IPC.coerceTypes(self.vim.vars['vimade'])
+    if not 'recipe' in self.vimade_py:
+      recipe = vimade_vim.get('recipe')
+      if recipe and not recipe_applied:
+        self.vim.vars['__vimade_recipe_applied'] = 1
+        self.recipe_vim = self._get_recipe(recipe)
+      vimade_vim = self.TYPE.shallow_extend(vimade_vim, self.recipe_vim)
+    vimade = self.TYPE.shallow_extend(vimade_vim, self.vimade_py)
     if 'fadepriority' in vimade and not 'matchpriority' in vimade:
       vimade['matchpriority'] = vimade['fadepriority']
     
