@@ -13,6 +13,15 @@ NAMESPACE = None
 IS_NVIM = None
 HAS_NVIM_GET_HL = None
 
+M.next_id = 0
+M.free_ids = []
+M.name_id_lookup = {}
+M.id_name_lookup = {}
+M.base_id_cache = {}
+M.vimade_id_cache = {}
+M.win_lookup = {}
+M.current_modify_state = {}
+
 def __init(args):
   global GLOBALS
   global IS_NVIM
@@ -48,14 +57,6 @@ def __init(args):
     def remove_signs():
       pass
   M.global_win.ns = GlobalNamespace(M.global_win)
-
-M.next_id = 0
-M.free_ids = []
-M.name_id_lookup = {}
-M.id_name_lookup = {}
-M.base_id_cache = {}
-M.vimade_id_cache = {}
-M.win_lookup = {}
 
 _process_hl_results = None
 def _process_nvim_hl_results(results, ids):
@@ -158,9 +159,64 @@ def clear_colors(win, ids):
 def clear_base_cache():
   M.base_id_cache = {}
 
+# WARNING: this should only be called within modify loop or with a valid modify_state
+# returns tuple (ids, highlights)
+def get_highlights(win, ids_or_names, sync = False, modify_state = None):
+  modify_state = modify_state or M.current_modify_state
+  result = Promise()
+  def then_process_ids(ids):
+    base_keys = []
+    attrs_eval = []
+    attrs_eval_ids = []
+    base_key_suffix = modify_state.get('base_key_suffix')
+    fg_wincolorhl = modify_state.get('fg_wincolorhl')
+    name_override = modify_state.get('name_override')
+    for id in ids:
+      cache_key = str(id) + base_key_suffix
+      if not cache_key in M.base_id_cache:
+        base_keys.append(cache_key)
+        attrs_eval_ids.append(id)
+        attrs_eval.append(hi_string % id)
+        M.base_id_cache[cache_key] = {}
+    if len(attrs_eval_ids) > 0:
+      # This is unsafe to batch mostly due to basegroups.  The issue is that basegroups are already linked
+      # then async op here to redo the highlights can cause a visual skip showing the wrong color
+      # this occurs b/c another window might redo the highlight due to clear_color on the current window.
+      # There is a performance gain but it's not worth maintaining the logic.
+      attrs = _process_hl_results(IPC.eval_and_return('[' + ','.join(attrs_eval) + ']'), attrs_eval_ids)
+      for i, cache_key in enumerate(base_keys):
+        base = M.base_id_cache.get(cache_key)
+        base_hi = defaultHi(attrs[i], fg_wincolorhl)
+        base['hi'] = base_hi
+        base['base_key'] = str(base_hi['ctermfg']) + ',' + str(base_hi['ctermbg']) + ',' + str(base_hi['fg']) + ',' + str(base_hi['bg']) + ',' + str(base_hi['sp'])
+    highlights = {}
+    for id in ids:
+      base = M.base_id_cache[str(id) + base_key_suffix]
+      base_hi = base['hi']
+      name = name_override if name_override else base_hi['name']
+      if name in highlights:
+        continue
+      hi_attrs = {
+          'name': name,
+          'ctermfg': base_hi['ctermfg'],
+          'ctermbg': base_hi['ctermbg'],
+          'fg': base_hi['fg'],
+          'bg': base_hi['bg'],
+          'sp': base_hi['sp'] }
+      ### below logic prevents basebg from applying to VimadeWC (otherwise background is altered for Vim)
+      if name == 'Normal':
+        hi_attrs['ctermbg'] = None
+        hi_attrs['bg'] = None
+      highlights[name] = hi_attrs
+    result.resolve((ids, highlights))
+
+  _get_hl_name_and_ids_for(win, ids_or_names, sync).then(then_process_ids)
+
+  return result
+
 # ensure we have valid ids for the highlighting process, otherwise
 # get them.
-def _get_hl_name_and_ids_for(win, to_process):
+def _get_hl_name_and_ids_for(win, to_process, sync = False):
 # def _get_hl_ids_for_names(win, to_process):
   to_process = to_process[0:]
   name_index_map = {}
@@ -210,7 +266,10 @@ def _get_hl_name_and_ids_for(win, to_process):
     promise.resolve(to_process)
 
   if len(name_eval) or len(id_eval):
-    IPC.batch_eval_and_return('[[' + ','.join(name_eval) + '], ['+ ','.join(id_eval) +']]').then(next)
+    if sync:
+      next(IPC.eval_and_return('[[' + ','.join(name_eval) + '], ['+ ','.join(id_eval) +']]'))
+    else:
+      IPC.batch_eval_and_return('[[' + ','.join(name_eval) + '], ['+ ','.join(id_eval) +']]').then(next)
   else:
     promise.resolve(to_process)
 
@@ -252,30 +311,37 @@ def defaultWincolorHi(wincolorhl, normalhl):
 
 def create_highlights(win, to_process, skip_transpose = False, name_override = None):
   promise = Promise()
-  def next(to_process):
-    wincolorhl = win['wincolorhl']
-    basebg = win['basebg']
-    normal_fg = wincolorhl['fg']
-    normal_bg = wincolorhl['bg']
-    normal_sp = wincolorhl['sp']
-    normal_ctermfg = wincolorhl['ctermfg']
-    normal_ctermbg = wincolorhl['ctermbg']
-    fg_wincolorhl = {
-      'name': '',
-      'ctermfg': wincolorhl['ctermfg'],
-      'ctermbg': None,
-      'fg': wincolorhl['fg'],
-      'bg': None,
-      'sp': None,
-    } if not skip_transpose else {
-      'name': '',
-      'ctermfg': None,
-      'ctermbg': None,
-      'fg': None,
-      'bg': None,
-      'sp': None,
-    }
-    base_key_suffix = 'c' if skip_transpose else ''
+  wincolorhl = win['wincolorhl']
+  basebg = win['basebg']
+  normal_fg = wincolorhl['fg']
+  normal_bg = wincolorhl['bg']
+  normal_sp = wincolorhl['sp']
+  normal_ctermfg = wincolorhl['ctermfg']
+  normal_ctermbg = wincolorhl['ctermbg']
+  fg_wincolorhl = {
+    'name': '',
+    'ctermfg': wincolorhl['ctermfg'],
+    'ctermbg': None,
+    'fg': wincolorhl['fg'],
+    'bg': None,
+    'sp': None,
+  } if not skip_transpose else {
+    'name': '',
+    'ctermfg': None,
+    'ctermbg': None,
+    'fg': None,
+    'bg': None,
+    'sp': None,
+  }
+  base_key_suffix = 'c' if skip_transpose else ''
+  modify_state = {
+    'base_key_suffix': base_key_suffix,
+    'fg_wincolorhl': fg_wincolorhl,
+    'name_override': name_override,
+  }
+
+  def then_process_highlights(result):
+    (to_process, highlights) = result
 
     target = {
       'name': '',
@@ -286,57 +352,35 @@ def create_highlights(win, to_process, skip_transpose = False, name_override = N
       'sp': normal_sp }
 
     result = []
-    attrs_eval = []
-    attrs_eval_ids = []
-    base_keys = []
-    for id in to_process:
-      cache_key = str(id) + base_key_suffix
-      if not cache_key in M.base_id_cache:
-        M.base_id_cache[cache_key] = {}
-        base_keys.append(cache_key)
-        attrs_eval_ids.append(id)
-        attrs_eval.append(hi_string % id)
-
-    if len(attrs_eval):
-      # This is unsafe to batch mostly due to basegroups.  The issue is that basegroups are already linked
-      # then async op here to redo the highlights can cause a visual skip showing the wrong color
-      # this occurs b/c another window might redo the highlight due to clear_color on the current window.
-      # There is a performance gain but it's not worth maintaining the logic.
-      attrs = IPC.eval_and_return('[' + ','.join(attrs_eval) + ']')
-      attrs = _process_hl_results(attrs, attrs_eval_ids)
-      for i, cache_key in enumerate(base_keys):
-        base = M.base_id_cache.get(cache_key)
-        base_hi = defaultHi(attrs[i], fg_wincolorhl)
-        base['hi'] = base_hi
-        base['base_key'] = str(base_hi['ctermfg']) + ',' + str(base_hi['ctermbg']) + ',' + str(base_hi['fg']) + ',' + str(base_hi['bg']) + ',' + str(base_hi['sp'])
     to_create = []
     style = win['style']
-    highlights = {}
     hi_target = TYPE.shallow_copy(target)
 
-    for id in to_process:
-      base = M.base_id_cache[str(id) + base_key_suffix]
-      base_hi = base['hi']
-      name = name_override if name_override else base_hi['name']
-      if name in highlights:
-        continue
-      # selective copy (we cache other keys that should not be exposed)
-      # copy the target for the style run
-      hi_attrs = {
-          'name': name,
-          'ctermfg': base_hi['ctermfg'],
-          'ctermbg': base_hi['ctermbg'],
-          'fg': base_hi['fg'],
-          'bg': base_hi['bg'],
-          'sp': base_hi['sp'] }
-      ### below logic prevents basebg from applying to VimadeWC (otherwise background is altered for Vim)
-      if name == 'Normal':
-        hi_attrs['ctermbg'] = None
-        hi_attrs['bg'] = None
-      highlights[name] = hi_attrs
-
+    # temporary hack to store the modify_state while highlights
+    # are modified, this ensures we have the correct suffix, wincolor,
+    # etc if new highlights are requested (e.g from link.py)
+    M.current_modify_state = modify_state
     for s in style:
       s.modify(highlights, hi_target)
+    M.current_modify_state = {}
+
+    # resolve any newly linked highlights
+    for (name, hi) in highlights.items():
+      link = hi.get('link')
+      if not link:
+        continue
+      chain = {}
+      while link:
+        if link in chain:
+          # ensures no circular refs
+          break
+        chain[link] = True
+        link_hi = highlights.get(link)
+        # only set if linked_hi exists, otherwise this is an error
+        if not link_hi:
+          break
+        hi = highlights[name] = highlights[link]
+        link = hi.get('link')
 
     for id in to_process:
       base = M.base_id_cache[str(id) + base_key_suffix]
@@ -380,6 +424,6 @@ def create_highlights(win, to_process, skip_transpose = False, name_override = N
       IPC.batch_command('function! VimadeCreateTemp()\n' + ('\n'.join(to_create)) + '\nendfunction \n call VimadeCreateTemp()')
     promise.resolve(result)
 
-  _get_hl_name_and_ids_for(win, to_process).then(next)
+  get_highlights(win, to_process, False, modify_state).then(then_process_highlights)
 
   return promise
