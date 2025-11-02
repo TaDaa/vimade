@@ -1,10 +1,10 @@
 from vimade.style.value import condition as CONDITION
 
 class Component():
-  def __init__(self, name, **kwargs):
+  def __init__(parent, name, **kwargs):
     _condition = kwargs.get('condition', CONDITION.INACTIVE)
-    self.tick = kwargs.get('tick')
-    self.name = name
+    parent.tick = kwargs.get('tick')
+    parent.name = name
     class __Component():
       def __init__(self, win, state):
         self.win = win
@@ -21,11 +21,11 @@ class Component():
         # components don't need their own keys since they are just proxies to their children
         if self.condition == False:
           return ''
-        style_keys = [s.key(win, state) for j, s in enumerate(self.style)]
+        style_keys = [s.key(win, state) for s in self.style]
         return ','.join([s for s in style_keys if s])
       def modify(self, highlights, to_hl):
         if self.condition == False:
           return
         for s in self.style:
           s.modify(highlights, to_hl)
-    self.attach = __Component
+    parent.attach = __Component
