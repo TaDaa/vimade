@@ -109,7 +109,7 @@ function! SetupMyVimadeConfig()
 python << EOF
 from vimade import vimade
 vimade.setup(
-  recipe = ['default', {'animate':True}],
+  recipe = ['default', {'animate':False}],
   fadelevel = 0.4,
  )
 EOF
