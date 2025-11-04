@@ -190,9 +190,9 @@ function! vimade#GetDefaults()
     let g:vimade_defaults.basebg = ''
     "
     ""@setting vimade.recipe
-    "Supported:     ['default', {}], ['minimalist', {}], ['duo', {'animate: 0'}]
+    "Supported:     ['default', {}], ['minimalist', {}], ['duo', {'animate': v:false}]
     " The second argument in the array overrides the recipe settings (e.g.
-    " {'animate: 1'})
+    " {'animate': v:true})
     " May also specify recipe as just 'default' or ['default']
 
     " unset - but automatically picked up if user changes and has not set via
@@ -597,7 +597,6 @@ function! vimade#StartAnimationTimer()
   if g:vimade_features.has_timer_start && !exists('g:vimade_animation_running')
     let g:vimade_animation_running = 1
     if !exists('g:vimade_animation_timer')
-      " TODO for vim this should be lower -- otherwise feels jerky
       let g:vimade_animation_timer = timer_start(16, 'vimade#DoAnimations', {'repeat': -1})
     else
       call timer_pause(g:vimade_animation_timer, 0)

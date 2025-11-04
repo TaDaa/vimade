@@ -73,7 +73,7 @@ Configure with vimscript                      *vimade-vimscript-config*
 
 >
   let g:vimade = {}
-  let g:vimade.recipe = ['default', {'animate': 0}]
+  let g:vimade.recipe = ['default', {'animate': v:false}]
   let g:vimade.fadelevel = 0.4
 <
 ------------------------------------------------------------------------------
@@ -275,7 +275,7 @@ OPTIONS                                       *vimade-options*
 
   Example (vimscript):
 >
-  let g:vimade.recipe = ['minimalist', {'animate': 0}]
+  let g:vimade.recipe = ['minimalist', {'animate': v:false}]
 <
 
   Example (python):
