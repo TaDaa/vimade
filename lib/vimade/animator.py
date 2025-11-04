@@ -29,9 +29,9 @@ def _tick_after():
   if M.scheduled == True:
     IPC.eval_and_return('vimade#StartAnimationTimer()')
 
-def schedule(win):
-  if not win.winid in queued_windows:
-    queued_windows[win.winid] = True
+def schedule(style):
+  if not style.win.winid in queued_windows:
+    queued_windows[style.win.winid] = True
     M.scheduled = True
 
 def refresh():

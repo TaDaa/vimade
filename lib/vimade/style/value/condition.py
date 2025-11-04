@@ -7,3 +7,7 @@ def INACTIVE (style, state):
 
 def ALL (style, state):
   return True
+
+def IS_PANE(style, state):
+  # For now this always true until additional component states are supported.
+  return True

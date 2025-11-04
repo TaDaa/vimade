@@ -1,4 +1,5 @@
 import sys
+import math
 M = sys.modules[__name__]
 
 from vimade import animator as ANIMATOR
@@ -107,6 +108,7 @@ def Animate(**kwargs):
   _direction = _direction if _direction != None else DEFAULT_DIRECTION
   _reset = kwargs.get('reset')
   _reset = _reset if _reset != None else (_direction != DIRECTION.IN_OUT)
+  _reset_swap = _direction == DIRECTION.IN_OUT
   _compare = kwargs.get('compare')
   def animate(style, state):
     id = None
@@ -118,7 +120,7 @@ def Animate(**kwargs):
       state = state['animations']
       id = _id
     if not id in state:
-      state[id] = {'value': None}
+      state[id] = {'value': None, 'start': None, 'nc_timestamp': None}
     state = state[id]
     to = style.resolve(_to, state)
     start = style.resolve(_start, state)
@@ -130,7 +132,14 @@ def Animate(**kwargs):
     if compare == False:
       state['change_timestamp'] = GLOBALS.now
     state['last_to'] = to
-    time = (GLOBALS.now - (max(win.timestamps['nc'], state.get('change_timestamp') or 0))) * 1000 - (delay or 0)
+
+    # Bucket time for vim -- this limits the number of defined highlight
+    # groups based on the bucket size.
+    # The python implementation uses smaller bucket sizes than lua due to
+    # lower performance and need for more granular steps to achieve smooth
+    # transitions.
+    time = math.floor(((GLOBALS.now - (max(win.timestamps['nc'], state.get('change_timestamp') or 0))) * 1000 - (delay or 0)) / 8) * 8
+
     # direction in and active means go towards 'to' value from start value
     # direction out and active means go towards start value when the window becomes inactive
     # otherwise the window should be on 'to' value
@@ -161,22 +170,26 @@ def Animate(**kwargs):
       state['start'] = start
     if time <= 0:
       if reset == True:
-        state['start'] = start
-        state['value'] = start
+        state['start'] = state.get('to', start) if _reset_swap else start
+        state['value'] = state.get('to', start) if _reset_swap else start
       else:
         state['start'] = state['value']
       style._animating = True
-      ANIMATOR.schedule(win)
+      ANIMATOR.schedule(style)
       return state['start']
+    state['to'] = to
+    state['start'] = start
     if time >= duration:
       state['value'] = to
       style._animating = False
       return to
-
     elapsed = time / float(duration)
-    elapsed = min(max(_ease(elapsed), 0), 1)
+    # Round elapsed time to the closest 1000th (helps with deterministic bucketing).
+    # the output used from this is for fading and color manipulation, so this level
+    # of granularity would not even be user perceivable.
+    elapsed = math.floor(min(max(_ease(elapsed), 0), 1) * 1000 + 0.5) / 1000
     state['value'] = _interpolate(to, state['start'], elapsed, style, state)
-    ANIMATOR.schedule(win)
     style._animating = True
+    ANIMATOR.schedule(style)
     return state['value']
   return animate

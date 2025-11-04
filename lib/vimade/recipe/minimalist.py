@@ -1,7 +1,3 @@
-import sys
-import vim
-M = sys.modules[__name__]
-
 from vimade.state import globals as GLOBALS
 from vimade.style.value import animate as ANIMATE
 from vimade.style.value import condition as CONDITION
@@ -16,33 +12,35 @@ EXCLUDE_NAMES = ['LineNr', 'LineNrBelow', 'LineNrAbove', 'WinSeparator', 'EndOfB
 NO_VISIBILITY_NAMES = ['LineNr', 'LineNrBelow', 'LineNrAbove', 'EndOfBuffer', 'NonText', 'VimadeWC']
 LOW_VISIBILITY_NAMES = ['WinSeparator']
 
-def animate_minimalist(config):
+def minimalist(config):
   condition = config.get('condition') 
   animation = {
     'duration': config.get('duration'),
     'delay': config.get('delay'),
     'ease': config.get('ease'),
     'direction': config.get('direction'),
-  }
+  } if config.get('animate') else None
   return [
     Component('Pane',
+      condition = CONDITION.IS_PANE,
       style = [
         TINT.Tint(
           condition = condition,
           value = ANIMATE.Tint(**TYPE.extend({}, animation, {
             'to': TINT.Default().value()
           }))
-        ),
+        ) if animation else TINT.Default(**config),
         Exclude(
           condition = condition,
           value = config.get('exclude_names'),
           style = [
             FADE.Fade(
               value = ANIMATE.Number(**TYPE.extend({}, animation, {
+                'id': 'fade',
                 'to': FADE.Default().value(),
                 'start': 1
               }))
-            )
+            ) if animation else FADE.Default()
           ]
         ),
         Include(
@@ -51,9 +49,10 @@ def animate_minimalist(config):
           style = [
             FADE.Fade(
               value = ANIMATE.Number(**TYPE.extend({}, animation, {
+                'id': 'no-vis-fade',
                 'to': 0,
                 'start': 1
-              }))
+              })) if animation else 0
             )
           ]
         ),
@@ -63,40 +62,16 @@ def animate_minimalist(config):
           style = [
             FADE.Fade(
               value = ANIMATE.Number(**TYPE.extend({}, animation, {
+                'id': 'low-vis-fade',
                 'to': config.get('low_visibility_fadelevel'),
                 'start': 1
-              }))
+              })) if animation else config.get('low_visibility_fadelevel')
             )
           ]
         )
       ]
     )
   ]
-
-def minimalist(config):
-  condition = config.get('condition') 
-  return [
-      Component('Pane',
-        style = [
-          TINT.Default(**config),
-          Exclude(
-            condition = condition,
-            value = config.get('exclude_names'),
-            style = [FADE.Default()]
-          ),
-          Include(
-            condition = condition,
-            value = config.get('no_visibility_names'),
-            style = [FADE.Fade(value = 0)]
-          ),
-          Include(
-            condition = condition,
-            value = config.get('low_visibility_names'),
-            style = [FADE.Fade(value = config.get('low_visibility_fadelevel'))]
-          )
-        ]
-      )
-    ]
 
 # @param **kwargs {
   # @optional animate: boolean = false
@@ -117,6 +92,6 @@ def Minimalist(**kwargs):
   config['low_visibility_names'] = config.get('low_visibility_names', LOW_VISIBILITY_NAMES)
   config['low_visibility_fadelevel'] = config.get('low_visibility_fadelevel', 0.1)
   return {
-    'style': animate_minimalist(config) if config.get('animate') else minimalist(config),
+    'style': minimalist(config),
     'linkwincolor': [] if GLOBALS.is_nvim else [x for x in config['no_visibility_names'] if x != 'VimadeWC'],
   }

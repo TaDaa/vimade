@@ -1,10 +1,8 @@
-import sys
-import vim
-M = sys.modules[__name__]
-
 from vimade.state import globals as GLOBALS
 from vimade.style.value import animate as ANIMATE
+from vimade.style.value import condition as CONDITION
 from vimade.style.value import direction as DIRECTION
+from vimade.style.component import Component
 from vimade.style import fade as FADE
 from vimade.style import tint as TINT
 from vimade.util import type as TYPE
@@ -39,40 +37,40 @@ def _duo_fade_to(config):
       pct = buffer_pct
     return to + (1 - to) * (1 - pct)
   return _duo_fade_result
-def animate_duo(config):
+def duo(config):
   condition = config.get('condition') 
   animation = {
     'duration': config.get('duration'),
     'delay': config.get('delay'),
     'ease': config.get('ease'),
     'direction': config.get('direction'),
-  }
+  } if config.get('animate') else None
+  def _tint_start(style, state):
+    return state.get('start')
+  def _fade_start(style, state):
+    return state.get('start', 1)
   return [
-    TINT.Tint(
-      condition = condition,
-      value = ANIMATE.Tint(**TYPE.extend({}, animation, {
-        'to': _duo_tint_to(config),
-      })
-    )),
-    FADE.Fade(
-      condition = condition,
-      value = ANIMATE.Number(**TYPE.extend({}, animation, {
-        'start': 1,
-        'to': _duo_fade_to(config),
-      })
-    )),
-  ]
-
-def duo(config):
-  return [
-    TINT.Default(
-      condition = config.get('condition'),
-      value = _duo_tint_to(config),
-    ),
-    FADE.Default(
-      condition = config.get('condition'),
-      value = _duo_fade_to(config),
-    ),
+    Component('Pane', 
+      condition = CONDITION.IS_PANE,
+      style = [
+        TINT.Tint(
+          condition = condition,
+          value = ANIMATE.Tint(**TYPE.extend({}, animation, {
+            'id': 'pane-tint',
+            'start': _tint_start,
+            'to': _duo_tint_to(config),
+          })) if animation else _duo_tint_to(config)
+        ),
+        FADE.Fade(
+          condition = condition,
+          value = ANIMATE.Number(**TYPE.extend({}, animation, {
+            'id': 'pane-fade',
+            'start': _fade_start,
+            'to': _duo_fade_to(config),
+          })) if animation else _duo_fade_to(config)
+        )
+      ]
+    )
   ]
 
 # @param **kwargs {
@@ -87,11 +85,11 @@ def duo(config):
 # }
 def Duo(**kwargs):
   config = TYPE.shallow_copy(kwargs)
-  config['ncmode'] = config['ncmode'] if config.get('ncmode') != None else 'windows'
-  config['buffer_pct'] = config['buffer_pct'] if config.get('buffer_pct') != None else 0.382
-  config['window_pct'] = config['window_pct'] if config.get('window_pct') != None else 1
-  config['direction'] = config['direction'] if config.get('direction') != None else DIRECTION.IN_OUT
+  config['ncmode'] = config.get('ncmode', 'windows')
+  config['buffer_pct'] = config.get('buffer_pct', 0.382)
+  config['window_pct'] = config.get('window_pct', 1)
+  config['direction'] = config.get('direction', DIRECTION.IN_OUT)
   return {
-    'style': animate_duo(config) if config.get('animate') else duo(config),
+    'style': duo(config),
     'ncmode': config['ncmode'],
   }
