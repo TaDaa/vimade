@@ -24,6 +24,10 @@ M.buf_shared_lookup = {}
 M._changed_win = False
 IS_NVIM = GLOBALS.is_nvim
 
+C_KEY = 0
+S_KEY = 1
+T_KEY = 2
+
 # patch 620 increased to unlimited
 # https://github.com/vim/vim/issues/11248
 UNLIMITED_MATCHADDPOS = bool(int(vim.eval('has("patch-9.0.0620") || has("nvim-0.9.5")')))
@@ -261,7 +265,6 @@ class Namespace:
     rows_so_far = 0
     
     buf = buf[int(visible_rows[0][0])-1:int(visible_rows[-1][0])]
-    buf = [bytes(b, 'utf-8', 'replace') for b in buf] if IS_V3 else buf
 
     for (row, fold) in visible_rows:
       row = int(row)
@@ -272,7 +275,7 @@ class Namespace:
       if fold > -1:
         rows_so_far += 1
         continue
-      text = buf[r]
+      text = bytes(buf[r], 'utf-8', 'replace') if IS_V3 else buf[r]
       text_ln = len(text)
       if text_ln > 0:
         if wrap:
@@ -299,7 +302,7 @@ class Namespace:
         s_col -= adjust_start
         s_col = max(s_col, 1)
         m_col = min(m_col, text_ln)
-        to_eval.append((row-1, s_col - 1, m_col -1, r))
+        to_eval.append((row-1, s_col - 1, m_col -1, buf[r]))
 
     coords = shared_state.get(coords_key)
     contents_changed = None
@@ -339,11 +342,11 @@ class Namespace:
         # cells that have already been checked.
         else:
           treesitter_eval = []
-          for (row, start_col, max_col, text_i) in to_eval:
+          for (row, start_col, max_col, row_text) in to_eval:
             if row < 0:
               continue
             if row >= grid_ln or grid[row] == None:
-              treesitter_eval.append((row, start_col, max_col, text_i))
+              treesitter_eval.append((row, start_col, max_col, row_text))
               continue
             colors = grid[row]
             colors_ln = len(colors)
@@ -353,23 +356,22 @@ class Namespace:
               # us to skip requesting parts of the screen that were already
               # evaluated in different windows. This mostly benefits
               # ncmode='windows' but can also improve buffer fading as well.
-              if not color or color['t'] != tick_id:
+              if not color or color[T_KEY] != tick_id:
                 if len(treesitter_eval) and treesitter_eval[-1][2] == column - 1:
                   treesitter_eval[-1][2] += 1
                 else:
-                  treesitter_eval.append([row, column, column, text_i])
+                  treesitter_eval.append([row, column, column, row_text])
       # endif enabletreesitter
       # contents changed detection
-      for (row, start_col, end_col, text_i) in to_eval:
+      for (row, start_col, end_col, row_text) in to_eval:
         if row >= grid_ln or not grid[row] or end_col >= len(grid[row]):
           contents_changed = (row, 0)
           break
         else:
-          text = buf[text_i]
           colors = grid[row]
           for column in range(start_col, end_col+1):
             current = colors[column]
-            if current and current['c'] != text[column]:
+            if current and current[C_KEY] != row_text[column]:
               contents_changed = (row, column)
               break
             column += 1
@@ -395,21 +397,17 @@ class Namespace:
     hi_grid = self.hi_grid
     # ensure we have updated grid and its sized appropriately
     grid = coords['grid']
-    for (row, column, end_col, text_i) in to_eval:
+    for (row, column, end_col, row_text) in to_eval:
       if row >= len(grid) or row < 0:
         continue
-      text = buf[text_i]
       if grid[row] == None:
-        grid[row] = [None] * len(text)
-      elif len(text) < len(grid[row]):
-        grid[row] = grid[row][0:len(text)]
-      elif len(text) > len(grid[row]):
-        grid[row] = grid[row] + [None] * (len(text) - len(grid[row]))
-      else:
-        grid[row]
-      hi_row = hi_grid.get(row)
-      if hi_row == None:
-        hi_grid[row] = hi_row = {}
+        grid[row] = [None] * len(row_text)
+      elif len(row_text) < len(grid[row]):
+        grid[row] = grid[row][0:len(row_text)]
+      elif len(row_text) > len(grid[row]):
+        grid[row] = grid[row] + [None] * (len(row_text) - len(grid[row]))
+      if row not in hi_grid:
+        hi_grid[row] = {}
 
     # tick_id is just a quick & dirty way we can ensure that the state is
     # synced between multiple layers of changes
@@ -439,33 +437,32 @@ class Namespace:
 
     def process_treesitter(to_eval):
       ts_empty = {}
-      for (row, start_col, end_col, text_i) in to_eval:
+      for (row, start_col, end_col, row_text) in to_eval:
         if row >= len(grid) or row < 0:
           continue
-        text = buf[text_i]
         colors = grid[row]
         ts_row = ts_results.get(str(row)) if ts_results else None
         hi_row = hi_grid.get(row)
         for column in range(start_col, end_col+1):
           color = colors[column]
-          ch = text[column]
+          ch = row_text[column]
           s = None
           if ch != '' and ch != sp and ch != tab:
             ts_id = ts_row.get(str(column)) if ts_row else None
             if ts_id != None:
               s = int(ts_id)
-            elif color == None or color['s'] == None: ## fallback to syn
+            elif color == None or color[S_KEY] == None: ## fallback to syn
               syn_eval.append('synID('+str(row+1)+','+str(column+1)+',0)')
               syn_indices.append(len(gaps))
               gaps.append([None, row, column])
           elif enablebasegroups == False:
             s = 0
           if not color:
-            colors[column] = color = {'c': ch, 's': s}
+            colors[column] = color = [ch, s, None]
             if s != None:
               gaps.append((s, row, column))
-          elif s != None and color['s'] != s:
-            color['s'] = s
+          elif s != None and color[S_KEY] != s:
+            color[S_KEY] = s
             # if the syntax value changed (treesitter can updated async), we
             #need to refresh the screen this should only ever happen once.
             if not needs_redraw[0]:
@@ -478,35 +475,34 @@ class Namespace:
               self.remove_matches()
               return process_treesitter(to_eval)
             gaps.append((s, row, column))
-          elif color['s'] != None and not hi_row.get(column):
-            gaps.append((color['s'], row, column))
+          elif color[S_KEY] != None and not hi_row.get(column):
+            gaps.append((color[S_KEY], row, column))
           # tick_id here is used to skip changes that have already been processed during this run
           # this is completely safe and even if a conflict was encountered, which is highly improbable
           # this would self resolve on next tick.
-          color['t'] = tick_id
+          color[T_KEY] = tick_id
 
     def process_syn(to_eval):
-      for (row, start_col, end_col, text_i) in to_eval:
+      for (row, start_col, end_col, row_text) in to_eval:
         if row >= len(grid) or row < 0:
           continue
-        text = buf[text_i]
         colors = grid[row]
-        hi_row = hi_grid.get(row)
+        hi_row = hi_grid[row]
         for column in range(start_col, end_col+1):
           color = colors[column]
           if color == None:
-            ch = text[column]
-            color = colors[column] = {'c': ch, 's': None}
+            ch = row_text[column]
+            color = colors[column] = [ch, None, None]
             if ch != '' and ch != sp and ch != tab:
               syn_eval.append('synID('+str(row+1)+','+str(column+1)+',0)')
               syn_indices.append(len(gaps))
               gaps.append([None, row, column])
             elif enablebasegroups == False:
-              color['s'] = -1
+              color[S_KEY] = -1
               gaps.append((-1, row, column))
-          elif color['s'] != None and not hi_row.get(column):
-            gaps.append((color['s'], row, column))
-          color['t'] = tick_id
+          elif column not in hi_row and color[S_KEY] != None:
+            gaps.append((color[S_KEY], row, column))
+          color[T_KEY] = tick_id
 
     process_treesitter(to_eval) if enabletreesitter else process_syn(to_eval)
 
@@ -515,17 +511,16 @@ class Namespace:
         syn_eval = IPC.eval_and_return('[' + ','.join(syn_eval) + ']')
         for i, id in enumerate(syn_eval):
           gap = gaps[syn_indices[i]]
-          grid[gap[1]][gap[2]]['s'] = gap[0] = int(id) or 0
+          grid[gap[1]][gap[2]][S_KEY] = gap[0] = int(id) or 0
 
       matches = {}
       for (id, row, column) in gaps:
         color = grid[row][column]
         hi_row = hi_grid[row]
-        if not hi_row.get(column):
-          hi_row[column] = True
+        hi_row[column] = True
         c = column + 1
         r = row + 1
-        if not id in matches:
+        if id not in matches:
           matches[id] = [[r, c, 1]]
         else:
           match = matches[id]
