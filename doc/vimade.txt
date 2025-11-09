@@ -666,8 +666,7 @@ RECIPES                                       *vimade-recipes*
   require("vimade").setup({recipe = {"duo", {animate = true}}})
 < 
 `paradox`                                     *vimade-recipe-paradox*
-  Inverts the colors of the active window for a high-contrast look. (Neovim
-  only)
+  Inverts the colors of the active window for a high-contrast look.
 >
   require("vimade").setup({recipe = {"paradox", {animate = true}}})
 < 

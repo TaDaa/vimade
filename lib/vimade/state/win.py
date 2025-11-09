@@ -184,6 +184,7 @@ class WinState(object):
         'animations': {},
         'custom': {},
       },
+      'terminal': False,
       'timestamps': {
         'active_win': 0,
         'active_buf': 0,
@@ -326,6 +327,7 @@ class WinState(object):
     self.buf_opts = self.buffer.options
     self.win_vars = self.window.vars
     self.win_opts = self.window.options
+    self.terminal = buftype == 'terminal'
     self.diff = bool(int(diff))
     self.wincolor = wincolor
 

@@ -388,7 +388,7 @@ A balanced approach between window and buffer fading.
 <summary><a><ins>Paradox</ins></a></summary>
 <br>
 
-Inverts the colors of the active window for a high-contrast look. (Neovim only)
+Inverts the colors of the active window for a high-contrast look.
 
 <table>
 <tbody>

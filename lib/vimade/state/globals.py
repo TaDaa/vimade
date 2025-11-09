@@ -149,6 +149,7 @@ class Globals(object):
       'termguicolors': None,
       'disablebatch': False,
       'recipe': [],
+      'recipe_on': {},
       'style': [],
       'now': None,
     }
@@ -201,7 +202,7 @@ class Globals(object):
       tick_id = 1000
     return tick_id
 
-  def _get_recipe(self, recipe):
+  def _prepare_recipe(self, recipe):
     if not recipe:
       return {}
     if type(recipe) == str:
@@ -218,14 +219,22 @@ class Globals(object):
           module = self.import_module('vimade.recipe.' + file)
           module = module.__getattribute__(name)
           recipe = module(**(recipe[1] if len(recipe) > 1 else {}))
-        except:
+          on_teardown = self.recipe_on.get('teardown')
+          if callable(on_teardown):
+            on_teardown()
+          self.recipe_on = recipe.get('on',{})
+          on_setup = self.recipe_on.get('setup')
+          if callable(on_setup):
+            on_setup()
+        except Exception as e:
+          print(e)
           recipe = {}
         return self.TYPE.extend({}, recipe)
     return {}
 
   def setup(self, **kwargs):
     external_overlay = {}
-    recipe = self._get_recipe(kwargs.get('recipe'))
+    recipe = self._prepare_recipe(kwargs.get('recipe'))
     overlay = self.TYPE.extend(recipe, self.TYPE.deep_copy(kwargs))
     for field in ['usecursorhold', 'checkinterval', 'enablefocusfading', 'normalid', 'normalncid']:
       value = overlay.get(field)
@@ -278,7 +287,7 @@ class Globals(object):
       recipe = vimade_vim.get('recipe')
       if recipe and not recipe_applied:
         self.vim.vars['__vimade_recipe_applied'] = 1
-        self.recipe_vim = self._get_recipe(recipe)
+        self.recipe_vim = self._prepare_recipe(recipe)
       vimade_vim = self.TYPE.shallow_extend(vimade_vim, self.recipe_vim)
     vimade = self.TYPE.shallow_extend(vimade_vim, self.vimade_py)
     if 'fadepriority' in vimade and not 'matchpriority' in vimade:
