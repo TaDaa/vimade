@@ -102,3 +102,24 @@ if (!exists('g:vimade.lazy') || !g:vimade.lazy) && !exists('g::vimade_loaded')
     augroup END
   endif
 endif
+
+"--- VIMADE THREADING PROOF OF CONCEPT (TEMPORARY) ---
+function! s:VimadeTestThreadingPy()
+python3 << EOF
+import sys
+import vim
+# Add lib path just in case, though it should be present if loaded
+lib_path = vim.eval('g:vimade_plugin_current_directory')
+if lib_path not in sys.path:
+    sys.path.insert(0, lib_path)
+
+try:
+    import vimade.threading_poc
+    vimade.threading_poc.poc_entrypoint()
+except Exception as e:
+    print('[Vimade PoC] Error: ' + str(e))
+EOF
+endfunction
+
+command! VimadeTestThreading call s:VimadeTestThreadingPy()
+"--- END VIMADE THREADING POC ---

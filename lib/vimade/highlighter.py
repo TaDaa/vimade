@@ -48,7 +48,7 @@ def __init(args):
       self.invalidate_highlights()
     def highlight(self):
       def next(replacement):
-        IPC.batch_command('hi! link vimade_0 vimade_' + str(replacement[0]))
+        IPC.worker.batch_command('hi! link vimade_0 vimade_' + str(replacement[0]))
       create_highlights(M.global_win, [M.global_win.original_wincolor]).then(next)
     def unhighlight(self, a = False, b = False):
       pass
@@ -129,7 +129,7 @@ def get_hl_for_ids(win, ids):
     def next(value):
       value = _process_hl_results(value, ids)
       result.resolve(value)
-    IPC.batch_eval_and_return('['+','.join([(hi_string_normal if id in (GLOBALS.normalid, GLOBALS.normalncid) else hi_string) % id for id in ids])+']').then(next)
+    IPC.worker.batch_eval_and_return('['+','.join([(hi_string_normal if id in (GLOBALS.normalid, GLOBALS.normalncid) else hi_string) % id for id in ids])+']').then(next)
 
   _get_hl_name_and_ids_for(win, ids).then(next)
   return result
@@ -183,7 +183,7 @@ def get_highlights(win, ids_or_names, sync = False, modify_state = None):
       # then async op here to redo the highlights can cause a visual skip showing the wrong color
       # this occurs b/c another window might redo the highlight due to clear_color on the current window.
       # There is a performance gain but it's not worth maintaining the logic.
-      attrs = _process_hl_results(IPC.eval_and_return('[' + ','.join(attrs_eval) + ']'), attrs_eval_ids)
+      attrs = _process_hl_results(IPC.worker.eval_and_return('[' + ','.join(attrs_eval) + ']'), attrs_eval_ids)
       for i, cache_key in enumerate(base_keys):
         base = M.base_id_cache.get(cache_key)
         base_hi = defaultHi(attrs[i], fg_wincolorhl)
@@ -267,9 +267,9 @@ def _get_hl_name_and_ids_for(win, to_process, sync = False):
 
   if len(name_eval) or len(id_eval):
     if sync:
-      next(IPC.eval_and_return('[[' + ','.join(name_eval) + '], ['+ ','.join(id_eval) +']]'))
+      next(IPC.worker.eval_and_return('[[' + ','.join(name_eval) + '], ['+ ','.join(id_eval) +']]'))
     else:
-      IPC.batch_eval_and_return('[[' + ','.join(name_eval) + '], ['+ ','.join(id_eval) +']]').then(next)
+      IPC.worker.batch_eval_and_return('[[' + ','.join(name_eval) + '], ['+ ','.join(id_eval) +']]').then(next)
   else:
     promise.resolve(to_process)
 
@@ -421,7 +421,7 @@ def create_highlights(win, to_process, skip_transpose = False, name_override = N
     if len(to_create):
       # non-blocking, but must execute before matchaddpos is called for Vim.  This happens naturally
       # due to the ordering of logic in IPC (command is explicitly called before eval)
-      IPC.batch_command('function! VimadeCreateTemp()\n' + ('\n'.join(to_create)) + '\nendfunction \n call VimadeCreateTemp()')
+      IPC.worker.batch_command('function! VimadeCreateTemp()\n' + ('\n'.join(to_create)) + '\nendfunction \n call VimadeCreateTemp()')
     promise.resolve(result)
 
   get_highlights(win, to_process, False, modify_state).then(then_process_highlights)

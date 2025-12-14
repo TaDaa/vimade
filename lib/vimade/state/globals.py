@@ -87,7 +87,7 @@ class Globals(object):
     (is_nvim,
      is_gui_running,
      original_background,
-     features) = IPC.eval_and_return('['+','.join([
+     features) = IPC.main.eval_and_return('['+','.join([
        'has("nvim")',
        'has("gui_running")',
        '&background',
@@ -266,7 +266,7 @@ class Globals(object):
       winid,
       winnr,
       bufnr,
-      tabnr, recipe_applied) = self.IPC.mem_safe_eval('['+','.join([
+      tabnr, recipe_applied) = self.IPC.worker.mem_safe_eval('['+','.join([
       '&background',
       'exists("g:colors_name") ? g:colors_name : ""',
       '&termguicolors',
@@ -379,7 +379,7 @@ class Globals(object):
       self._linkwincolor = _linkwincolor
       eval_linkwincolor = []
       if len(linkwincolor):
-        self.IPC.batch_command('function! VimadeCreateTemp()\n' + ('\n'.join([('hi! link ' + hi + ' Normal') for hi in linkwincolor])) + '\nendfunction \n call VimadeCreateTemp()')
+        self.IPC.worker.batch_command('function! VimadeCreateTemp()\n' + ('\n'.join([('hi! link ' + hi + ' Normal') for hi in linkwincolor])) + '\nendfunction \n call VimadeCreateTemp()')
 
 
 

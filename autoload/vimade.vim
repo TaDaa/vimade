@@ -911,6 +911,18 @@ endfunction
 function! s:SoftInvalidateSigns_Python()
   exec g:vimade_py_cmd "from vimade import bridge; bridge.invalidate()"
 endfunction
+
+function! vimade#TestRun()
+  let l:result = 0
+  let l:i = 0
+  while i < 100
+    let l:result = l:result + 1
+    let l:i = l:i + 1
+    let g:tick_i = l:i
+  endwhile
+  return l:i
+endfunction
+
 let s:python_renderer = {
   \ 'name': 'python',
   \ 'animate': function('s:Animate_Python'),

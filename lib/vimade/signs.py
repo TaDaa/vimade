@@ -72,11 +72,11 @@ def clear_win(win):
         undefine_eval.append('silent! noautocmd sign undefine vimade_' + name)
       # If counts are right, the signs are removed.  This is guarenteed to occur before
       # they could be added again.
-      IPC.batch_command('function! VimadeSignTemp()\n' + ('\n'.join(undefine_eval)) + '\nendfunction \n call VimadeSignTemp()')
+      IPC.worker.batch_command('function! VimadeSignTemp()\n' + ('\n'.join(undefine_eval)) + '\nendfunction \n call VimadeSignTemp()')
 
   # This logic can be batched, its just difficult to understand and not really maintainable.
   # Safer to get the signs and remove them immediately.
-  IPC.batch_eval_and_return(
+  IPC.worker.batch_eval_and_return(
     'bufexists('+str(bufnr)+') ? get(sign_getplaced('+str(bufnr)+',{"group": "*"})[0], "signs", []) : []' if HAS_SIGN_GET_PLACED_AND_GROUPS else \
             'bufexists('+str(bufnr)+') ? get(getbufinfo('+str(bufnr)+')[0], "signs", []) : []').then(next)
 
@@ -120,7 +120,7 @@ def _do_unhighlight(bufnr, signs, win):
       unhi_eval.append('silent! noautocmd sign unplace ' + id + VIMADE_GROUP_TEXT + ' buffer='+str(bufnr))
       M._free_ids.append(id)
   if len(unhi_eval):
-    return IPC.batch_command('function! VimadeSignTemp()\n' + ('\n'.join(unhi_eval)) + '\nendfunction \n call VimadeSignTemp()')
+    return IPC.worker.batch_command('function! VimadeSignTemp()\n' + ('\n'.join(unhi_eval)) + '\nendfunction \n call VimadeSignTemp()')
 
 def _do_create(bufnr, win, names):
   promise = Promise()
@@ -178,7 +178,7 @@ def _do_create(bufnr, win, names):
       if len(definitions) == 0:
         promise.resolve(None)
       else:
-        IPC.batch_command('function! VimadeSignTemp()\n' + ('\n'.join(definitions)) + '\nendfunction \n call VimadeSignTemp()').then(promise)
+        IPC.worker.batch_command('function! VimadeSignTemp()\n' + ('\n'.join(definitions)) + '\nendfunction \n call VimadeSignTemp()').then(promise)
     # Associated with a single win. This means when a win is cleared, signs owned by that win also need to be cleared.
     # TODO we should event drive the window logic and let HIGHLIGHTER and SIGNS clear off event. For now this only
     # happens in namespace.py so should be fine in the short term.
@@ -187,7 +187,7 @@ def _do_create(bufnr, win, names):
         HIGHLIGHTER.create_highlights(win, skip_transpose_highlights, True)
     ]).then(create_definitions)
   if len(names):
-    IPC.batch_eval_and_return('[' + ','.join(['execute("sign list ' + name[1] +'")' for name in names]) + ']')\
+    IPC.worker.batch_eval_and_return('[' + ','.join(['execute("sign list ' + name[1] +'")' for name in names]) + ']')\
         .then(create_highlights)
     return promise
   return promise.resolve(None)
@@ -261,9 +261,9 @@ def _do_highlight(bufnr, visible_rows, signs, win):
 
   def add_signs(value):
     if len(add_eval):
-      IPC.batch_command('function! VimadeSignTemp() \n' + ('\n'.join(add_eval)) + '\nendfunction \n call VimadeSignTemp()')
+      IPC.worker.batch_command('function! VimadeSignTemp() \n' + ('\n'.join(add_eval)) + '\nendfunction \n call VimadeSignTemp()')
 
-  IPC.batch_command('function! VimadeSignTemp() \n' + ('\n'.join(remove_eval)) + '\nendfunction \n call VimadeSignTemp()')
+  IPC.worker.batch_command('function! VimadeSignTemp() \n' + ('\n'.join(remove_eval)) + '\nendfunction \n call VimadeSignTemp()')
   _do_create(bufnr, win, to_create).then(add_signs)
 
 def flush():
@@ -285,9 +285,11 @@ def flush():
       elif (state & HAS_UNHI_WINDOWS) > 0:
         _do_unhighlight(buf['bufnr'], signs, buf['owner_win'])
 
-  IPC.batch_eval_and_return('[' + \
+  IPC.worker.batch_eval_and_return('[' + \
       ','.join( \
         ['bufexists(' + str(x['bufnr']) + ') ? get(sign_getplaced(' + str(x['bufnr']) + ',{"group": "*"})[0], "signs", []) : []' for x in bufs] if HAS_SIGN_GET_PLACED_AND_GROUPS else \
         ['bufexists(' + str(x['bufnr']) + ') ? get(getbufinfo(' + str(x['bufnr']) + ')[0], "signs", []) : []' for x in bufs ]) + ']').then(next)
 
-  return IPC.flush_batch()
+  # IPC.worker.flush()
+  # IPC.worker.wait_for_responses()
+  # return IPC.flush_batch()

@@ -55,11 +55,11 @@ class WinDeps(Promise):
               break
         if self.wincolor == None:
           self.wincolor = 'Normal' if win.is_active_win else 'NormalNC'
-      return IPC.batch_eval_and_return('gettabwinvar(%d,%d,"&winhl")'%(win.tabnr, win.winid)).then(set_winhl)
+      return IPC.worker.batch_eval_and_return('gettabwinvar(%d,%d,"&winhl")'%(win.tabnr, win.winid)).then(set_winhl)
     else:
       def set_wincolor(value):
         self.wincolor = value
-      return IPC.batch_eval_and_return('gettabwinvar(%d,%d,"&wincolor")'%(win.tabnr, win.winnr)).then(set_wincolor)
+      return IPC.worker.batch_eval_and_return('gettabwinvar(%d,%d,"&wincolor")'%(win.tabnr, win.winnr)).then(set_wincolor)
   def _apply_remaining_config(self):
     def next(config):
       config.append(self.wincolor)
@@ -72,7 +72,7 @@ class WinDeps(Promise):
     bufnr = win.bufnr
 
     all([
-        IPC.batch_eval_and_return('['+
+        IPC.worker.batch_eval_and_return('['+
         ','.join([
           'gettabwinvar(%d,%d,"&wrap")' % (tabnr, winnr),
           'gettabwinvar(%d,%d,"&buftype")' % (tabnr, winnr),
@@ -101,8 +101,9 @@ class WinDeps(Promise):
 
 
 # TODO move these into features
-HAS_NVIM_WIN_GET_CONFIG = True if int(IPC.eval_and_return('exists("*nvim_win_get_config")')) else False
-HAS_NVIM_GET_HL_NS = True if int(IPC.eval_and_return('exists("*nvim_get_hl_ns")')) else False
+HAS_NVIM_WIN_GET_CONFIG = True if int(IPC.main.eval_and_return('exists("*nvim_win_get_config")')) else False
+HAS_NVIM_GET_HL_NS = True if int(IPC.main.eval_and_return('exists("*nvim_get_hl_ns")')) else False
+# TODO vim.eval bad
 HAS_WIN_GETTYPE = True if int(vim.eval('exists("*win_gettype")')) else False
 
 def _get_values(input):

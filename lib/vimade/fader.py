@@ -1,6 +1,7 @@
 import sys
 import time
 import vim
+import threading
 M = sys.modules[__name__]
 
 from vimade.util.promise import Promise, all
@@ -24,15 +25,41 @@ def _pairs(input):
     return input.items()
 
 def _return_to_win():
-  current_winid = int(IPC.eval_and_return('win_getid()'))
+  current_winid = int(IPC.worker.eval_and_return('win_getid()'))
   start_winid = GLOBALS.current['winid']
   if current_winid != start_winid:
-    vim.command('noautocmd call win_gotoid(%d)' % (start_winid))
+    IPC.worker.command('noautocmd call win_gotoid(%d)' % (start_winid))
 
-def _update(only_these_windows):
+g_tick_state = None
+g_only_these_windows = None
+# for threading?
+def _update(tick_state, only_these_windows = None):
+  promise = IPC.worker.batch_eval_and_return('vimade#TestRun()')
+  last_i = 0
+  IPC.worker.flush()
+  for i in range(0,1000000):
+    last_i =i
+    if promise._has_value:
+      break
+  IPC.worker.stop()
+  print('last_i', last_i, vim.vars['tick_i'], '\n')
+  return
+# def _update(only_these_windows):
+# for threading?
+  notify('tick:before')
+  GLOBALS.refresh(tick_state)
+  if GLOBALS.tick_state > 0 and only_these_windows:
+    only_these_windows = None
   promise = Promise()
   # start_time = time.time()
-  windows = IPC.eval_and_return('getwininfo()')
+  # for threading?
+  # windows = IPC.th_eval_and_return('getwininfo()')
+  windows = IPC.worker.eval_and_return('getwininfo()')
+
+  # IPC.worker.stop()
+  # notify('tick:after')
+  # return
+
   current = GLOBALS.current
   current_promise = None
   other_promises = []
@@ -45,7 +72,7 @@ def _update(only_these_windows):
     # This redraw is needed for basegroups in certain versions of Neovim
     # Neovim async API breaks in certain scenarios and doesn't update the backing color mechanism
     if GLOBALS.enablebasegroups:
-      vim.command('redraw!')
+      IPC.worker.command('redraw!')
   
   style = GLOBALS.style
   for s in style:
@@ -53,6 +80,9 @@ def _update(only_these_windows):
       s.tick()
 
   HIGHLIGHTER.refresh_vimade_0()
+  # IPC.worker.stop()
+  # notify('tick:after')
+  # return
 
   for wininfo in windows:
     # we skip only_these_windows here because we need to know who the active window is
@@ -63,6 +93,11 @@ def _update(only_these_windows):
     if current['winid'] == int(wininfo['winid']):
       current_promise = WIN_STATE.refresh_active(wininfo)
       break
+
+  # IPC.worker.stop()
+  # notify('tick:after')
+  # return
+
     
   for wininfo in windows:
     if current['tabnr'] == int(wininfo['tabnr']) and current['winid'] != int(wininfo['winid']) and \
@@ -78,20 +113,34 @@ def _update(only_these_windows):
   def next(val):
     def complete(val):
       promise.resolve(None)
+      # print('done')
       # delta = time.time() - start_time
       # if delta * 1000 > 3:
-         # print('d', delta*1000)
+      # print('d', delta*1000)
       pass
     WIN_STATE.cleanup(windows)
-    _return_to_win()
+    # _return_to_win()
     # start_time = time.time()
-    SIGNS.flush().then(complete)
+    # SIGNS.flush().then(complete)
+    SIGNS.flush()
+    complete(0)
 
-  IPC.flush_batch().then(next)
+  # IPC.flush_batch().then(next)
+  SIGNS.flush()
+  IPC.worker.flush()
+  IPC.worker.wait_for_responses()
+  WIN_STATE.cleanup(windows)
+  _return_to_win()
+  # promise.resolve(None)
+  # next(0)
+  notify('tick:after')
+  IPC.worker.stop()
+  promise.resolve(None)
+  # return
   return promise
 
-def _after_promise(val):
-  _return_to_win()
+# def _after_promise(val):
+#   _return_to_win()
 
 _callbacks = {}
 def on(name, callback):
@@ -118,20 +167,82 @@ def recalculate():
 def invalidate():
   tick(GLOBALS.CHANGED)
 
+worker_event = threading.Event()
+def worker_tick():
+  while True:
+    try:
+      worker_event.wait()
+      worker_event.clear()
+# print('t', t)
+# start = time.time()
+      _update(g_tick_state, g_only_these_windows)
+    except e:
+      print(e)
+    # print('\n')
+    # print((time.time() - start)*1000)
+    # print('\n')
+
+t_worker = threading.Thread(target=worker_tick)
+t_worker.daemon = True
+t_worker.start()
+
+
 def tick(tick_state = GLOBALS.READY, only_these_windows = None):
+# for threading?
+  # start_time = time.time()
   last_ei = vim.options['ei']
   vim.options['ei'] = 'all'
-  notify('tick:before')
-  GLOBALS.refresh(tick_state)
+
+  # TODO this should be in worker
+  # notify('tick:before')
+  # for threading?
 
   # if the tick_state changed during an animation, we need to use that frame
   # to sync the windows
-  if GLOBALS.tick_state > 0 and only_these_windows:
-    only_these_windows = None
+  # disable for threading
+  # GLOBALS.refresh(tick_state)
+  # if GLOBALS.tick_state > 0 and only_these_windows:
+  #   only_these_windows = None
 
   def after_update(v):
     notify('tick:after')
-  _update(only_these_windows).then(after_update)
+  # _update(only_these_windows).then(after_update)
+  # end disable for threading
+  # worker = IPC.Worker()
+  # IPC.worker = IPC.Worker()
+  start_time = time.time()
+  # t_worker = threading.Thread(target=_update, args=(tick_state, only_these_windows))
+  # t_worker.daemon = True
+  global g_only_these_windows
+  g_only_these_windows = only_these_windows
+  global g_tick_state
+  g_tick_state = tick_state
+
+  start_time = time.time()
+  IPC.worker.start()
+  worker_event.set()
+  IPC.main.defer_to_worker(IPC.worker)
+  # print((time.time() - start_time)*1000)
+  #
+
+  # GLOBALS.refresh(tick_state)
+
+
+  delta = time.time() - start_time
+  # print(delta * 1000)
+  # IPC.main.defer_to_worker()
+
+  # TODO after_update
+  return
+
+
+  # IPC.block_main_thread(worker)
+  # notify('tick:after')
+  # delta = time.time() - start_time
+  # if delta * 1000 > 3:
+  # print('d', delta*1000)
+  # print('done!!')
+  # worker.end()
 
 
   vim.options['ei'] = last_ei

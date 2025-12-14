@@ -33,7 +33,7 @@ T_KEY = 2
 UNLIMITED_MATCHADDPOS = bool(int(vim.eval('has("patch-9.0.0620") || has("nvim-0.9.5")')))
 
 def _goto_win(winid):
-  vim.command('silent! noautocmd call win_gotoid('+str(winid)+')')
+  IPC.worker.command('silent! noautocmd call win_gotoid('+str(winid)+')')
 
 # Namespaces manages both config per window, shared across multiple windows, and partially attached
 # to a buffer. This is unfortunately extremely complex.  Consider the following:
@@ -111,7 +111,7 @@ class Namespace:
         replacement_winhl = ','.join([sources[i]+ ':' + (('vimade_'+str(replacement)) if sources[i] not in ('Normal', 'NormalNC') else targets[i])
                                       for i,replacement in enumerate(replacement_ids)])
         if replacement_winhl != self.win.winhl:
-          IPC.eval_and_return('settabwinvar(%s,%s,"&winhl","%s")' % (self.win.tabnr, self.win.winnr, replacement_winhl))
+          IPC.worker.eval_and_return('settabwinvar(%s,%s,"&winhl","%s")' % (self.win.tabnr, self.win.winnr, replacement_winhl))
           # TODO this management aspect needs to be controlled within namespace not manipulating external variables
           self.win.vimade_winhl = True
           self.win.winhl = replacement_winhl
@@ -119,7 +119,7 @@ class Namespace:
 
   def remove_basegroups(self):
     if GLOBALS.enablebasegroups and self.win.vimade_winhl:
-      IPC.eval_and_return('settabwinvar(%s,%s,"&winhl","%s")' % (self.win.tabnr, self.win.winnr, self.win.original_winhl))
+      IPC.worker.eval_and_return('settabwinvar(%s,%s,"&winhl","%s")' % (self.win.tabnr, self.win.winnr, self.win.original_winhl))
       # TODO this management aspect needs to be controlled within namespace not manipulating external variables
       self.win.vimade_winhl = None
       self.win.winhl = self.win.original_winhl
@@ -173,7 +173,7 @@ class Namespace:
       winid = str(self.win.winid)
       try:
         # no async allowed or can cause flickering
-        vim.command('|'.join(['silent! call matchdelete('+str(match)+','+winid+')' for match in matches]))
+        IPC.worker.command('|'.join(['silent! call matchdelete('+str(match)+','+winid+')' for match in matches]))
       except:
         pass
       self.matches = []
@@ -244,7 +244,7 @@ class Namespace:
     start_row = topline = win.topline
     # add 1 for wrapped rows to handle bottom heavy edge case
     end_row = (win.botline + 1) if wrap else win.botline
-    (lookup, visible_rows) = IPC.eval_and_return('[winsaveview(),vimade#GetVisibleRows('+str(start_row)+','+str(end_row)+')]')
+    (lookup, visible_rows) = IPC.worker.eval_and_return('[winsaveview(),vimade#GetVisibleRows('+str(start_row)+','+str(end_row)+')]')
     self.visible_rows = visible_rows
     start_col = int(lookup['leftcol']) + 1 #leftcol is based on index=0
     max_col = start_col + width
@@ -508,7 +508,7 @@ class Namespace:
 
     if len(gaps):
       if len(syn_eval):
-        syn_eval = IPC.eval_and_return('[' + ','.join(syn_eval) + ']')
+        syn_eval = IPC.worker.eval_and_return('[' + ','.join(syn_eval) + ']')
         for i, id in enumerate(syn_eval):
           gap = gaps[syn_indices[i]]
           grid[gap[1]][gap[2]][S_KEY] = gap[0] = int(id) or 0
@@ -548,6 +548,6 @@ class Namespace:
           if len(matchadds):
             def add_matches(matches):
               self.matches += matches
-            IPC.batch_eval_and_return('['+','.join(matchadds)+']').then(add_matches)
+            IPC.worker.batch_eval_and_return('['+','.join(matchadds)+']').then(add_matches)
 
       replacement_ids = HIGHLIGHTER.create_highlights(self.win, match_keys).then(next)
