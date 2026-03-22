@@ -242,7 +242,6 @@ M.refresh = function (real_ns, winhl, is_global)
       -- we can't just use the anonymous namespace for this because
       -- it may no longer exist once vimade takes ownership
       ns.highlights = highlights_from_winhl(winhl)
-      ns.modified = true
     else
       ns.highlights = NVIM_GET_HL(real_ns, {link = true})
     end
@@ -250,7 +249,7 @@ M.refresh = function (real_ns, winhl, is_global)
     filter_ns(ns.highlights)
     if BIT_BAND(GLOBALS.tick_state, GLOBALS.RECALCULATE) > 0 then
       ns.modified = true 
-    elseif real_ns ~= 0 and 
+    elseif (real_ns ~= 0 or winhl ~= "") and 
       (global_ns and (global_ns.modified or ns.sync_id ~= global_ns.sync_id)) then
       ns.modified = true
     elseif last == nil then
