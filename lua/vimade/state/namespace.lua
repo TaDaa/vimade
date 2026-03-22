@@ -105,7 +105,9 @@ M.get_replacement = function (win, real_ns, hi_key, skip_create)
       vimade_highlights = {},
     }
     ns.key = key
-    ns.real_ns =real_ns
+    -- NOTE: winhl is also part of key so this should be safe
+    ns.winhl = win.winhl
+    ns.real_ns = real_ns
     ns.windows = {}
     ns.modified = true
     ns.created = true
@@ -123,7 +125,7 @@ M.get_replacement = function (win, real_ns, hi_key, skip_create)
 end
 
 M.check_ns_modified = function(ns)
-  local real = REAL_NAMESPACE.refresh(ns.real_ns, false)
+  local real = REAL_NAMESPACE.refresh(ns.real_ns, ns.winhl, false)
   if ns.created or real.modified or real.sync_id ~= ns.sync_id then
     ns.modified = true
     ns.created = false

@@ -222,11 +222,17 @@ M.refresh = function (winid, is_active)
   local real_ns
   if NAMESPACE.is_vimade_ns(active_ns) == true then
     real_ns = win.real_ns
-    winhl = win.winhl
   else
-    winhl = vim.wo[win.winid].winhl
-    real_ns = winhl and 0 or (active_ns == -1 and 0 or active_ns)
+    -- user set ns now has precedence over winhl
+    -- this is technically always true even in < 0.11
+    -- in legacy (< 0.11), using the real_ns should resolve to the same
+    -- highlights as building the mock winhl ns overlay anyways.
+    real_ns = active_ns == -1 and 0 or active_ns
   end
+  -- the major importance of doing this is for broken neovim version
+  -- >= 0.11 <= 0.12 + patch for discussion #98
+  -- we can resolve the winhl manually in these scenarios
+  winhl = real_ns == 0 and vim.wo[win.winid].winhl or ''
   win.real_ns = real_ns
   win.winhl = winhl
   vim.w[win.winid]._vimade_real_ns = real_ns
@@ -275,7 +281,7 @@ M.refresh = function (winid, is_active)
     end
   end
 
-  local hi_key = (winhl or win.real_ns) .. ':' 
+  local hi_key = (winhl ~= '' and winhl or win.real_ns) .. ':' 
   hi_key = hi_key .. ':' .. basebg_key
 
   -- this is to separate out the logic for inactive vs active.  we can use this for highlighting

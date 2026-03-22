@@ -249,7 +249,7 @@ M.getInfo = function ()
 end
 
 M.refresh_global_ns = function ()
-  M.global_ns = REAL_NAMESPACE.refresh(0, true)
+  M.global_ns = REAL_NAMESPACE.refresh(0, '', true)
   if M.global_ns.modified  then
     M.global_highlights = M.global_ns.highlights
   end

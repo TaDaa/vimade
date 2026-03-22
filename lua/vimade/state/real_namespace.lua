@@ -27,7 +27,7 @@ M.__init = function (args)
   end)
 end
 
-M.resolve_all_links = function (real_ns, real_highlights, is_global)
+M.resolve_all_links = function (real_ns, real_highlights, is_global, is_winhl)
   local copy_ns
   if GLOBALS.termguicolors then
     copy_ns = TYPE.copy_hl_ns_gui
@@ -35,7 +35,8 @@ M.resolve_all_links = function (real_ns, real_highlights, is_global)
     copy_ns = TYPE.copy_hl_ns_cterm
   end
   local globals = copy_ns(is_global and real_highlights or GLOBALS.global_highlights)
-  local overrides = real_ns ~= 0 and copy_ns(real_highlights) or {}
+  local has_overrides = real_ns ~= 0 or is_winhl 
+  local overrides = has_overrides and copy_ns(real_highlights) or {}
   local output = {}
   local visited = {}
 
@@ -138,18 +139,20 @@ M.resolve_all_links = function (real_ns, real_highlights, is_global)
 
   local output = {}
 
-  for name, override in pairs(overrides) do
-    if override.link  then
-      local chain = walk_links(name, override, real_ns)
-      for i, linked in pairs(chain) do
-        local linked_hi = linked.hi
-        if linked_hi.link or linked_hi.fg or linked_hi.bg or linked_hi.sp or linked_hi.ctermfg or linked_hi.ctermbg or linked_hi.blend then
-          output[linked.name] = linked_hi
+  if has_overrides then
+    for name, override in pairs(overrides) do
+      if override.link  then
+        local chain = walk_links(name, override, real_ns ~= 0 and real_ns or -1)
+        for i, linked in pairs(chain) do
+          local linked_hi = linked.hi
+          if linked_hi.link or linked_hi.fg or linked_hi.bg or linked_hi.sp or linked_hi.ctermfg or linked_hi.ctermbg or linked_hi.blend then
+            output[linked.name] = linked_hi
+          end
         end
+        -- TODO cleanup, this is ugly
+      elseif override.link or override.fg or override.bg or override.sp or override.ctermfg or override.ctermbg or override.blend then
+        output[name] = override
       end
-      -- TODO cleanup, this is ugly
-    elseif override.link or override.fg or override.bg or override.sp or override.ctermfg or override.ctermbg or override.blend then
-      output[name] = override
     end
   end
 
@@ -189,10 +192,35 @@ M.is_desync = function(ns)
   return ns.id ~= 0 and global_ns and ns.sync_id ~= global_ns.sync_id
 end
 
+local highlights_from_winhl = function(winhl)
+local start = 1
+local result ={}
+while true do
+  local i, j = winhl:find(',', start)
+  local split = winhl:find(':', start)
+  if split ~= nil then
+    if j == nil then
+      j = winhl:len() + 1
+    end
+    local from = winhl:sub(start, split - 1)
+    local to = winhl:sub(split+1, j - 1)
+    result[from] = {link = to}
+  end
+  if i == nil then
+    break
+  end
+  start = j + 1
+end
+return result
+end
+
 M.pending_removal = {}
 M.cache = {}
-M.refresh = function (real_ns, is_global)
-  local ns = M.cache[real_ns]
+M.refresh = function (real_ns, winhl, is_global)
+  -- NOTE: winhl is only a non-empty string if real_ns was 0
+  winhl = real_ns == 0 and winhl or ''
+  local key = winhl ~= '' and winhl or real_ns
+  local ns = M.cache[key]
   local filter_ns
   local equal_ns
   if GLOBALS.termguicolors then
@@ -205,11 +233,20 @@ M.refresh = function (real_ns, is_global)
   if not ns then
     ns = {}
     local global_ns = M.cache[0]
-    local last = M.pending_removal[real_ns]
-    M.cache[real_ns] = ns
-    ns.id = real_ns
+    local last = M.pending_removal[key]
+    M.cache[key] = ns
+    ns.id = key
     ns.sync_id = last and last.sync_id
-    ns.highlights = NVIM_GET_HL(real_ns, {link = true})
+    if real_ns == 0 and winhl ~= "" then
+      -- creates a mock overlay of highlights based on winhl
+      -- we can't just use the anonymous namespace for this because
+      -- it may no longer exist once vimade takes ownership
+      ns.highlights = highlights_from_winhl(winhl)
+      ns.modified = true
+    else
+      ns.highlights = NVIM_GET_HL(real_ns, {link = true})
+    end
+
     filter_ns(ns.highlights)
     if BIT_BAND(GLOBALS.tick_state, GLOBALS.RECALCULATE) > 0 then
       ns.modified = true 
@@ -224,7 +261,8 @@ M.refresh = function (real_ns, is_global)
       end
     end
     if (not last or not last.complete_highlights) or ns.modified then
-      ns.complete_highlights = M.resolve_all_links(real_ns, ns.highlights, is_global)
+      ns.complete_highlights = M.resolve_all_links(
+        real_ns,ns.highlights, is_global, winhl ~= "")
       -- lets us know when to resync non-global namespaces
       -- this is atypical behavior but can occur if the global namespace
       -- changes on a different tab, gets synchronized and then user
