@@ -18,6 +18,7 @@ local TINT = require('vimade.style.tint')
 local WIN_STATE = require('vimade.state.win')
 
 local TABLE_INSERT = table.insert
+local NVIM_TABPAGE_GET_WIN = vim.api.nvim_tabpage_get_win
 
 local events = require('vimade.util.events')()
 
@@ -25,8 +26,17 @@ M.on = events.on
 
 -- internal only
 local update = function ()
-  local windows = vim.api.nvim_tabpage_list_wins(0)
   local current = GLOBALS.current
+  local tabs = vim.api.nvim_list_tabpages()
+  local windows = vim.api.nvim_tabpage_list_wins(0)
+  -- insert each active non-current-tab window
+  -- this permits styling inactive tabs in the tabline
+  -- see #100
+  for _, tab in ipairs(tabs) do
+    if tab ~= current.tabnr then
+      TABLE_INSERT(windows, NVIM_TABPAGE_GET_WIN(tab))
+    end
+  end
   local updated_cache = {}
 
   areas = FOCUS.update({

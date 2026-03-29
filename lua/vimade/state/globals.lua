@@ -139,8 +139,14 @@ local DEFAULTS = TYPE.extend(DEFAULT_RECIPE.Default(), {
               return 'StatusLine'
           end
         end,
-        -- Prevent ActiveTabs from highlighting.
-        'TabLineSel',
+        -- Prevent ActiveTabs from highlighting when vimade_fade_active disabled.
+        -- This prevents floating windows on the same page from fading the tab,
+        -- which is needed for VimadeFocus
+        tabline = function(win, active)
+          if vim.g.vimade_fade_active ~= 1 then
+            return 'TabLineSel'
+          end
+        end,
         -- Pmenu should only affect menus like the cmdline autocomplete, which are linked to the active window.
         -- When using Focus mode, these need to be disabled.
         'Pmenu',
