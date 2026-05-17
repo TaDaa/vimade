@@ -302,7 +302,7 @@ class Namespace:
         s_col -= adjust_start
         s_col = max(s_col, 1)
         m_col = min(m_col, text_ln)
-        to_eval.append((row-1, s_col - 1, m_col -1, buf[r]))
+        to_eval.append((row-1, s_col - 1, m_col -1, text))
 
     coords = shared_state.get(coords_key)
     contents_changed = None
