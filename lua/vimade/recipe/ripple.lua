@@ -3,12 +3,21 @@ local M = {}
 local Include = require('vimade.style.include').Include
 local Exclude = require('vimade.style.exclude').Exclude
 local ANIMATE = require('vimade.style.value.animate')
+local CONDITION = require('vimade.style.value.condition')
 local DIRECTION = require('vimade.style.value.direction')
 local EASE = require('vimade.style.value.ease')
 local FADE = require('vimade.style.fade')
 local TINT = require('vimade.style.tint')
 local TYPE = require('vimade.util.type')
 local GLOBALS = require('vimade.state.globals')
+local Component = require('vimade.style.component').Component
+local Link = require('vimade.style.link').Link
+local Invert = require('vimade.style.invert').Invert
+local Fade = FADE.Fade
+local Tint = TINT.Tint
+
+local default_tint = TINT.Default().value()
+local default_fade = FADE.Default().value()
 
 local get_win_infos = function ()
   local distance = function (a1, a2, b1, b2)
@@ -54,7 +63,9 @@ local get_win_infos = function ()
   end
   local result = {}
   for i, info in ipairs(wininfo) do
-    if GLOBALS.current.tabnr == info.tabnr then
+    if GLOBALS.current.tabnr == info.tabnr
+        and vim.api.nvim_win_is_valid(info.winid)
+        and vim.api.nvim_win_get_config(info.winid).relative == '' then
       result[info.winid] = {
         info = info,
         dist = distance_between(info, found_cur),
@@ -78,93 +89,161 @@ local ripple_tick = function()
   end
 end
 local ripple_to_tint = function (style, state)
-  local to = style.resolve(TINT.Default().value(), state)
+  local to = style.resolve(default_tint, state)
   local m_dist = max_distance
   if m_dist == 0 then
     m_dist = 1
   end
+  local winid = (style.win.area_owner or style.win).winid
+  local dist = win_infos[winid] and (win_infos[winid].dist / m_dist) or 0
   if to then
     for i, color in pairs(to) do
       if color.rgb then
         if color.intensity == nil then
           color.intensity = 1
         end
-        color.intensity = (win_infos[style.win.winid].dist / m_dist) * color.intensity
+        color.intensity = dist * color.intensity
       end
     end
   end
   return to
 end
 local ripple_to_fade = function (style, state)
-  local to = style.resolve(FADE.Default().value(), state)
+  local to = style.resolve(default_fade, state)
+  if (style.win.area_owner or style.win).nc and GLOBALS.vimade_focus_active then
+    return to
+  end
   local m_dist = max_distance
   if m_dist == 0 then
     m_dist = 1
   end
-  return to + (1-win_infos[style.win.winid].dist / m_dist) * ((1-to) * 0.5)
+  local winid = (style.win.area_owner or style.win).winid
+  local dist = win_infos[winid] and (1 - win_infos[winid].dist / m_dist) or 1
+  return to + dist * ((1-to) * 0.5)
 end
 local ripple_duration = function(style, state)
   local m_dist = max_distance
-  if m_dist == 0 then
+  if not win_infos[style.win.winid] or m_dist == 0 then
     return 0
   end
   return 100 + (win_infos[style.win.winid].dist / m_dist) * 200
 end
 local ripple_delay = function(style, state)
   local m_dist = max_distance
-  if m_dist == 0 then
+  if not win_infos[style.win.winid] or m_dist == 0 then
     return 0
   end
   return (win_infos[style.win.winid].dist / m_dist) * 300
 end
-local animate_ripple = function (config)
-  local result = {
-    TINT.Tint({
-      tick = ripple_tick,
-      condition = config.condition,
-      value = ANIMATE.Tint({
-        start = function (style, state)
-          local start = style.resolve(TINT.Default().value(), state)
-          if start then
-            for i, color in pairs(start) do
-              color.intensity = 0
-            end
+
+local ripple_tint = function(config, animation)
+  return Tint({
+    condition = config.condition,
+    value = animation and ANIMATE.Tint({
+      start = function (style, state)
+        local start = style.resolve(default_tint, state)
+        if start then
+          for i, color in pairs(start) do
+            color.intensity = 0
           end
-          return start
-        end,
-        to = ripple_to_tint,
-        direction = config.direction,
-        duration = config.duration,
-        delay = config.delay,
-        ease = config.ease,
-      })
-    }),
-    FADE.Fade({
-      condition = config.condition,
-      value = ANIMATE.Number({
-        to = ripple_to_fade,
-        start = 1,
-        direction = config.direction,
-        duration = config.duration,
-        delay = config.delay,
-        ease = config.ease,
-      }),
-    })
-  }
-  return result
+        end
+        return start
+      end,
+      to = ripple_to_tint,
+      direction = config.direction,
+      duration = config.duration,
+      delay = config.delay,
+      ease = config.ease,
+    }) or ripple_to_tint,
+  })
+end
+
+local ripple_fade = function(config, animation)
+  return Fade({
+    condition = config.condition,
+    value = animation and ANIMATE.Number({
+      to = ripple_to_fade,
+      start = animation.start or 1,
+      direction = config.direction,
+      duration = config.duration,
+      delay = config.delay,
+      ease = config.ease,
+    }) or ripple_to_fade,
+  })
 end
 
 local ripple = function (config)
+  local animation = config.animate and {
+    duration = config.duration,
+    delay = config.delay,
+    ease = config.ease,
+    direction = config.direction,
+  } or nil
   return {
-    TINT.Tint({
+    Component('Mark', {
+      condition = CONDITION.IS_MARK,
       tick = ripple_tick,
-      condition = config.condition,
-      value = ripple_to_tint,
+      style = {
+        Link({
+          condition = CONDITION.ALL,
+          value = {{from='NormalFloat', to='Normal'}, {from='NormalNC', to='Normal'}}
+        }),
+        ripple_tint(TYPE.extend({}, config, {
+          condition = CONDITION.INACTIVE,
+        }), animation),
+        Invert({
+          condition = CONDITION.ALL,
+          value = 0.02,
+        })
+      },
     }),
-    FADE.Fade({
-      condition = config.condition,
-      value = ripple_to_fade,
+    Component('Focus', {
+      condition = CONDITION.IS_FOCUS,
+      style = {
+        Link({
+          condition = CONDITION.ALL,
+          value = {{from='NormalFloat', to='Normal'}, {from='NormalNC', to='Normal'}}
+        }),
+        ripple_tint(
+          TYPE.extend({}, config, {
+            condition = CONDITION.INACTIVE,
+          }),
+          animation and TYPE.extend({}, animation, {
+            direction = DIRECTION.OUT,
+          }) or nil
+        ),
+        ripple_fade(
+          TYPE.extend({}, config, {
+            condition = CONDITION.INACTIVE,
+          }),
+          animation and TYPE.extend({}, animation, {
+            direction = DIRECTION.OUT,
+          }) or nil
+        ),
+      }
     }),
+    Component('Pane', {
+      condition = CONDITION.IS_PANE,
+      style = {
+        ripple_tint(TYPE.extend({}, config, {
+          condition = CONDITION.INACTIVE_OR_FOCUS,
+        }), animation),
+        ripple_fade(
+          TYPE.extend({}, config, {
+            condition = CONDITION.INACTIVE_OR_FOCUS,
+          }),
+          animation and TYPE.extend({}, animation, {
+            start = function (style, state)
+              if GLOBALS.vimade_focus_active then
+                return default_fade(style, state)
+              else
+                return 1
+              end
+            end
+          }) or nil
+        )
+      },
+    })
   }
 end
 
@@ -185,7 +264,7 @@ M.Ripple = function(config)
   config.ease = config.ease or EASE.LINEAR
   config.ncmode = config.ncmode or 'windows'
   return {
-    style = config.animate and animate_ripple(config) or ripple(config),
+    style = ripple(config),
     ncmode = config.ncmode
   }
 end
