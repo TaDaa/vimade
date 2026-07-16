@@ -107,8 +107,9 @@ def Animate(**kwargs):
   _direction = kwargs.get('direction')
   _direction = _direction if _direction != None else DEFAULT_DIRECTION
   _reset = kwargs.get('reset')
-  _reset = _reset if _reset != None else (_direction != DIRECTION.IN_OUT)
   _reset_swap = _direction == DIRECTION.IN_OUT
+  if _reset is None:
+    _reset = True
   _compare = kwargs.get('compare')
   def animate(style, state):
     id = None
@@ -125,13 +126,13 @@ def Animate(**kwargs):
     to = style.resolve(_to, state)
     start = style.resolve(_start, state)
     compare = _compare(to, state.get('last_to')) if callable(_compare) else _compare
+    if compare == False:
+      state['change_timestamp'] = GLOBALS.now
+    state['last_to'] = to
     delay = _delay(style, state) if callable(_delay) else _delay
     duration = _duration(style, state) if callable(_duration) else _duration
     direction = _direction(style, state) if callable(_direction) else _direction
     reset = _reset(style, state) if callable(_reset) else _reset
-    if compare == False:
-      state['change_timestamp'] = GLOBALS.now
-    state['last_to'] = to
 
     # Bucket time for vim -- this limits the number of defined highlight
     # groups based on the bucket size.
@@ -139,6 +140,7 @@ def Animate(**kwargs):
     # lower performance and need for more granular steps to achieve smooth
     # transitions.
     time = math.floor(((GLOBALS.now - (max(win.timestamps['nc'], state.get('change_timestamp') or 0))) * 1000 - (delay or 0)) / 8) * 8
+    swapped = False
 
     # direction in and active means go towards 'to' value from start value
     # direction out and active means go towards start value when the window becomes inactive
@@ -152,9 +154,12 @@ def Animate(**kwargs):
         return to
     elif (direction == DIRECTION.OUT and style._condition == CONDITION.ACTIVE and style.win.nc) \
       or (direction == DIRECTION.IN and style._condition == CONDITION.INACTIVE and not style.win.nc):
+        swapped = True
         swp = start
         start = to
         to = swp
+        state['start'] = None
+        state['to'] = None
     elif (direction == DIRECTION.OUT and style._condition == CONDITION.INACTIVE and not style.win.nc) \
       or (direction == DIRECTION.IN and style._condition == CONDITION.ACTIVE and style.win.nc):
         state['value'] = start
@@ -170,15 +175,21 @@ def Animate(**kwargs):
       state['start'] = start
     if time <= 0:
       if reset == True:
-        state['start'] = state.get('to', start) if _reset_swap else start
-        state['value'] = state.get('to', start) if _reset_swap else start
+        reset_value = None
+        if _reset_swap:
+          reset_value = state.get('to')
+        if reset_value == None:
+          reset_value = start
+        state['start'] = reset_value
+        state['value'] = reset_value
       else:
         state['start'] = state['value']
       style._animating = True
       ANIMATOR.schedule(style)
       return state['start']
     state['to'] = to
-    state['start'] = start
+    if state.get('start') is None or compare == False:
+      state['start'] = to if swapped else start
     if time >= duration:
       state['value'] = to
       style._animating = False

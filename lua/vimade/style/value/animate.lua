@@ -183,6 +183,7 @@ M.Animate = function (config)
     -- consistently. 32ms would be better for bucketing, we need to revisit this.
     -- TODO make this configurable
     local time = MATH_FLOOR((GLOBALS.now - (MATH_MAX(win.timestamps.nc, state.change_timestamp or 0) + delay)) / 16) * 16
+    local swapped = false
     -- TODO this logic is nc specific and should be abstracted
     if (direction == DIRECTION.OUT and style._condition == CONDITION.ACTIVE and win.nc == false)
       or (direction == DIRECTION.IN and (style._condition == CONDITION.INACTIVE or style._condition == CONDITION.INACTIVE_OR_FOCUS) and win.nc == true) then
@@ -193,9 +194,12 @@ M.Animate = function (config)
        return to
     elseif (direction == DIRECTION.OUT and style._condition == CONDITION.ACTIVE and win.nc == true)
       or (direction == DIRECTION.IN and (style._condition == CONDITION.INACTIVE or style._condition == CONDITION.INACTIVE_OR_FOCUS) and win.nc == false) then
+        swapped = true
         local swp = start
         start = to
         to = swp
+        state.start = nil
+        state.to = nil
     elseif (direction == DIRECTION.OUT and (style._condition == CONDITION.INACTIVE or style._condition == CONDITION.INACTIVE_OR_FOCUS) and win.nc == false)
       or (direction == DIRECTION.IN and style._condition == CONDITION.ACTIVE and win.nc == true) then
       state.value = start
@@ -223,7 +227,9 @@ M.Animate = function (config)
       return state.start
     end
     state.to = to
-    state.start = start
+    if state.start == nil or compare == false then
+      state.start = swapped and to or start
+    end
     if time >= duration then
       state.value = to
       style._animating = false
