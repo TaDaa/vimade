@@ -370,7 +370,7 @@ OPTIONS                                       *vimade-options*
           },
           buf_opts = {buftype = {'prompt'}},
         },
-        default_block_floats = function (win, active)
+        block_inactive_floats = function (win, active)
           return win.win_config.relative ~= '' and
             (win ~= active or win.buf_opts.buftype =='terminal') and true or false
         end,
